@@ -1,4 +1,4 @@
-# Sustainable Catalyst Engagement & Communications — v8.0.0
+# Sustainable Catalyst Engagement & Communications — v8.1.0
 
 **Unified Platform Foundation** — additive release defining independent product identity, Python FastAPI application, nine domain boundaries, versioned interchange contracts, read-only capability discovery, validation-only handoff endpoint, and production startup authentication guard.
 
@@ -39,3 +39,6 @@ PYTHONPATH=. .venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8810
 ```
 
 Port 8810 is an example; confirm it is free. Keep bound to localhost; configure a reverse proxy, TLS and persisted secrets in a subsequent deployment release. A generated token exported in a shell is only suitable for a temporary local smoke test. Do not expose this proof-of-foundation service publicly. No reverse proxy, production service, database migration or WordPress change is included.
+
+
+Canonical contracts: see `docs/CANONICAL-DATA-MODEL.md`.

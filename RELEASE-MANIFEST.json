@@ -1,0 +1,8 @@
+{
+  "product": "Sustainable Catalyst Engagement & Communications",
+  "version": "8.1.0",
+  "phase": "canonical-contracts",
+  "legacy_data_mutations": false,
+  "persistence": "none",
+  "model_count": 12
+}
