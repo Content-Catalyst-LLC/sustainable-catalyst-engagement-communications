@@ -3,6 +3,7 @@ import os
 from alembic import context
 from sqlalchemy import engine_from_config, pool
 from app.persistence.models import metadata
+from app.persistence import audit  # register audit table
 config=context.config
 target_metadata=metadata
 url=os.environ.get('SCEC_DATABASE_URL')

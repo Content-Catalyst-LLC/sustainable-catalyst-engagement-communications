@@ -17,7 +17,7 @@ def test_schema_generated(name,model):
 
 def test_registry_read_only():
     r=client.get('/v1/contracts/canonical')
-    assert r.status_code==200 and r.json()['persistence']=='none' and len(r.json()['models'])==12
+    assert r.status_code==200 and r.json()['persistence']=='opt-in-postgresql' and len(r.json()['models'])==12
     assert client.post('/v1/contracts/canonical',json={}).status_code==405
     assert client.get('/v1/contracts/canonical/missing/schema').status_code==404
 
