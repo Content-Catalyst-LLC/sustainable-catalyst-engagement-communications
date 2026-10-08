@@ -5,7 +5,7 @@ from .contracts.models import DomainDescriptor, HandoffEnvelope
 
 settings = Settings()
 validate_settings(settings)
-app = FastAPI(title='Sustainable Catalyst Engagement & Communications', version='8.1.0', description='Foundation contracts only; no live legacy migration or production write endpoints.')
+app = FastAPI(title='Sustainable Catalyst Engagement & Communications', version='8.2.0', description='Foundation contracts only; no live legacy migration or production write endpoints.')
 
 def require_service_token(authorization: str | None = Header(default=None)) -> None:
     if settings.auth_mode == 'token':
@@ -14,7 +14,7 @@ def require_service_token(authorization: str | None = Header(default=None)) -> N
 
 @app.get('/health')
 def health():
-    return {'status':'ok', 'service':'engagement-communications', 'version':'8.1.0', 'phase':'foundation'}
+    return {'status':'ok', 'service':'engagement-communications', 'version':'8.2.0', 'phase':'persistence-foundation'}
 
 @app.get('/v1/capabilities', response_model=list[DomainDescriptor], dependencies=[Depends(require_service_token)])
 def capabilities():

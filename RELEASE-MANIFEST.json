@@ -1,8 +1,9 @@
 {
   "product": "Sustainable Catalyst Engagement & Communications",
-  "version": "8.1.0",
-  "phase": "canonical-contracts",
-  "legacy_data_mutations": false,
-  "persistence": "none",
-  "model_count": 12
+  "version": "8.2.0",
+  "phase": "PostgreSQL Persistence & Migration Foundation",
+  "legacy_writes": false,
+  "canonical_tables": 12,
+  "database_migration": "820_001",
+  "destructive_downgrade": false
 }

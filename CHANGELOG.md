@@ -1,5 +1,12 @@
 # Changelog
 
+## 8.2.0
+- PostgreSQL schema, Alembic baseline, non-destructive review workflow, and read-only import rehearsal.
+- 12 canonical tables with tenant FKs, unique legacy identifiers, privacy constraints, JSONB payloads.
+- No live legacy copy, public database API, or automatic migration.
+
+# Changelog
+
 ## 8.1.0 — Canonical Data & Object Model
 - 12 strict Pydantic canonical object contracts.
 - Source-qualified legacy identifiers, UUIDs, tenant reference, timestamps, classification.
