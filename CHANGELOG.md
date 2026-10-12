@@ -1,3 +1,8 @@
+## v9.6.0 — Engagement Analytics & Reporting
+- Added scoped, deterministic, non-persistent aggregate reporting and stage distribution previews.
+- Denied export and commit unconditionally, independent of persistence/outbound flags.
+- Kept WordPress bridge and database migration files unchanged.
+
 ## 9.5.0 — Notifications & Communications
 - Added deterministic consent-aware template/channel planning, audit summaries, and mandatory human review.
 - Send and commit routes always deny. No external transports, persistence, migrations, or WordPress changes.

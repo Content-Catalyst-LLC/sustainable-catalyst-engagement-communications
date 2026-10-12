@@ -35,3 +35,6 @@ Read-only institutional and advisory relationship intelligence at `/v1/instituti
 
 ## v9.5.0 Notifications & Communications
 The `/v1/communications-intelligence/*` API provides nonpersistent planning and review only. Enabled for controlled tests with `SCEC_COMMUNICATIONS_STAGING_ENABLED=1`, bound identity and organization allowlist. Outbound delivery and writes remain disabled regardless of flags. No WordPress forms or routes are changed.
+
+## v9.6.0 — Staging Engagement Analytics & Reporting
+Tenant-scoped and authenticated `/v1/engagement-analytics/status`, `/report-preview`, `/funnel-preview`, `/export`, `/commit`. Disabled by default. Bound identity, tenant allowlist, and administrator or advisor role required. Request-supplied validated dimensions only (100 events max); no personal data, historical reads, persistence, exports, or outbound delivery.
