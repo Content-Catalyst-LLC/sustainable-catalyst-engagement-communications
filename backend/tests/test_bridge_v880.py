@@ -7,7 +7,7 @@ CSS = PLUGIN.parent / "assets/bridge.css"
 
 def test_plugin_has_required_metadata():
     s = PLUGIN.read_text()
-    assert "Plugin Name:" in s and "Version: 8.8.0" in s
+    assert "Plugin Name:" in s and "Version: 8.8.1" in s
 
 def test_plugin_uses_settings_api_and_admin_permission():
     s = PLUGIN.read_text()
