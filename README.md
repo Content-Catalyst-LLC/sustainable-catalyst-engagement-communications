@@ -22,3 +22,7 @@ Run `python3 certification/certify.py` locally, or `python3 certification/certif
 ## v9.1.0 Contact & Feedback staging intake
 
 Private authenticated preview API (`/v1/intake/status`, `/v1/intake/preview`, `/v1/intake/commit` [always 503]). No WordPress form modification or production data writes. See `deployment/V910-DEPLOY.md`.
+
+## v9.2 staging community intelligence
+
+See `RELEASE-MANIFEST-v9.2.0.md` and `deployment/V920-DEPLOY.md`. This is a non-persistent, gated analysis API, not live WordPress intake.

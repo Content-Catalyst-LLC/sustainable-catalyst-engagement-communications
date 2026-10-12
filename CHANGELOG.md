@@ -1,3 +1,7 @@
+## 9.2.0 — Feature Suggestions & Community Intelligence
+- Authenticated, tenant-bound, read-only feature request classification, priority heuristics, exact within-batch duplicate flags and aggregation previews.
+- Writes explicitly rejected; no WordPress, database, or public proxy changes.
+
 ## 8.9.0 — Production Consolidation & Certification Preflight
 - Introduce read-only source and Contabo preflight checks with JSON report output.
 - Preserve deployed backend 8.6.0, web 8.7.0 and WordPress bridge 8.8.2; no new database migration.

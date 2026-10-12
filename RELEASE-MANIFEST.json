@@ -1,7 +1,7 @@
 {
   "project": "sustainable-catalyst-engagement-communications",
-  "version": "9.1.0",
-  "phase": "contact-feedback-intake-staging",
+  "version": "9.2.0",
+  "phase": "feature-community-intelligence-staging",
   "schema_revision": "850_001",
   "production_writes_default": "disabled",
   "frontend_mode": "read-only-no-records",
@@ -12,5 +12,6 @@
   "wordpress_bridge_version": "8.8.2",
   "certification_status": "local-and-staging-validation-required",
   "human_auth": "opt-in staging; production acceptance pending",
-  "intake_mode": "non-persistent-authenticated-preview-only"
+  "intake_mode": "non-persistent-authenticated-preview-only",
+  "intelligence_mode": "authenticated-nonpersistent-preview-only"
 }
