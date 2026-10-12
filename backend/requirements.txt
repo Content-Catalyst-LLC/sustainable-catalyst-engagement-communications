@@ -5,3 +5,4 @@ httpx==0.28.1
 SQLAlchemy==2.0.44
 psycopg[binary]==3.2.12
 alembic==1.17.2
+PyJWT[crypto]==2.13.0

@@ -132,3 +132,7 @@ def advisory_status_transition(engagement_id: UUID, payload: AdvisoryTransition,
 @app.get('/v1/advisory/engagements/{engagement_id}/history',dependencies=[Depends(require_service_token),Depends(require_permission('advisory:read'))])
 def advisory_engagement_history(engagement_id: UUID, limit: int=50, tenant: UUID = Depends(get_tenant), db: Session = Depends(session)):
     return advisory_history(tenant,engagement_id,db,limit)
+
+# v9.0 staged, isolated human OIDC auth boundary (not a production data-write grant).
+from .human_auth import router as human_auth_router
+app.include_router(human_auth_router)
