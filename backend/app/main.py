@@ -6,7 +6,7 @@ from .contracts.models import DomainDescriptor, HandoffEnvelope
 
 settings = Settings()
 validate_settings(settings)
-app = FastAPI(title='Sustainable Catalyst Engagement & Communications', version='9.6.0', description='Opt-in tenant-scoped contact and engagement persistence; legacy WordPress untouched.')
+app = FastAPI(title='Sustainable Catalyst Engagement & Communications', version='9.7.0', description='Opt-in tenant-scoped contact and engagement persistence; legacy WordPress untouched.')
 
 def require_service_token(authorization: str | None = Header(default=None)) -> None:
     from .identity import bound_mode, parse_token
@@ -20,7 +20,7 @@ def require_service_token(authorization: str | None = Header(default=None)) -> N
 
 @app.get('/health')
 def health():
-    return {'status':'ok', 'service':'engagement-communications', 'version':app.version, 'phase':'engagement-analytics-reporting-staging'}
+    return {'status':'ok', 'service':'engagement-communications', 'version':app.version, 'phase':'privacy-retention-consent-governance-staging'}
 
 @app.get('/v1/capabilities', response_model=list[DomainDescriptor], dependencies=[Depends(require_service_token),Depends(require_permission('contracts:read'))])
 def capabilities():
@@ -161,3 +161,7 @@ app.include_router(communications_router, dependencies=[Depends(require_service_
 # v9.6 bounded aggregate-only reporting; no storage or transport access.
 from .engagement_analytics_v960 import router as engagement_analytics_router
 app.include_router(engagement_analytics_router, dependencies=[Depends(require_service_token)])
+
+# v9.7 deterministic privacy governance previews, no mutation or deletion.
+from .privacy_governance_v970 import router as privacy_governance_router
+app.include_router(privacy_governance_router, dependencies=[Depends(require_service_token)])

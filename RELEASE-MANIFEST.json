@@ -1,7 +1,7 @@
 {
   "project": "sustainable-catalyst-engagement-communications",
-  "version": "9.6.0",
-  "phase": "engagement-analytics-reporting-staging",
+  "version": "9.7.0",
+  "phase": "privacy-retention-consent-governance-staging",
   "schema_revision": "850_001",
   "production_writes_default": "disabled",
   "frontend_mode": "read-only-no-records",
@@ -18,5 +18,7 @@
   "institutional_intelligence_mode": "authenticated-nonpersistent-preview-only",
   "production_writes_enabled": false,
   "outbound_messaging_enabled": false,
-  "analytics_mode": "request-supplied-aggregate-preview-only"
+  "analytics_mode": "request-supplied-aggregate-preview-only",
+  "privacy_governance_mode": "bound-identity-nonpersistent-policy-preview",
+  "actual_deletion_enabled": false
 }

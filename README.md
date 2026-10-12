@@ -38,3 +38,6 @@ The `/v1/communications-intelligence/*` API provides nonpersistent planning and 
 
 ## v9.6.0 — Staging Engagement Analytics & Reporting
 Tenant-scoped and authenticated `/v1/engagement-analytics/status`, `/report-preview`, `/funnel-preview`, `/export`, `/commit`. Disabled by default. Bound identity, tenant allowlist, and administrator or advisor role required. Request-supplied validated dimensions only (100 events max); no personal data, historical reads, persistence, exports, or outbound delivery.
+
+## v9.7.0 privacy governance staging
+`SCEC_PRIVACY_STAGING_ENABLED=0` by default. Bound-identity, allowlisted-tenant metadata previews via `/v1/privacy-governance/*`. No legal decisions, live data ingestion, processing of actual data-subject requests, consent edits, deletion, writes, or outbound messages.

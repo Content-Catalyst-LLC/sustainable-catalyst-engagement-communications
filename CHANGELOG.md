@@ -1,3 +1,8 @@
+## v9.7.0 — Privacy, Retention & Consent Governance
+- Read-only policy metadata review, consent status assessment, retention review flags, and rights-request previews.
+- Deletion, consent mutation, persistence, and external communications explicitly disabled.
+- Existing five WordPress links and database migrations preserved.
+
 ## v9.6.0 — Engagement Analytics & Reporting
 - Added scoped, deterministic, non-persistent aggregate reporting and stage distribution previews.
 - Denied export and commit unconditionally, independent of persistence/outbound flags.
