@@ -1,9 +1,8 @@
 {
-  "product": "Sustainable Catalyst Engagement & Communications",
-  "version": "8.2.0",
-  "phase": "PostgreSQL Persistence & Migration Foundation",
-  "legacy_writes": false,
-  "canonical_tables": 12,
-  "database_migration": "820_001",
-  "destructive_downgrade": false
+  "project": "sustainable-catalyst-engagement-communications",
+  "version": "8.4.0",
+  "phase": "product-support-python-modernization",
+  "schema_revision": "840_001",
+  "test_count_local": 52,
+  "production_writes_default": "disabled"
 }

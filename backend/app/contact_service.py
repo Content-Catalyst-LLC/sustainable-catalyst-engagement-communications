@@ -59,20 +59,22 @@ def put_record(kind: str, payload: dict, tenant: UUID, db: Session):
              legacy_external_id=legacy.external_id if legacy else None,payload=obj)
     try:
         with db.begin():
-            if kind!='organizations':
-                org=db.execute(select(TABLES['organizations'].c.id).where(TABLES['organizations'].c.id==tenant)).first()
-                if org is None: raise HTTPException(422,'Organization must be registered first')
-        if kind=='inquiries' and model.contact_id is not None:
-            contact=db.execute(select(TABLES['contacts'].c.id).where(and_(TABLES['contacts'].c.id==model.contact_id,TABLES['contacts'].c.organization_id==tenant))).first()
-            if not contact:raise HTTPException(422,'contact_id must belong to the same organization')
+            if kind != 'organizations':
+                org = db.execute(select(TABLES['organizations'].c.id).where(TABLES['organizations'].c.id == tenant)).first()
+                if org is None:
+                    raise HTTPException(422, 'Organization must be registered first')
+            if kind == 'inquiries' and model.contact_id is not None:
+                contact = db.execute(select(TABLES['contacts'].c.id).where(and_(TABLES['contacts'].c.id == model.contact_id, TABLES['contacts'].c.organization_id == tenant))).first()
+                if not contact:
+                    raise HTTPException(422, 'contact_id must belong to the same organization')
             db.execute(insert(table).values(**row))
-            if kind!='engagement_events':
-                from app.persistence.audit import audit_events
-                db.execute(insert(audit_events).values(organization_id=tenant,record_type=kind,record_id=model.id,operation='created',recorded_at=datetime.now(timezone.utc)))
+            from app.persistence.audit import audit_events
+            db.execute(insert(audit_events).values(organization_id=tenant, record_type=kind,
+                record_id=model.id, operation='created', recorded_at=datetime.now(timezone.utc)))
         return obj
     except IntegrityError:
         db.rollback()
-        raise HTTPException(409,'Duplicate record or legacy identity')
+        raise HTTPException(409, 'Duplicate record or legacy identity')
 
 def read_record(kind: str, record_id: UUID, tenant: UUID, db: Session):
     if kind not in ALLOWED: raise HTTPException(404,'Unknown record type')

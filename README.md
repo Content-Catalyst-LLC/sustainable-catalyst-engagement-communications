@@ -1,44 +1,12 @@
-# Sustainable Catalyst Engagement & Communications — v8.1.0
+# Sustainable Catalyst Engagement & Communications — v8.4.0
 
-**Unified Platform Foundation** — additive release defining independent product identity, Python FastAPI application, nine domain boundaries, versioned interchange contracts, read-only capability discovery, validation-only handoff endpoint, and production startup authentication guard.
+**Product Support Python Modernization**. Builds upon the v8.3.0 tenant-scoped contact and inquiry persistence foundation.
 
-This is a foundation, **not a migrated application**. No database, frontend, WordPress plugin, newsletter delivery, test or assessment runtime is claimed. Both incumbent plugins and the existing support backend must stay running.
+- New service-only support case API for creation, tenant-filtered retrieval/listing, validated triage/status transitions, feedback notes and immutable support history.
+- New Alembic `840_001` support history table. Requires `830_001` to be present; do not run v8.2 bootstrap migration again.
+- Atomic case creation and audit; controlled status transitions, requester-tenant validation, and explicit product-key capture.
+- Fixes v8.3.0 `put_record` indentation/transaction regression that could prevent contact and inquiry persistence.
+- Does not migrate legacy WordPress support records, dispatch messages, send mail, trigger automated triage, or enable public submissions.
+- Persistent endpoints remain OFF unless `SCEC_PERSISTENCE_ENABLED=1` and PostgreSQL/tenant configuration provided. **Before enabling**, verify service-token security, tenant isolation, and app role privileges.
 
-## macOS test
-
-```bash
-cd backend
-python3 -m venv .venv
-source .venv/bin/activate
-python -m pip install -r requirements-dev.txt
-PYTHONPATH=. python -m pytest -q
-```
-
-## Development server
-
-```bash
-cd backend
-source .venv/bin/activate
-SCEC_ENV=development PYTHONPATH=. uvicorn app.main:app --host 127.0.0.1 --port 8810
-# another terminal: curl http://127.0.0.1:8810/health
-```
-
-## VPS gated smoke test (no production cutover)
-
-Install separately in `/opt/scec-v800`; never overwrite existing installations:
-
-```bash
-cd /opt/scec-v800/backend
-python3 -m venv .venv
-.venv/bin/pip install -r requirements-dev.txt
-PYTHONPATH=. .venv/bin/python -m pytest -q
-export SCEC_ENV=production
-export SCEC_AUTH_MODE=token
-export SCEC_SERVICE_TOKEN="$(python3 -c 'import secrets;print(secrets.token_urlsafe(48))')"
-PYTHONPATH=. .venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8810
-```
-
-Port 8810 is an example; confirm it is free. Keep bound to localhost; configure a reverse proxy, TLS and persisted secrets in a subsequent deployment release. A generated token exported in a shell is only suitable for a temporary local smoke test. Do not expose this proof-of-foundation service publicly. No reverse proxy, production service, database migration or WordPress change is included.
-
-
-Canonical contracts: see `docs/CANONICAL-DATA-MODEL.md`.
+See `deployment/V840-DEPLOY.md` for exact Mac/Contabo commands. For a non-writing health-only deployment keep persistence off.
