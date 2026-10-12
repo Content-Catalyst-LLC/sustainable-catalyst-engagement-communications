@@ -1,3 +1,6 @@
+## v9.3.0 — Support case intelligence staging
+- Non-persistent support classification, severity, transition guidance and summaries; default-disabled and no WordPress changes.
+
 ## 9.2.0 — Feature Suggestions & Community Intelligence
 - Authenticated, tenant-bound, read-only feature request classification, priority heuristics, exact within-batch duplicate flags and aggregation previews.
 - Writes explicitly rejected; no WordPress, database, or public proxy changes.

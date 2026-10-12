@@ -1,7 +1,7 @@
 {
   "project": "sustainable-catalyst-engagement-communications",
-  "version": "9.2.0",
-  "phase": "feature-community-intelligence-staging",
+  "version": "9.3.0",
+  "phase": "support-case-intelligence-staging",
   "schema_revision": "850_001",
   "production_writes_default": "disabled",
   "frontend_mode": "read-only-no-records",
@@ -13,5 +13,6 @@
   "certification_status": "local-and-staging-validation-required",
   "human_auth": "opt-in staging; production acceptance pending",
   "intake_mode": "non-persistent-authenticated-preview-only",
-  "intelligence_mode": "authenticated-nonpersistent-preview-only"
+  "intelligence_mode": "authenticated-nonpersistent-preview-only",
+  "support_intelligence_mode": "authenticated-nonpersistent-preview-only"
 }

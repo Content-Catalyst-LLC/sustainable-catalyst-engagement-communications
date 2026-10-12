@@ -26,3 +26,6 @@ Private authenticated preview API (`/v1/intake/status`, `/v1/intake/preview`, `/
 ## v9.2 staging community intelligence
 
 See `RELEASE-MANIFEST-v9.2.0.md` and `deployment/V920-DEPLOY.md`. This is a non-persistent, gated analysis API, not live WordPress intake.
+
+## v9.3.0 Support intelligence
+Authenticated staging-only `/v1/support-intelligence` routes return non-persistent previews; flag `SCEC_SUPPORT_INTELLIGENCE_STAGING_ENABLED=1` is required along with bound identity and tenant allowlist. Writes always rejected. See `deployment/V930-DEPLOY.md`.
