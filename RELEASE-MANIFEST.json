@@ -1,10 +1,14 @@
 {
   "project": "sustainable-catalyst-engagement-communications",
-  "version": "8.8.2",
-  "phase": "wordpress-compatibility-bridge",
+  "version": "8.9.0",
+  "phase": "production-consolidation-certification",
   "schema_revision": "850_001",
   "production_writes_default": "disabled",
   "frontend_mode": "read-only-no-records",
   "backend_identity_mode": "bound-opt-in",
-  "wordpress_bridge_mode": "public-read-only-launch-no-proxy"
+  "wordpress_bridge_mode": "public-read-only-launch-no-proxy",
+  "running_backend_version": "8.6.0",
+  "running_frontend_version": "8.7.0",
+  "wordpress_bridge_version": "8.8.2",
+  "certification_status": "preflight-only-pending-live-public-and-auth-gates"
 }
