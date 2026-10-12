@@ -81,4 +81,4 @@ def test_reference_binding(identity):
 def test_migration_unchanged_and_no_exposed_issuer():
     paths={r.path for r in app.routes}
     assert not any('token' in path or 'mint' in path for path in paths)
-    assert app.version=='9.4.0'
+    assert app.version=='9.5.0'

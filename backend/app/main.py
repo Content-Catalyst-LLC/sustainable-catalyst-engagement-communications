@@ -6,7 +6,7 @@ from .contracts.models import DomainDescriptor, HandoffEnvelope
 
 settings = Settings()
 validate_settings(settings)
-app = FastAPI(title='Sustainable Catalyst Engagement & Communications', version='9.4.0', description='Opt-in tenant-scoped contact and engagement persistence; legacy WordPress untouched.')
+app = FastAPI(title='Sustainable Catalyst Engagement & Communications', version='9.5.0', description='Opt-in tenant-scoped contact and engagement persistence; legacy WordPress untouched.')
 
 def require_service_token(authorization: str | None = Header(default=None)) -> None:
     from .identity import bound_mode, parse_token
@@ -20,7 +20,7 @@ def require_service_token(authorization: str | None = Header(default=None)) -> N
 
 @app.get('/health')
 def health():
-    return {'status':'ok', 'service':'engagement-communications', 'version':app.version, 'phase':'institutional-advisory-intelligence-staging'}
+    return {'status':'ok', 'service':'engagement-communications', 'version':app.version, 'phase':'notifications-communications-staging'}
 
 @app.get('/v1/capabilities', response_model=list[DomainDescriptor], dependencies=[Depends(require_service_token),Depends(require_permission('contracts:read'))])
 def capabilities():
@@ -153,3 +153,7 @@ app.include_router(support_intelligence_router, dependencies=[Depends(require_se
 # v9.4.0 read-only relationship analysis; no WordPress or database mutations.
 from .institutional_intelligence_v940 import router as institutional_intelligence_router
 app.include_router(institutional_intelligence_router, dependencies=[Depends(require_service_token)])
+
+# v9.5.0 staging notification preview. No outbound transports.
+from .communications_intelligence_v950 import router as communications_router
+app.include_router(communications_router, dependencies=[Depends(require_service_token)])

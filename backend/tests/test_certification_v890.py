@@ -25,7 +25,7 @@ def test_no_customer_data_in_certification_output():
 
 def test_manifest_declares_versions_without_mislabel():
     m=json.loads((ROOT/'RELEASE-MANIFEST.json').read_text())
-    assert m['version'] in ('8.9.0','9.0.0','9.1.0','9.2.0','9.3.0','9.4.0')
+    assert m['version'] in ('8.9.0','9.0.0','9.1.0','9.2.0','9.3.0','9.4.0','9.5.0')
     assert m['running_backend_version'] in ('8.6.0','9.0.0-staged')
     assert m['running_frontend_version']=='8.7.0'
     assert m['wordpress_bridge_version']=='8.8.2'

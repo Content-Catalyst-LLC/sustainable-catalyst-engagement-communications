@@ -32,3 +32,6 @@ Authenticated staging-only `/v1/support-intelligence` routes return non-persiste
 
 ## v9.4.0 staging
 Read-only institutional and advisory relationship intelligence at `/v1/institutional-intelligence/*`. Disable-by-default flag: `SCEC_INSTITUTIONAL_STAGING_ENABLED=0`; requires bound identity and allowlisted organization if enabled. No production writes, WordPress intake or approval actions.
+
+## v9.5.0 Notifications & Communications
+The `/v1/communications-intelligence/*` API provides nonpersistent planning and review only. Enabled for controlled tests with `SCEC_COMMUNICATIONS_STAGING_ENABLED=1`, bound identity and organization allowlist. Outbound delivery and writes remain disabled regardless of flags. No WordPress forms or routes are changed.
