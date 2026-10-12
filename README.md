@@ -1,3 +1,7 @@
+# v8.8.0 — WordPress Bridge
+
+See `wordpress-bridge/README.md` and `deployment/V880-DEPLOY.md`. No Python, web container, or PostgreSQL changes are required for this release.
+
 # Sustainable Catalyst Engagement & Communications v8.7.0
 
 Standalone web shell + optional versioned FastAPI backend. The UI is **not yet connected to private institutional records**: no user login, no browser credentials, no synthetic live data, and no production writes. Run frontend independently on Contabo at loopback port 8097, keeping v8.6.0 private backend alive on port 8816. Details in `deployment/V870-DEPLOY.md` and `frontend/README.md`.

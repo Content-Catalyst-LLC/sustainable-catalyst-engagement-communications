@@ -1,3 +1,6 @@
+## 8.8.0 — WordPress Compatibility Bridge
+- Added WordPress public bridge, settings, scoped styles and standalone launch shortcode. No backend or frontend runtime change.
+
 ## 8.7.0 — Standalone Web Application Foundation
 - Built responsive independent UI shell covering overview, contacts, engagement, product support, advisory, activity, and access/privacy.
 - Refused to misrepresent synthetic records as production; all live data views unconnected and writes disabled.
