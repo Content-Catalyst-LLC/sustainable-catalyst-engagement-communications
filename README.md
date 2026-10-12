@@ -47,3 +47,6 @@ Tenant-scoped and authenticated `/v1/engagement-analytics/status`, `/report-prev
 
 ## v9.9.0 — Source assurance
 Staging-only `/v1/release-assurance/` status, assessment-preview, reliability-preview and hard-disabled mutation/promotion endpoints. `SCEC_ASSURANCE_STAGING_ENABLED=0` is the default. Source preflight PASS is not production certification.
+
+## Unified platform v10.0.0
+Read-only catalog, readiness and consolidation previews under `/v1/unified-platform`. Default disabled: `SCEC_UNIFIED_STAGING_ENABLED=0`. No live login federation or live integration.

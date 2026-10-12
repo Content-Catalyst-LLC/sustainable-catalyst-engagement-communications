@@ -1,3 +1,8 @@
+## v10.0.0 — Unified Engagement Platform
+- Unified catalog and readiness reporting across prior v9 modules; all operational transitions blocked.
+- Extended static frontend navigation without live-data access.
+- No WordPress or migration edits.
+
 ## v9.9.0 — Security, Reliability & Certification
 - Added tenant-scoped, human-review-only assurance and reliability report previews, forbidden-feature flag detection, reproducible hashes and fail-closed promotion routes.
 - Preserved WordPress pages and bridge, database schema and migrations, and disabled all production actions.
