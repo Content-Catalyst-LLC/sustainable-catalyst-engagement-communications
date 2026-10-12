@@ -1,3 +1,7 @@
+# Sustainable Catalyst Engagement & Communications v8.7.0
+
+Standalone web shell + optional versioned FastAPI backend. The UI is **not yet connected to private institutional records**: no user login, no browser credentials, no synthetic live data, and no production writes. Run frontend independently on Contabo at loopback port 8097, keeping v8.6.0 private backend alive on port 8816. Details in `deployment/V870-DEPLOY.md` and `frontend/README.md`.
+
 # Sustainable Catalyst Engagement & Communications — v8.6.0
 
 **Identity, Authorization & Privacy — opt-in bound security foundation.**

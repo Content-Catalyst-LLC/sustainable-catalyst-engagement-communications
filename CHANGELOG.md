@@ -1,3 +1,10 @@
+## 8.7.0 — Standalone Web Application Foundation
+- Built responsive independent UI shell covering overview, contacts, engagement, product support, advisory, activity, and access/privacy.
+- Refused to misrepresent synthetic records as production; all live data views unconnected and writes disabled.
+- Added loopback-only nginx Docker deployment with CSP and security headers.
+- Updated backend release health and added frontend/static security regression tests.
+- No database migration, no Caddy rewrite, no modifications to v8.6.0 service.
+
 ## v8.6.0 — Identity, Authorization & Privacy
 - Opt-in signed service-principal verification, tenant-bound roles, approval actor anti-spoofing and privacy-conscious denial telemetry.
 - No Alembic migration; writes default disabled.
