@@ -1,3 +1,7 @@
+## v9.9.0 — Security, Reliability & Certification
+- Added tenant-scoped, human-review-only assurance and reliability report previews, forbidden-feature flag detection, reproducible hashes and fail-closed promotion routes.
+- Preserved WordPress pages and bridge, database schema and migrations, and disabled all production actions.
+
 ## v9.8.0 — Cross-Platform Integration & Identity Federation
 - Added tenant-bound, non-persistent application handoff and compatibility contract previews.
 - Explicitly denies token exchanges, identity links, handoff commits, outbound messaging, deletion, and persistence.

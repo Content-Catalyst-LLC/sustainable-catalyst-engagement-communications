@@ -44,3 +44,6 @@ Tenant-scoped and authenticated `/v1/engagement-analytics/status`, `/report-prev
 
 ## v9.8.0 federation contract previews
 `/v1/federation-intelligence/*` is disabled by default (`SCEC_FEDERATION_STAGING_ENABLED=0`). Enabled previews require bound tenant identity and allowlisted administrator/advisor credentials. No actual cross-platform federation, identity linking, token transfer, persistence, outbound messages, or deletion.
+
+## v9.9.0 — Source assurance
+Staging-only `/v1/release-assurance/` status, assessment-preview, reliability-preview and hard-disabled mutation/promotion endpoints. `SCEC_ASSURANCE_STAGING_ENABLED=0` is the default. Source preflight PASS is not production certification.

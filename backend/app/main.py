@@ -6,7 +6,7 @@ from .contracts.models import DomainDescriptor, HandoffEnvelope
 
 settings = Settings()
 validate_settings(settings)
-app = FastAPI(title='Sustainable Catalyst Engagement & Communications', version='9.8.0', description='Opt-in tenant-scoped contact and engagement persistence; legacy WordPress untouched.')
+app = FastAPI(title='Sustainable Catalyst Engagement & Communications', version='9.9.0', description='Opt-in tenant-scoped contact and engagement persistence; legacy WordPress untouched.')
 
 def require_service_token(authorization: str | None = Header(default=None)) -> None:
     from .identity import bound_mode, parse_token
@@ -20,7 +20,7 @@ def require_service_token(authorization: str | None = Header(default=None)) -> N
 
 @app.get('/health')
 def health():
-    return {'status':'ok', 'service':'engagement-communications', 'version':app.version, 'phase':'cross-platform-identity-federation-staging'}
+    return {'status':'ok', 'service':'engagement-communications', 'version':app.version, 'phase':'security-reliability-certification-staging'}
 
 @app.get('/v1/capabilities', response_model=list[DomainDescriptor], dependencies=[Depends(require_service_token),Depends(require_permission('contracts:read'))])
 def capabilities():
@@ -169,3 +169,7 @@ app.include_router(privacy_governance_router, dependencies=[Depends(require_serv
 # v9.8 contract preview only; no actual federation or token exchange.
 from .federation_intelligence_v980 import router as federation_router
 app.include_router(federation_router, dependencies=[Depends(require_service_token)])
+
+# v9.9 source and assurance previews. No production promotion.
+from .release_assurance_v990 import router as assurance_router
+app.include_router(assurance_router, dependencies=[Depends(require_service_token)])
