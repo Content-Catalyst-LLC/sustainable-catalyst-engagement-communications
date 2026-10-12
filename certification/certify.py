@@ -7,7 +7,7 @@ ROOT=Path(__file__).resolve().parents[1]
 def check_source():
     data={}
     manifest=json.loads((ROOT/'RELEASE-MANIFEST.json').read_text())
-    data['release_manifest_890']=manifest.get('version') in ('8.9.0','9.0.0')
+    data['release_manifest_890']=manifest.get('version') in ('8.9.0','9.0.0','9.1.0')
     data['database_contract_unchanged']=manifest.get('schema_revision')=='850_001'
     data['writes_disabled_contract']=manifest.get('production_writes_default')=='disabled'
     data['independent_web_present']=all((ROOT/p).exists() for p in ('frontend/index.html','frontend/compose.yaml','frontend/nginx.conf'))
@@ -61,7 +61,7 @@ def main():
     # Public HTTPS, browser acceptance, identity brokering and tenant-scope tests require separate evidence.
     pending=['public_https_dns_tls','wordpress_public_launcher_acceptance','authenticated_human_session','csrf_revocation_session_expiry','live_tenant_isolation_roles','privacy_retention_policy','staged_persistence_write_certification']
     passed=all(source.values()) and (not args.live or all(live.values()))
-    report={'release':'8.9.0','source_checks':source,'live_checks':live,'gates_not_certified':pending,'preflight':'PASS' if passed else 'FAIL','production_certified':False,'production_writes_enabled':False}
+    report={'release':json.loads((ROOT/'RELEASE-MANIFEST.json').read_text())['version'],'source_checks':source,'live_checks':live,'gates_not_certified':pending,'preflight':'PASS' if passed else 'FAIL','production_certified':False,'production_writes_enabled':False}
     encoded=json.dumps(report,indent=2,sort_keys=True)
     print(encoded)
     if args.json_out: Path(args.json_out).write_text(encoded+'\n')

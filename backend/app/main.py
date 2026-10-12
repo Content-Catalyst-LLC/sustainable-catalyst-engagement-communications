@@ -6,7 +6,7 @@ from .contracts.models import DomainDescriptor, HandoffEnvelope
 
 settings = Settings()
 validate_settings(settings)
-app = FastAPI(title='Sustainable Catalyst Engagement & Communications', version='9.0.0', description='Opt-in tenant-scoped contact and engagement persistence; legacy WordPress untouched.')
+app = FastAPI(title='Sustainable Catalyst Engagement & Communications', version='9.1.0', description='Opt-in tenant-scoped contact and engagement persistence; legacy WordPress untouched.')
 
 def require_service_token(authorization: str | None = Header(default=None)) -> None:
     from .identity import bound_mode, parse_token
@@ -20,7 +20,7 @@ def require_service_token(authorization: str | None = Header(default=None)) -> N
 
 @app.get('/health')
 def health():
-    return {'status':'ok', 'service':'engagement-communications', 'version':app.version, 'phase':'human-authentication-foundation'}
+    return {'status':'ok', 'service':'engagement-communications', 'version':app.version, 'phase':'contact-feedback-intake-staging'}
 
 @app.get('/v1/capabilities', response_model=list[DomainDescriptor], dependencies=[Depends(require_service_token),Depends(require_permission('contracts:read'))])
 def capabilities():
@@ -136,3 +136,7 @@ def advisory_engagement_history(engagement_id: UUID, limit: int=50, tenant: UUID
 # v9.0 staged, isolated human OIDC auth boundary (not a production data-write grant).
 from .human_auth import router as human_auth_router
 app.include_router(human_auth_router)
+
+# v9.1.0: private, fail-closed, non-persistent intake validation. No WordPress changes.
+from .intake_v910 import router as intake_v910_router
+app.include_router(intake_v910_router, dependencies=[Depends(require_service_token)])

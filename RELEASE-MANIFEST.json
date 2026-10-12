@@ -1,15 +1,16 @@
 {
   "project": "sustainable-catalyst-engagement-communications",
-  "version": "9.0.0",
-  "phase": "production-consolidation-certification",
+  "version": "9.1.0",
+  "phase": "contact-feedback-intake-staging",
   "schema_revision": "850_001",
   "production_writes_default": "disabled",
   "frontend_mode": "read-only-no-records",
   "backend_identity_mode": "bound-opt-in",
   "wordpress_bridge_mode": "public-read-only-launch-no-proxy",
-  "running_backend_version": "8.6.0",
+  "running_backend_version": "9.0.0-staged",
   "running_frontend_version": "8.7.0",
   "wordpress_bridge_version": "8.8.2",
-  "certification_status": "preflight-only-pending-live-public-and-auth-gates",
-  "human_auth": "opt-in staging; production acceptance pending"
+  "certification_status": "local-and-staging-validation-required",
+  "human_auth": "opt-in staging; production acceptance pending",
+  "intake_mode": "non-persistent-authenticated-preview-only"
 }

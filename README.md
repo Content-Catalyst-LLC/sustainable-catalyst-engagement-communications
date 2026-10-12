@@ -18,3 +18,7 @@ Schema remains `850_001` (18 tables); **no new migration**. Existing v8.5.0 cont
 ## v8.9.0 certification preflight
 
 Run `python3 certification/certify.py` locally, or `python3 certification/certify.py --live` on the Contabo host. See `deployment/V890-DEPLOY.md`. The release does **not** certify production identity/data workflows or enable writes.
+
+## v9.1.0 Contact & Feedback staging intake
+
+Private authenticated preview API (`/v1/intake/status`, `/v1/intake/preview`, `/v1/intake/commit` [always 503]). No WordPress form modification or production data writes. See `deployment/V910-DEPLOY.md`.
