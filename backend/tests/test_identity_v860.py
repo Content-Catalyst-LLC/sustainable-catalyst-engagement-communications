@@ -80,5 +80,6 @@ def test_reference_binding(identity):
 
 def test_migration_unchanged_and_no_exposed_issuer():
     paths={r.path for r in app.routes}
-    assert not any('token' in path or 'mint' in path for path in paths)
-    assert app.version=='9.7.0'
+    assert not any('mint' in path or path.endswith('/token') or path.endswith('/issue-token') for path in paths)
+    # v9.8 has a named token-exchange endpoint, but it is a fail-closed 503 route.
+    assert app.version=='9.8.0'

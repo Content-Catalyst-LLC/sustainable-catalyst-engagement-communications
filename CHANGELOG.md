@@ -1,3 +1,8 @@
+## v9.8.0 — Cross-Platform Integration & Identity Federation
+- Added tenant-bound, non-persistent application handoff and compatibility contract previews.
+- Explicitly denies token exchanges, identity links, handoff commits, outbound messaging, deletion, and persistence.
+- WordPress bridge and database contracts unchanged.
+
 ## v9.7.0 — Privacy, Retention & Consent Governance
 - Read-only policy metadata review, consent status assessment, retention review flags, and rights-request previews.
 - Deletion, consent mutation, persistence, and external communications explicitly disabled.

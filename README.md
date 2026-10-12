@@ -41,3 +41,6 @@ Tenant-scoped and authenticated `/v1/engagement-analytics/status`, `/report-prev
 
 ## v9.7.0 privacy governance staging
 `SCEC_PRIVACY_STAGING_ENABLED=0` by default. Bound-identity, allowlisted-tenant metadata previews via `/v1/privacy-governance/*`. No legal decisions, live data ingestion, processing of actual data-subject requests, consent edits, deletion, writes, or outbound messages.
+
+## v9.8.0 federation contract previews
+`/v1/federation-intelligence/*` is disabled by default (`SCEC_FEDERATION_STAGING_ENABLED=0`). Enabled previews require bound tenant identity and allowlisted administrator/advisor credentials. No actual cross-platform federation, identity linking, token transfer, persistence, outbound messages, or deletion.
