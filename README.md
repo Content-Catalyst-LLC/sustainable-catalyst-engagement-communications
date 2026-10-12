@@ -1,4 +1,4 @@
-# Sustainable Catalyst Engagement & Communications — v8.4.0
+# Sustainable Catalyst Engagement & Communications — v8.5.0
 
 **Product Support Python Modernization**. Builds upon the v8.3.0 tenant-scoped contact and inquiry persistence foundation.
 
@@ -10,3 +10,5 @@
 - Persistent endpoints remain OFF unless `SCEC_PERSISTENCE_ENABLED=1` and PostgreSQL/tenant configuration provided. **Before enabling**, verify service-token security, tenant isolation, and app role privileges.
 
 See `deployment/V840-DEPLOY.md` for exact Mac/Contabo commands. For a non-writing health-only deployment keep persistence off.
+
+Advisory workflows: see deployment/V850-DEPLOY.md.

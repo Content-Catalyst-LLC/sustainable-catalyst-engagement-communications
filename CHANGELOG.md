@@ -1,3 +1,10 @@
+## 8.5.0 — Advisory & Institutional Workflows
+
+- Added proposed engagements, human-gated activation requests, independent reviewer references, advisory transitions, tenant-scoped history and approval metadata.
+- Added forward-only migration `850_001` with two additional tables (16 -> 18).
+- Retained v8.4 support endpoints and disabled-by-default production persistence.
+- No WordPress writes/imports, no automatic approval. Reviewer references are supplied by service clients; full user identity/RBAC deferred to v8.6.
+
 # Changelog
 
 ## v8.4.0 — Product Support Python Modernization

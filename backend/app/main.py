@@ -5,7 +5,7 @@ from .contracts.models import DomainDescriptor, HandoffEnvelope
 
 settings = Settings()
 validate_settings(settings)
-app = FastAPI(title='Sustainable Catalyst Engagement & Communications', version='8.4.0', description='Opt-in tenant-scoped contact and engagement persistence; legacy WordPress untouched.')
+app = FastAPI(title='Sustainable Catalyst Engagement & Communications', version='8.5.0', description='Opt-in tenant-scoped contact and engagement persistence; legacy WordPress untouched.')
 
 def require_service_token(authorization: str | None = Header(default=None)) -> None:
     if settings.auth_mode == 'token':
@@ -14,7 +14,7 @@ def require_service_token(authorization: str | None = Header(default=None)) -> N
 
 @app.get('/health')
 def health():
-    return {'status':'ok', 'service':'engagement-communications', 'version':'8.4.0', 'phase':'product-support-python-modernization'}
+    return {'status':'ok', 'service':'engagement-communications', 'version':'8.5.0', 'phase':'advisory-institutional-workflows'}
 
 @app.get('/v1/capabilities', response_model=list[DomainDescriptor], dependencies=[Depends(require_service_token)])
 def capabilities():
@@ -46,7 +46,6 @@ from .contact_service import get_tenant, session, put_record, read_record, list_
 
 @app.post('/v1/engagement/{kind}', status_code=201, dependencies=[Depends(require_service_token)])
 def create_engagement(kind: str, payload: dict = Body(...), tenant: UUID = Depends(get_tenant), db: Session = Depends(session)):
-    
     if kind == 'cases': raise HTTPException(404, 'Use support case workflow')
     return put_record(kind,payload,tenant,db)
 
@@ -84,3 +83,41 @@ def support_case_feedback(case_id: UUID, payload: SupportFeedback, tenant: UUID 
 @app.get('/v1/support/cases/{case_id}/history',dependencies=[Depends(require_service_token)])
 def support_case_history(case_id: UUID, limit: int=50, tenant: UUID = Depends(get_tenant), db: Session = Depends(session)):
     return case_history(tenant,case_id,db,limit)
+
+# v8.5.0 institutional advisory workflow; service-authenticated and tenant scoped.
+from .advisory_service import ApprovalRequest, ApprovalDecision, AdvisoryTransition
+from .advisory_service import create_engagement as advisory_create, request_approval, decide_approval, transition as advisory_transition, history as advisory_history
+
+@app.post('/v1/advisory/engagements',status_code=201,dependencies=[Depends(require_service_token)])
+def advisory_engagement_create(payload: dict = Body(...), tenant: UUID = Depends(get_tenant), db: Session = Depends(session)):
+    return advisory_create(payload,tenant,db)
+
+@app.get('/v1/advisory/engagements/{engagement_id}',dependencies=[Depends(require_service_token)])
+def advisory_engagement_read(engagement_id: UUID, tenant: UUID = Depends(get_tenant), db: Session = Depends(session)):
+    from .advisory_service import _engagement
+    return _engagement(db,tenant,engagement_id)
+
+@app.get('/v1/advisory/engagements',dependencies=[Depends(require_service_token)])
+def advisory_engagement_list(limit: int = 50, offset: int = 0, tenant: UUID = Depends(get_tenant), db: Session = Depends(session)):
+    from sqlalchemy import select
+    from .persistence.models import TABLES
+    if not 1 <= limit <= 100 or not 0 <= offset <= 100000:raise HTTPException(422,'Invalid pagination')
+    table=TABLES['advisory_engagements']
+    items=db.execute(select(table.c.payload).where(table.c.organization_id==tenant).order_by(table.c.created_at.desc(),table.c.id).limit(limit).offset(offset)).scalars().all()
+    return {'items':items,'limit':limit,'offset':offset}
+
+@app.post('/v1/advisory/engagements/{engagement_id}/approvals',status_code=201,dependencies=[Depends(require_service_token)])
+def advisory_approval_request(engagement_id: UUID, payload: ApprovalRequest, tenant: UUID = Depends(get_tenant), db: Session = Depends(session)):
+    return request_approval(tenant,engagement_id,payload,db)
+
+@app.post('/v1/advisory/engagements/{engagement_id}/approvals/{approval_id}/decision',dependencies=[Depends(require_service_token)])
+def advisory_approval_decide(engagement_id: UUID, approval_id: UUID, payload: ApprovalDecision, tenant: UUID = Depends(get_tenant), db: Session = Depends(session)):
+    return decide_approval(tenant,engagement_id,approval_id,payload,db)
+
+@app.post('/v1/advisory/engagements/{engagement_id}/transitions',dependencies=[Depends(require_service_token)])
+def advisory_status_transition(engagement_id: UUID, payload: AdvisoryTransition, tenant: UUID = Depends(get_tenant), db: Session = Depends(session)):
+    return advisory_transition(tenant,engagement_id,payload,db)
+
+@app.get('/v1/advisory/engagements/{engagement_id}/history',dependencies=[Depends(require_service_token)])
+def advisory_engagement_history(engagement_id: UUID, limit: int=50, tenant: UUID = Depends(get_tenant), db: Session = Depends(session)):
+    return advisory_history(tenant,engagement_id,db,limit)
