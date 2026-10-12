@@ -1,3 +1,7 @@
+## v9.4.0 — Institutional Relationships & Advisory
+- Added authenticated, non-persistent relationship classification, lifecycle guidance, portfolio summaries, risk review flags and fail-closed commit route.
+- Preserved WordPress bridge and all existing database/schema contracts.
+
 ## v9.3.0 — Support case intelligence staging
 - Non-persistent support classification, severity, transition guidance and summaries; default-disabled and no WordPress changes.
 
