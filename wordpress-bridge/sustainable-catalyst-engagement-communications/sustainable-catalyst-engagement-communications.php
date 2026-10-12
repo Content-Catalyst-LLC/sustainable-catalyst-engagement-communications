@@ -2,15 +2,15 @@
 /**
  * Plugin Name: Sustainable Catalyst — Engagement & Communications Bridge
  * Description: Public, read-only WordPress launch surface for the independent Engagement & Communications app.
- * Version: 8.8.1
+ * Version: 8.8.2
  * Author: Content Catalyst LLC
  * Text Domain: sc-engagement-bridge
  */
 if (!defined('ABSPATH')) { exit; }
 
-final class SC_Engagement_Bridge_881 {
+final class SC_Engagement_Bridge_882 {
     const OPTION = 'sc_ec880_app_url';
-    const VERSION = '8.8.1';
+    const VERSION = '8.8.2';
     public static function boot() {
         add_action('admin_init', array(__CLASS__, 'register_settings'));
         add_action('admin_menu', array(__CLASS__, 'menu'));
@@ -89,7 +89,8 @@ final class SC_Engagement_Bridge_881 {
         self::start_assets();
         $pages = array(
             array('Contact', 'General inquiries and institutional correspondence', array('contact', 'contact-us')),
-            array('Feedback', 'Ideas, suggestions and platform improvement requests', array('feedback')),
+            array('Feedback', 'General feedback about the platform and its services', array('feedback')),
+            array('Feature Suggestions', 'Propose new tools, capabilities and improvements', array('feature-suggestions')),
             array('Channel', 'Updates and public communications', array('channel')),
             array('Support', 'Technical questions and service assistance', array('support')),
         );
@@ -114,7 +115,7 @@ final class SC_Engagement_Bridge_881 {
         $url = self::url();
         ob_start(); ?>
         <section class="scec880" aria-labelledby="scec880-heading">
-          <div class="scec880-kicker">SUSTAINABLE CATALYST / INDEPENDENT OPERATING SURFACE <span>8.8.1</span></div>
+          <div class="scec880-kicker">SUSTAINABLE CATALYST / INDEPENDENT OPERATING SURFACE <span>8.8.2</span></div>
           <div class="scec880-intro">
             <div><h2 id="scec880-heading">Engagement <span>&amp;</span><br>Communications</h2>
             <p>Institutional relationships, support, advisory workflows, and accountable communication—organized within an independent application.</p></div>
@@ -136,4 +137,4 @@ final class SC_Engagement_Bridge_881 {
         return ob_get_clean();
     }
 }
-SC_Engagement_Bridge_881::boot();
+SC_Engagement_Bridge_882::boot();

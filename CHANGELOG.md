@@ -1,3 +1,6 @@
+## 8.8.2
+- Added the existing Feature Suggestions WordPress page as a separate navigation card.
+
 ## 8.8.0 — WordPress Compatibility Bridge
 - Added WordPress public bridge, settings, scoped styles and standalone launch shortcode. No backend or frontend runtime change.
 
