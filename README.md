@@ -1,14 +1,7 @@
-# Sustainable Catalyst Engagement & Communications — v8.5.0
+# Sustainable Catalyst Engagement & Communications — v8.6.0
 
-**Product Support Python Modernization**. Builds upon the v8.3.0 tenant-scoped contact and inquiry persistence foundation.
+**Identity, Authorization & Privacy — opt-in bound security foundation.**
 
-- New service-only support case API for creation, tenant-filtered retrieval/listing, validated triage/status transitions, feedback notes and immutable support history.
-- New Alembic `840_001` support history table. Requires `830_001` to be present; do not run v8.2 bootstrap migration again.
-- Atomic case creation and audit; controlled status transitions, requester-tenant validation, and explicit product-key capture.
-- Fixes v8.3.0 `put_record` indentation/transaction regression that could prevent contact and inquiry persistence.
-- Does not migrate legacy WordPress support records, dispatch messages, send mail, trigger automated triage, or enable public submissions.
-- Persistent endpoints remain OFF unless `SCEC_PERSISTENCE_ENABLED=1` and PostgreSQL/tenant configuration provided. **Before enabling**, verify service-token security, tenant isolation, and app role privileges.
+Adds `backend/app/identity.py`: HMAC-SHA256 authenticated short-lived service principals with required organization, subject, roles, expiration and audience; per-route RBAC; tenant-header-to-principal binding; advisory/support actor-ref anti-spoofing; pseudonymous authorization-denial logging. Default legacy behavior retained for non-disruptive parallel deployment; `SCEC_IDENTITY_MODE=bound` explicitly activates checks. Tokens are **service-issued assertions**, not verified human login/SSO. No public token issuer exists. Signing key must remain secret and must be distributed by a trusted system; token theft/revocation, key rotation, database RLS and independent external identity verification are not solved by this build.
 
-See `deployment/V840-DEPLOY.md` for exact Mac/Contabo commands. For a non-writing health-only deployment keep persistence off.
-
-Advisory workflows: see deployment/V850-DEPLOY.md.
+Schema remains `850_001` (18 tables); **no new migration**. Existing v8.5.0 contact/support/advisory endpoints remain. Writes default disabled. No legacy WordPress changes. See `deployment/V860-DEPLOY.md` and `docs/SECURITY-V860.md`.

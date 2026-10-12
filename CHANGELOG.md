@@ -1,3 +1,8 @@
+## v8.6.0 — Identity, Authorization & Privacy
+- Opt-in signed service-principal verification, tenant-bound roles, approval actor anti-spoofing and privacy-conscious denial telemetry.
+- No Alembic migration; writes default disabled.
+- Bound mode remains service identity, not independent user identity or complete privacy program.
+
 ## 8.5.0 — Advisory & Institutional Workflows
 
 - Added proposed engagements, human-gated activation requests, independent reviewer references, advisory transitions, tenant-scoped history and approval metadata.

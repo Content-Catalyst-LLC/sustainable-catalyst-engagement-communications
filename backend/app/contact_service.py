@@ -6,6 +6,7 @@ from fastapi import Depends, Header, HTTPException
 from sqlalchemy import create_engine, select, and_, insert
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
+from app.identity import principal
 from app.contracts.canonical import MODEL_REGISTRY, Organization, Contact, Inquiry, EngagementEvent
 from app.persistence.models import TABLES, metadata
 
@@ -24,8 +25,13 @@ def config():
         raise HTTPException(503, 'Organization allowlist not configured')
     return url, allowed
 
-def get_tenant(x_scec_organization_id: str | None = Header(default=None)) -> UUID:
+def get_tenant(x_scec_organization_id: str | None = Header(default=None), actor=Depends(principal)) -> UUID:
     url, allowed=config()
+    from app.identity import bound_mode, tenant_for_principal
+    if bound_mode():
+        tenant=tenant_for_principal(x_scec_organization_id,actor)
+        if str(tenant) not in allowed:raise HTTPException(403,"Organization not authorized for this service")
+        return tenant
     try: tenant=UUID(x_scec_organization_id or '')
     except ValueError: raise HTTPException(400,'Valid X-SCEC-Organization-ID required')
     if str(tenant) not in allowed:

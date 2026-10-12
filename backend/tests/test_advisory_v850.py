@@ -10,7 +10,7 @@ from app.contracts.canonical import AdvisoryEngagement
 from app.contact_service import ALLOWED
 
 def test_version():
-    assert TestClient(app).get('/health').json()['version']=='8.5.0'
+    assert TestClient(app).get('/health').json()['version']=='8.6.0'
 
 def test_production_disabled_and_auth():
     assert TestClient(app).get('/v1/advisory/engagements').status_code in (401,503)
