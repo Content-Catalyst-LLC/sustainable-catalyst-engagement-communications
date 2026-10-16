@@ -1,3 +1,8 @@
+## 10.3.0 — Tenant Isolation & Permission Enforcement
+- Added read-only staging tenant authorization report and role matrix.
+- Synthetic cross-tenant, noncanonical-ID, actor-spoof and least-privilege regression checks.
+- No WordPress changes, migrations, live human login or production operation enablement.
+
 ## 10.2.0 — Production Identity & Session Certification (staging-only)
 - Added fail-closed identity assurance contract, deterministic evidence report and seven pending live gates.
 - Added offline asymmetric JWT, CSRF, tenant-role, expiry and revocation synthetic-fixture checks.

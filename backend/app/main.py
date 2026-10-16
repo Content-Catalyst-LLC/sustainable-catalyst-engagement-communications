@@ -6,7 +6,7 @@ from .contracts.models import DomainDescriptor, HandoffEnvelope
 
 settings = Settings()
 validate_settings(settings)
-app = FastAPI(title='Sustainable Catalyst Engagement & Communications', version='10.2.0', description='Opt-in tenant-scoped contact and engagement persistence; legacy WordPress untouched.')
+app = FastAPI(title='Sustainable Catalyst Engagement & Communications', version='10.3.0', description='Opt-in tenant-scoped contact and engagement persistence; legacy WordPress untouched.')
 
 def require_service_token(authorization: str | None = Header(default=None)) -> None:
     from .identity import bound_mode, parse_token
@@ -20,7 +20,7 @@ def require_service_token(authorization: str | None = Header(default=None)) -> N
 
 @app.get('/health')
 def health():
-    return {'status':'ok', 'service':'engagement-communications', 'version':app.version, 'phase':'production-identity-session-certification-staging'}
+    return {'status':'ok', 'service':'engagement-communications', 'version':app.version, 'phase':'tenant-isolation-permission-enforcement-staging'}
 
 @app.get('/v1/capabilities', response_model=list[DomainDescriptor], dependencies=[Depends(require_service_token),Depends(require_permission('contracts:read'))])
 def capabilities():
@@ -183,3 +183,7 @@ app.include_router(shell_router, dependencies=[Depends(require_service_token)])
 # v10.2: read-only, opt-in identity certification assessment; no real user auth.
 from .identity_certification_v1020 import router as identity_certification_router
 app.include_router(identity_certification_router, dependencies=[Depends(require_service_token)])
+
+# v10.3: staging-only tenant authorization certification; no activation or writes.
+from .tenant_authorization_v1030 import router as tenant_authorization_router
+app.include_router(tenant_authorization_router, dependencies=[Depends(require_service_token)])

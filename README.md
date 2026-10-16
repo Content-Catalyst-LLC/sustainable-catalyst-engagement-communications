@@ -58,3 +58,6 @@ Read-only catalog, readiness and consolidation previews under `/v1/unified-platf
 ## v10.2.0 — Identity & Session Certification (staging-only)
 
 Offline synthetic security fixtures validate cryptographic JWT signature and claims, tenant boundaries, CSRF and expiration/revocation predicates. Gated `/v1/identity-certification/` endpoints disclose only security status and unverified production evidence. No live authentication or persistence is enabled. See `deployment/V1020-DEPLOY.md`.
+
+## v10.3.0 — Tenant isolation and permission enforcement
+Offline synthetic policy assertions, nonpersistent staging authorization matrix, deterministic non-certifying report. All existing WordPress pages and migrations preserved; activation, deletion, communications and federation remain disabled. See `deployment/V1030-DEPLOY.md`.
