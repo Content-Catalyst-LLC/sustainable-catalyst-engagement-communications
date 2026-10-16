@@ -1,7 +1,7 @@
 {
   "project": "sustainable-catalyst-engagement-communications",
-  "version": "10.1.0",
-  "phase": "unified-application-shell-navigation-staging",
+  "version": "10.2.0",
+  "phase": "production-identity-session-certification-staging",
   "schema_revision": "850_001",
   "production_writes_default": "disabled",
   "frontend_mode": "read-only-no-records",
@@ -27,5 +27,6 @@
   "assurance_mode": "staging-only-nonpersistent-no-production-promotion",
   "production_certified": false,
   "unified_platform_mode": "read-only-discovery-and-preview",
-  "shell_mode": "read-only-navigation-and-discovery"
+  "shell_mode": "read-only-navigation-and-discovery",
+  "identity_certification_mode": "staging-offline-regression-gated-no-live-session-activation"
 }

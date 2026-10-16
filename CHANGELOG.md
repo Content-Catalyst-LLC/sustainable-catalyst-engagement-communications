@@ -1,3 +1,9 @@
+## 10.2.0 — Production Identity & Session Certification (staging-only)
+- Added fail-closed identity assurance contract, deterministic evidence report and seven pending live gates.
+- Added offline asymmetric JWT, CSRF, tenant-role, expiry and revocation synthetic-fixture checks.
+- Kept all WordPress bridge and database migration files byte-for-byte unchanged.
+- No live authentication, writes, outbound communications, deletion or real federation.
+
 ## 10.1.0 — Unified Application Shell & Navigation
 - Grouped responsive application navigation, accessible filter and route breadcrumbs.
 - Unified static overview corrected: no obsolete live backend indicator.

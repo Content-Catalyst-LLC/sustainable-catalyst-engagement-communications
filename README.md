@@ -53,3 +53,8 @@ Staging-only `/v1/release-assurance/` status, assessment-preview, reliability-pr
 
 ## Unified platform v10.0.0
 Read-only catalog, readiness and consolidation previews under `/v1/unified-platform`. Default disabled: `SCEC_UNIFIED_STAGING_ENABLED=0`. No live login federation or live integration.
+
+
+## v10.2.0 — Identity & Session Certification (staging-only)
+
+Offline synthetic security fixtures validate cryptographic JWT signature and claims, tenant boundaries, CSRF and expiration/revocation predicates. Gated `/v1/identity-certification/` endpoints disclose only security status and unverified production evidence. No live authentication or persistence is enabled. See `deployment/V1020-DEPLOY.md`.
