@@ -1,3 +1,6 @@
+# v10.1.0 Static application shell
+Includes 12 grouped workspaces, local workspace filtering, keyboard escape, mobile navigation, accessible current route and breadcrumbs. No live data, browser authentication, browser storage, direct API requests, writes, outbound communications or deletion. Deploy web separately only after explicit approval.
+
 # v8.7.0 Standalone Web Application
 
 Independent static frontend for Engagement & Communications, with dark institutional visual styling, seven navigable workspaces, accessible responsive navigation and explicitly read-only preview state. All metrics show `—` because no live data source is connected. **No synthetic records are presented as real.**

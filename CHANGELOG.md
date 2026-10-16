@@ -1,3 +1,9 @@
+## 10.1.0 — Unified Application Shell & Navigation
+- Grouped responsive application navigation, accessible filter and route breadcrumbs.
+- Unified static overview corrected: no obsolete live backend indicator.
+- Service-authenticated, staging-only shell catalog and fail-closed mutation routes.
+- No changes to WordPress, migrations, or operational safety defaults.
+
 ## v10.0.0 — Unified Engagement Platform
 - Unified catalog and readiness reporting across prior v9 modules; all operational transitions blocked.
 - Extended static frontend navigation without live-data access.

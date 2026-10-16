@@ -1,3 +1,6 @@
+# Current release: v10.1.0 — Unified Application Shell & Navigation
+Read-only standalone UI; no network calls, persistence or real identity federation. Production certification pending. See `deployment/V1010-DEPLOY.md`.
+
 # v8.8.0 — WordPress Bridge
 
 See `wordpress-bridge/README.md` and `deployment/V880-DEPLOY.md`. No Python, web container, or PostgreSQL changes are required for this release.
