@@ -61,3 +61,6 @@ Offline synthetic security fixtures validate cryptographic JWT signature and cla
 
 ## v10.3.0 — Tenant isolation and permission enforcement
 Offline synthetic policy assertions, nonpersistent staging authorization matrix, deterministic non-certifying report. All existing WordPress pages and migrations preserved; activation, deletion, communications and federation remain disabled. See `deployment/V1030-DEPLOY.md`.
+
+## v10.4.0
+Ephemeral in-memory transaction rehearsal with fail-closed service-gated discovery. No production database mutations. See deployment/V1040-DEPLOY.md.

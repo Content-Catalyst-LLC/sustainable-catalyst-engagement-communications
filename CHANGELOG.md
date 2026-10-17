@@ -1,3 +1,7 @@
+## v10.4.0 — Secure Persistence & Transaction Foundation
+- Added in-memory transaction rehearsal: atomic commit, rollback, per-tenant idempotency, optimistic revision checks, audit digests.
+- All HTTP mutation and promotion operations blocked; no WordPress or migration changes.
+
 ## 10.3.0 — Tenant Isolation & Permission Enforcement
 - Added read-only staging tenant authorization report and role matrix.
 - Synthetic cross-tenant, noncanonical-ID, actor-spoof and least-privilege regression checks.
