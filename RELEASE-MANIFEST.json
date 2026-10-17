@@ -1,7 +1,7 @@
 {
   "project": "sustainable-catalyst-engagement-communications",
-  "version": "11.0.0",
-  "phase": "research-distribution-foundation-staging",
+  "version": "11.1.0",
+  "phase": "rss-atom-json-feed-staging",
   "schema_revision": "850_001",
   "production_writes_default": "disabled",
   "frontend_mode": "read-only-no-records",
@@ -36,5 +36,6 @@
   "delivery_infrastructure_mode": "synthetic-contracts-only-no-transports-no-queue-no-delivery",
   "observability_reliability_mode": "synthetic-evidence-only-no-monitoring-alerting-recovery-or-mutation",
   "production_acceptance_mode": "source-and-staging-evidence-only-no-live-gates-no-activation",
-  "research_distribution_mode": "synthetic-provenance-manifest-preview-no-fetch-publishing-syndication-transport-persistence"
+  "research_distribution_mode": "synthetic-provenance-manifest-preview-no-fetch-publishing-syndication-transport-persistence",
+  "feed_mode": "synthetic-serialization-preview-only-no-public-routes-or-delivery"
 }

@@ -1,3 +1,8 @@
+## 11.1.0 — RSS, Atom & JSON Feeds
+- Added deterministic synthetic feed previews in RSS 2.0, Atom 1.0 and JSON Feed 1.1.
+- Validates opaque research IDs, source references, HTTPS canonical URLs, timestamps, and review gates.
+- Default-disabled tenant-bound routes; no actual publication, persistence, outbound delivery or WordPress modifications.
+
 ## 10.7.0 — Communications Delivery Infrastructure
 - Added tenant-bound, synthetic-only delivery contract review, suppression and unsubscribe flags, deterministic evidence, and retry previews; dangerous operations always unavailable.
 - Existing WordPress, frontend, database migrations and production safety gates unchanged.

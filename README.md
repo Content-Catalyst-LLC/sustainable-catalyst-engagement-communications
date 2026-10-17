@@ -82,3 +82,6 @@ Review the seven unresolved live gates using `/v1/production-acceptance` under i
 
 ### v11.0.0 research distribution preview foundation
 Read-only research manifest contracts for provenance-aware distribution planning. All outlets and actual publication remain disabled. See `deployment/V1100-DEPLOY.md`.
+
+## v11.1.0 RSS, Atom and JSON Feed previews
+Staging-only serializer at `/v1/research-feeds/preview`, requiring existing bound service identity and organization allowlisting. No publicly served feeds or live distribution. Seven production acceptance gates remain pending.

@@ -7,7 +7,7 @@ ROOT=Path(__file__).resolve().parents[1]
 def check_source():
     data={}
     manifest=json.loads((ROOT/'RELEASE-MANIFEST.json').read_text())
-    data['release_manifest_890']=manifest.get('version') in ('8.9.0','9.0.0','9.1.0','9.2.0','9.3.0','9.4.0','9.5.0','9.6.0','9.7.0','9.8.0','9.9.0','10.0.0','10.1.0','10.2.0','10.3.0','10.4.0','10.5.0','10.6.0','10.7.0','10.8.0','10.9.0','11.0.0')
+    data['release_manifest_890']=manifest.get('version') in ('8.9.0','9.0.0','9.1.0','9.2.0','9.3.0','9.4.0','9.5.0','9.6.0','9.7.0','9.8.0','9.9.0','10.0.0','10.1.0','10.2.0','10.3.0','10.4.0','10.5.0','10.6.0','10.7.0','10.8.0','10.9.0','11.0.0','11.1.0')
     data['database_contract_unchanged']=manifest.get('schema_revision')=='850_001'
     data['writes_disabled_contract']=manifest.get('production_writes_default')=='disabled'
     data['independent_web_present']=all((ROOT/p).exists() for p in ('frontend/index.html','frontend/compose.yaml','frontend/nginx.conf'))
@@ -60,6 +60,17 @@ def check_source():
     data['v1100_seven_live_gates_pending']=assessment['live_acceptance_gates_pending']==list(pending)
     data['v1100_wordpress_preserved']=data['v1090_five_wordpress_destinations_preserved'] and data['v1050_no_wordpress_mutation']
     data['v1100_manifest_fail_closed']=manifest.get('research_distribution_mode')=='synthetic-provenance-manifest-preview-no-fetch-publishing-syndication-transport-persistence' and manifest.get('outbound_messaging_enabled') is False and manifest.get('production_writes_enabled') is False
+    from app.feed_serialization_v1110 import FORMATS, BLOCKED_ACTIONS as FEED_BLOCKED, FeedPreview, FeedEntry, render
+    from datetime import datetime, timezone
+    sample=FeedEntry(object_ref='research-123',revision='v1',title='Synthetic title',summary='Synthetic summary',canonical_url='https://example.org/research/123',updated_at=datetime(2026,10,17,tzinfo=timezone.utc),source_refs=['source-123'])
+    test_feed=FeedPreview(format='rss',feed_title='Synthetic feed',feed_description='Synthetic preview',home_url='https://example.org/',feed_url='https://example.org/feed.xml',entries=[sample])
+    preview=render(test_feed,str(uuid4()))
+    data['v1110_supported_formats']=FORMATS==('rss','atom','json-feed')
+    data['v1110_no_live_publication']=all(preview[k] is False for k in ('publication_authorized','actual_syndication_enabled','outbound_communications_enabled','persisted','source_fetch_performed','federation_enabled','production_certified')) and len(FEED_BLOCKED)==7
+    data['v1110_feed_serialization']=preview['media_type']=='application/rss+xml' and '<rss' in preview['content_preview']
+    data['v1110_live_gates_pending']=preview['live_acceptance_gates_pending']==list(pending)
+    data['v1110_five_wordpress_destinations_preserved']=data['v1100_wordpress_preserved']
+    data['v1110_mode_disabled']=manifest.get('feed_mode')=='synthetic-serialization-preview-only-no-public-routes-or-delivery'
     return data
 
 def http_get(url):
