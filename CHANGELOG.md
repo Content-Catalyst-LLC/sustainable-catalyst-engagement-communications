@@ -119,3 +119,7 @@ OIDC PKCE browser sign-in boundary (disabled by default); stateful revocable ses
 ## 10.8.0 — Observability, Recovery & Reliability
 - Added synthetic-only failure classification, incident evidence fingerprints, retry delay and human escalation previews.
 - All live telemetry, alerting, automatic retry, recovery, restore, incident creation and promotion remain blocked. WordPress, frontend, and database migrations unchanged.
+
+## 10.9.0 — Production Acceptance & Security Certification
+- Added fail-closed, source/staging-only acceptance ledger with seven explicitly pending live production gates and synthetic tenant-scoped evidence fingerprints.
+- All production activation endpoints blocked; WordPress pages, frontend and database migrations remain unchanged.

@@ -76,3 +76,6 @@ Synthetic privacy/consent/retention readiness only. Draft retention values are n
 
 ### v10.8.0 observability and recovery
 Staging-only synthetic reliability assessments are under `/v1/observability-reliability`. They do not collect logs or metrics, send alerts, execute retries, restore backups, store incidents or permit production promotion. See `deployment/V1080-DEPLOY.md`.
+
+### v10.9.0 source-only production acceptance ledger
+Review the seven unresolved live gates using `/v1/production-acceptance` under isolated, authenticated staging only. No live gate can be certified in the application. See `deployment/V1090-DEPLOY.md`.
