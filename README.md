@@ -67,3 +67,6 @@ Ephemeral in-memory transaction rehearsal with fail-closed service-gated discove
 
 ### v10.5.0 WordPress Intake Bridge Certification
 The bridge certification engine inspects the bundled, unchanged WordPress launcher source and can produce nonpersistent, non-PII tenant-bound synthetic preview evidence. It makes **no live WordPress requests**, transmits no user submissions and never enables production changes. See `deployment/V1050-DEPLOY.md`.
+
+## v10.6.0
+Synthetic privacy/consent/retention readiness only. Draft retention values are not approved policy; no personal data is accepted, stored, exported or deleted by the v10.6 module.

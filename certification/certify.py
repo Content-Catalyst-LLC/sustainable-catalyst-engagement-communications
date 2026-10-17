@@ -7,7 +7,7 @@ ROOT=Path(__file__).resolve().parents[1]
 def check_source():
     data={}
     manifest=json.loads((ROOT/'RELEASE-MANIFEST.json').read_text())
-    data['release_manifest_890']=manifest.get('version') in ('8.9.0','9.0.0','9.1.0','9.2.0','9.3.0','9.4.0','9.5.0','9.6.0','9.7.0','9.8.0','9.9.0','10.0.0','10.1.0','10.2.0','10.3.0','10.4.0','10.5.0')
+    data['release_manifest_890']=manifest.get('version') in ('8.9.0','9.0.0','9.1.0','9.2.0','9.3.0','9.4.0','9.5.0','9.6.0','9.7.0','9.8.0','9.9.0','10.0.0','10.1.0','10.2.0','10.3.0','10.4.0','10.5.0','10.6.0')
     data['database_contract_unchanged']=manifest.get('schema_revision')=='850_001'
     data['writes_disabled_contract']=manifest.get('production_writes_default')=='disabled'
     data['independent_web_present']=all((ROOT/p).exists() for p in ('frontend/index.html','frontend/compose.yaml','frontend/nginx.conf'))
@@ -24,6 +24,11 @@ def check_source():
     sys.path.insert(0, str(ROOT / "backend"))
     from app.wordpress_bridge_certification_v1050 import source_report
     data.update({'v1050_'+k: v for k, v in source_report(ROOT).items()})
+    from app.privacy_consent_retention_v1060 import RETENTION, PURPOSE, GATES
+    data['v1060_all_five_channels']=set(RETENTION)==set(PURPOSE)=={'contact','feedback','feature-suggestions','channel','support'}
+    data['v1060_draft_retention_only']=all(isinstance(v,int) and 1 <= v <= 365 for v in RETENTION.values())
+    data['v1060_privacy_acceptance_pending']='production_privacy_acceptance' in GATES
+    data['v1060_no_bridge_mutation']=data['v1050_no_wordpress_mutation'] and data['v1050_no_remote_proxy']
     return data
 
 def http_get(url):

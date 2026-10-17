@@ -1,3 +1,6 @@
+## 10.6.0
+- Added disabled-by-default, service/tenant-gated synthetic privacy/consent/retention rehearsal and non-mutating certification checks. WordPress files and migrations unchanged.
+
 ## v10.4.0 — Secure Persistence & Transaction Foundation
 - Added in-memory transaction rehearsal: atomic commit, rollback, per-tenant idempotency, optimistic revision checks, audit digests.
 - All HTTP mutation and promotion operations blocked; no WordPress or migration changes.

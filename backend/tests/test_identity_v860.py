@@ -82,4 +82,4 @@ def test_migration_unchanged_and_no_exposed_issuer():
     paths={r.path for r in app.routes}
     assert not any('mint' in path or path.endswith('/token') or path.endswith('/issue-token') for path in paths)
     # v9.8 has a named token-exchange endpoint, but it is a fail-closed 503 route.
-    assert app.version=='10.5.0'
+    assert app.version=='10.6.0'
