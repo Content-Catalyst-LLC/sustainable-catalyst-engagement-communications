@@ -6,7 +6,7 @@ from .contracts.models import DomainDescriptor, HandoffEnvelope
 
 settings = Settings()
 validate_settings(settings)
-app = FastAPI(title='Sustainable Catalyst Engagement & Communications', version='10.7.0', description='Opt-in tenant-scoped contact and engagement persistence; legacy WordPress untouched.')
+app = FastAPI(title='Sustainable Catalyst Engagement & Communications', version='10.8.0', description='Opt-in tenant-scoped contact and engagement persistence; legacy WordPress untouched.')
 
 def require_service_token(authorization: str | None = Header(default=None)) -> None:
     from .identity import bound_mode, parse_token
@@ -20,7 +20,7 @@ def require_service_token(authorization: str | None = Header(default=None)) -> N
 
 @app.get('/health')
 def health():
-    return {'status':'ok', 'service':'engagement-communications', 'version':app.version, 'phase':'communications-delivery-infrastructure-staging'}
+    return {'status':'ok', 'service':'engagement-communications', 'version':app.version, 'phase':'observability-recovery-reliability-staging'}
 
 @app.get('/v1/capabilities', response_model=list[DomainDescriptor], dependencies=[Depends(require_service_token),Depends(require_permission('contracts:read'))])
 def capabilities():
@@ -203,3 +203,7 @@ app.include_router(privacy_retention_router, dependencies=[Depends(require_servi
 # v10.7: bounded synthetic delivery previews, no transport, queue, or persistence.
 from .delivery_infrastructure_v1070 import router as delivery_router
 app.include_router(delivery_router, dependencies=[Depends(require_service_token)])
+
+# v10.8 synthetic-only observability/recovery evidence: no collection, storage or messaging.
+from .observability_reliability_v1080 import router as reliability_router
+app.include_router(reliability_router, dependencies=[Depends(require_service_token)])

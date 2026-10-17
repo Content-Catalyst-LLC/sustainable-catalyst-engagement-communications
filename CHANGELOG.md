@@ -115,3 +115,7 @@ OIDC PKCE browser sign-in boundary (disabled by default); stateful revocable ses
 ## 10.5.0 — WordPress Intake Bridge Certification
 - Five-channel, read-only WordPress launcher and intake source-contract certification, consent-neutral, no PII echo, and fail-closed staging HTTP surface.
 - Entire public WordPress bridge and database migrations preserved; production operations remain disabled.
+
+## 10.8.0 — Observability, Recovery & Reliability
+- Added synthetic-only failure classification, incident evidence fingerprints, retry delay and human escalation previews.
+- All live telemetry, alerting, automatic retry, recovery, restore, incident creation and promotion remain blocked. WordPress, frontend, and database migrations unchanged.

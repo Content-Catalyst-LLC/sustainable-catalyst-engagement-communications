@@ -73,3 +73,6 @@ Synthetic privacy/consent/retention readiness only. Draft retention values are n
 
 ## 10.7.0 staging-only communications delivery foundation
 `/v1/delivery-infrastructure/status`, `/contracts`, and `/preview` require opted-in bound service identity; all transport, queue, send, approval, persistence and production promotion endpoints remain blocked. No WordPress changes. See `deployment/V1070-DEPLOY.md`.
+
+### v10.8.0 observability and recovery
+Staging-only synthetic reliability assessments are under `/v1/observability-reliability`. They do not collect logs or metrics, send alerts, execute retries, restore backups, store incidents or permit production promotion. See `deployment/V1080-DEPLOY.md`.

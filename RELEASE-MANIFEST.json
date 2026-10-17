@@ -1,7 +1,7 @@
 {
   "project": "sustainable-catalyst-engagement-communications",
-  "version": "10.7.0",
-  "phase": "communications-delivery-infrastructure-staging",
+  "version": "10.8.0",
+  "phase": "observability-recovery-reliability-staging",
   "schema_revision": "850_001",
   "production_writes_default": "disabled",
   "frontend_mode": "read-only-no-records",
@@ -33,5 +33,6 @@
   "transaction_mode": "ephemeral-synthetic-sqlite-rehearsal-only",
   "wordpress_intake_certification_mode": "source-only-no-pii-no-transport-no-live-wordpress-acceptance",
   "privacy_consent_retention_mode": "synthetic-policy-draft-nonpersistent-no-deletion-unapproved",
-  "delivery_infrastructure_mode": "synthetic-contracts-only-no-transports-no-queue-no-delivery"
+  "delivery_infrastructure_mode": "synthetic-contracts-only-no-transports-no-queue-no-delivery",
+  "observability_reliability_mode": "synthetic-evidence-only-no-monitoring-alerting-recovery-or-mutation"
 }
