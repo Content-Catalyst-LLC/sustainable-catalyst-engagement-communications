@@ -85,3 +85,6 @@ Read-only research manifest contracts for provenance-aware distribution planning
 
 ## v11.1.0 RSS, Atom and JSON Feed previews
 Staging-only serializer at `/v1/research-feeds/preview`, requiring existing bound service identity and organization allowlisting. No publicly served feeds or live distribution. Seven production acceptance gates remain pending.
+
+## v11.2.0 — Institutional Newsroom
+Tenant-bound synthetic newsroom announcement and release-history previews with provenance, editorial states, rights, privacy, source integrity and institutional review. No live publication, distribution, transport, persistence, or authorization. All existing WordPress destinations remain untouched. Seven live production gates remain pending.

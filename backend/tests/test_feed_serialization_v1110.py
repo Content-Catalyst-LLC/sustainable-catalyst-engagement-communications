@@ -15,7 +15,7 @@ def entry(**overrides):
 def feed(fmt='rss',**overrides):
     data=dict(format=fmt,feed_title='Research',feed_description='Synthetic discoveries',home_url='https://example.org/',feed_url='https://example.org/feed',entries=[entry()]);data.update(overrides);return FeedPreview(**data)
 
-def test_current_version():assert app.version=='11.1.0'
+def test_current_version():assert app.version=='11.2.0'
 @pytest.mark.parametrize('fmt',FORMATS)
 def test_serialized_formats(fmt):
     x=render(feed(fmt),TENANT)

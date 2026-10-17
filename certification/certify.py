@@ -7,7 +7,7 @@ ROOT=Path(__file__).resolve().parents[1]
 def check_source():
     data={}
     manifest=json.loads((ROOT/'RELEASE-MANIFEST.json').read_text())
-    data['release_manifest_890']=manifest.get('version') in ('8.9.0','9.0.0','9.1.0','9.2.0','9.3.0','9.4.0','9.5.0','9.6.0','9.7.0','9.8.0','9.9.0','10.0.0','10.1.0','10.2.0','10.3.0','10.4.0','10.5.0','10.6.0','10.7.0','10.8.0','10.9.0','11.0.0','11.1.0')
+    data['release_manifest_890']=manifest.get('version') in ('8.9.0','9.0.0','9.1.0','9.2.0','9.3.0','9.4.0','9.5.0','9.6.0','9.7.0','9.8.0','9.9.0','10.0.0','10.1.0','10.2.0','10.3.0','10.4.0','10.5.0','10.6.0','10.7.0','10.8.0','10.9.0','11.0.0','11.1.0','11.2.0')
     data['database_contract_unchanged']=manifest.get('schema_revision')=='850_001'
     data['writes_disabled_contract']=manifest.get('production_writes_default')=='disabled'
     data['independent_web_present']=all((ROOT/p).exists() for p in ('frontend/index.html','frontend/compose.yaml','frontend/nginx.conf'))
@@ -71,6 +71,15 @@ def check_source():
     data['v1110_live_gates_pending']=preview['live_acceptance_gates_pending']==list(pending)
     data['v1110_five_wordpress_destinations_preserved']=data['v1100_wordpress_preserved']
     data['v1110_mode_disabled']=manifest.get('feed_mode')=='synthetic-serialization-preview-only-no-public-routes-or-delivery'
+    from app.institutional_newsroom_v1120 import (ANNOUNCEMENT_KINDS,STATES,REVIEW_GATES,BLOCKED_ACTIONS as NEWS_BLOCKED,NewsroomEntry,NewsroomPreview,assess as newsroom_assess)
+    news=NewsroomEntry(announcement_ref='synthetic-release',revision='v1',kind='research-release',headline='Synthetic headline',summary='Synthetic summary',canonical_url='https://example.org/news/research',updated_at=datetime(2026,10,17,tzinfo=timezone.utc),source_refs=['source-123'],rights_reviewed=True,editorial_reviewed=True,source_integrity_reviewed=True,privacy_reviewed=True,institutional_approved=True)
+    preview=newsroom_assess(NewsroomPreview(newsroom_title='Synthetic',newsroom_url='https://example.org/news',entries=[news]),str(uuid4()))
+    data['v1120_newsroom_content_contracts']=len(ANNOUNCEMENT_KINDS)==5 and len(STATES)==4 and len(REVIEW_GATES)==6
+    data['v1120_human_review_cannot_publish']=preview['entries'][0]['editorial_review_complete'] and not preview['entries'][0]['publication_authorized']
+    data['v1120_publication_blocked']=len(NEWS_BLOCKED)==8 and all(preview[k] is False for k in ('actual_publication_enabled','outbound_communications_enabled','persisted','source_fetch_performed','federation_enabled','human_login_enabled','deletion_enabled','production_certified'))
+    data['v1120_seven_gates_pending']=preview['live_acceptance_gates_pending']==list(pending)
+    data['v1120_wordpress_preserved']=data['v1110_five_wordpress_destinations_preserved']
+    data['v1120_manifest_staging_only']=manifest.get('newsroom_mode')=='synthetic-editorial-release-history-preview-no-publication-transports-writes-or-federation'
     return data
 
 def http_get(url):

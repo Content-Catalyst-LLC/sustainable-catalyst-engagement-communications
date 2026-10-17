@@ -6,7 +6,7 @@ from .contracts.models import DomainDescriptor, HandoffEnvelope
 
 settings = Settings()
 validate_settings(settings)
-app = FastAPI(title='Sustainable Catalyst Engagement & Communications', version='11.1.0', description='Opt-in tenant-scoped contact and engagement persistence; legacy WordPress untouched.')
+app = FastAPI(title='Sustainable Catalyst Engagement & Communications', version='11.2.0', description='Opt-in tenant-scoped contact and engagement persistence; legacy WordPress untouched.')
 
 def require_service_token(authorization: str | None = Header(default=None)) -> None:
     from .identity import bound_mode, parse_token
@@ -20,7 +20,7 @@ def require_service_token(authorization: str | None = Header(default=None)) -> N
 
 @app.get('/health')
 def health():
-    return {'status':'ok', 'service':'engagement-communications', 'version':app.version, 'phase':'rss-atom-json-feed-staging'}
+    return {'status':'ok', 'service':'engagement-communications', 'version':app.version, 'phase':'institutional-newsroom-staging'}
 
 @app.get('/v1/capabilities', response_model=list[DomainDescriptor], dependencies=[Depends(require_service_token),Depends(require_permission('contracts:read'))])
 def capabilities():
@@ -219,3 +219,7 @@ app.include_router(research_distribution_router, dependencies=[Depends(require_s
 # v11.1: deterministic feed previews; never serves or syndicates a public feed.
 from .feed_serialization_v1110 import router as feeds_router
 app.include_router(feeds_router, dependencies=[Depends(require_service_token)])
+
+# v11.2 synthetic newsroom previews; no publication, writes, or delivery.
+from .institutional_newsroom_v1120 import router as newsroom_router
+app.include_router(newsroom_router, dependencies=[Depends(require_service_token)])

@@ -1,3 +1,7 @@
+## 11.2.0 — Institutional Newsroom
+- Synthetic release-history and newsroom announcement manifests; fail-closed publication with deterministic provenance.
+- Preserves protected WordPress/public routes and all production acceptance restrictions.
+
 ## 11.1.0 — RSS, Atom & JSON Feeds
 - Added deterministic synthetic feed previews in RSS 2.0, Atom 1.0 and JSON Feed 1.1.
 - Validates opaque research IDs, source references, HTTPS canonical URLs, timestamps, and review gates.
