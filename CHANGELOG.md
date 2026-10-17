@@ -123,3 +123,7 @@ OIDC PKCE browser sign-in boundary (disabled by default); stateful revocable ses
 ## 10.9.0 — Production Acceptance & Security Certification
 - Added fail-closed, source/staging-only acceptance ledger with seven explicitly pending live production gates and synthetic tenant-scoped evidence fingerprints.
 - All production activation endpoints blocked; WordPress pages, frontend and database migrations remain unchanged.
+
+## 11.0.0 — Research Distribution Foundation
+- Synthetic tenant-bound distribution manifests with deterministic SHA-256 evidence, immutable source references, channel selection and human-review gates. No network fetch, publication, email, queues or persistence.
+- All seven live production acceptance gates remain pending. Protected WordPress URLs and public surface unchanged.

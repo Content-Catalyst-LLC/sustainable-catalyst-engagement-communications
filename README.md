@@ -79,3 +79,6 @@ Staging-only synthetic reliability assessments are under `/v1/observability-reli
 
 ### v10.9.0 source-only production acceptance ledger
 Review the seven unresolved live gates using `/v1/production-acceptance` under isolated, authenticated staging only. No live gate can be certified in the application. See `deployment/V1090-DEPLOY.md`.
+
+### v11.0.0 research distribution preview foundation
+Read-only research manifest contracts for provenance-aware distribution planning. All outlets and actual publication remain disabled. See `deployment/V1100-DEPLOY.md`.

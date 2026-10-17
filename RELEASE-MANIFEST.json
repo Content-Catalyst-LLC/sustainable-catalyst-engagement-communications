@@ -1,7 +1,7 @@
 {
   "project": "sustainable-catalyst-engagement-communications",
-  "version": "10.9.0",
-  "phase": "production-acceptance-security-certification-staging",
+  "version": "11.0.0",
+  "phase": "research-distribution-foundation-staging",
   "schema_revision": "850_001",
   "production_writes_default": "disabled",
   "frontend_mode": "read-only-no-records",
@@ -10,7 +10,7 @@
   "running_backend_version": "9.0.0-staged",
   "running_frontend_version": "8.7.0",
   "wordpress_bridge_version": "8.8.2",
-  "certification_status": "source-preflight-only-all-seven-live-gates-pending",
+  "certification_status": "source-preflight-only-seven-live-gates-pending",
   "human_auth": "opt-in staging; production acceptance pending",
   "intake_mode": "non-persistent-authenticated-preview-only",
   "intelligence_mode": "authenticated-nonpersistent-preview-only",
@@ -35,5 +35,6 @@
   "privacy_consent_retention_mode": "synthetic-policy-draft-nonpersistent-no-deletion-unapproved",
   "delivery_infrastructure_mode": "synthetic-contracts-only-no-transports-no-queue-no-delivery",
   "observability_reliability_mode": "synthetic-evidence-only-no-monitoring-alerting-recovery-or-mutation",
-  "production_acceptance_mode": "source-and-staging-evidence-only-no-live-gates-no-activation"
+  "production_acceptance_mode": "source-and-staging-evidence-only-no-live-gates-no-activation",
+  "research_distribution_mode": "synthetic-provenance-manifest-preview-no-fetch-publishing-syndication-transport-persistence"
 }
