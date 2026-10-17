@@ -25,7 +25,7 @@ def test_private_api_not_exposed_by_web_proxy():
     assert '127.0.0.1:8097:80' in (WEB/'compose.yaml').read_text()
 
 def test_service_version():
-    assert TestClient(app).get('/health').json()['version']=='10.6.0'
+    assert TestClient(app).get('/health').json()['version']=='10.7.0'
 
 def test_no_web_database_revision():
     revisions=list((ROOT/'backend/alembic/versions').glob('*.py'))

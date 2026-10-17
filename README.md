@@ -70,3 +70,6 @@ The bridge certification engine inspects the bundled, unchanged WordPress launch
 
 ## v10.6.0
 Synthetic privacy/consent/retention readiness only. Draft retention values are not approved policy; no personal data is accepted, stored, exported or deleted by the v10.6 module.
+
+## 10.7.0 staging-only communications delivery foundation
+`/v1/delivery-infrastructure/status`, `/contracts`, and `/preview` require opted-in bound service identity; all transport, queue, send, approval, persistence and production promotion endpoints remain blocked. No WordPress changes. See `deployment/V1070-DEPLOY.md`.

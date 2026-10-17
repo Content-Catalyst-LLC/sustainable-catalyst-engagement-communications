@@ -103,7 +103,7 @@ def test_existing_auth_is_not_auto_enabled():
     assert "require_csrf" in source and "DELETE FROM sessions" in source
 
 def test_release_and_wordpress_untouched():
-    assert TestClient(app).get("/health").json()["version"]=="10.6.0"
+    assert TestClient(app).get("/health").json()["version"]=="10.7.0"
     manifest=(ROOT/"RELEASE-MANIFEST.json").read_text()
     assert '"actual_federation_enabled": false' in manifest
     assert '"production_writes_enabled": false' in manifest

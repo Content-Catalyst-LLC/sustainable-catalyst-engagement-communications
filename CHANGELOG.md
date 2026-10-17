@@ -1,3 +1,7 @@
+## 10.7.0 — Communications Delivery Infrastructure
+- Added tenant-bound, synthetic-only delivery contract review, suppression and unsubscribe flags, deterministic evidence, and retry previews; dangerous operations always unavailable.
+- Existing WordPress, frontend, database migrations and production safety gates unchanged.
+
 ## 10.6.0
 - Added disabled-by-default, service/tenant-gated synthetic privacy/consent/retention rehearsal and non-mutating certification checks. WordPress files and migrations unchanged.
 

@@ -9,7 +9,7 @@ client=TestClient(app)
 
 def test_health():
     r=client.get('/health')
-    assert r.status_code==200 and r.json()['version']=='10.6.0'
+    assert r.status_code==200 and r.json()['version']=='10.7.0'
 
 def test_all_domains_unique():
     assert len(DOMAINS)==9 and len({x.name for x in DOMAINS})==9

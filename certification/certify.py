@@ -7,7 +7,7 @@ ROOT=Path(__file__).resolve().parents[1]
 def check_source():
     data={}
     manifest=json.loads((ROOT/'RELEASE-MANIFEST.json').read_text())
-    data['release_manifest_890']=manifest.get('version') in ('8.9.0','9.0.0','9.1.0','9.2.0','9.3.0','9.4.0','9.5.0','9.6.0','9.7.0','9.8.0','9.9.0','10.0.0','10.1.0','10.2.0','10.3.0','10.4.0','10.5.0','10.6.0')
+    data['release_manifest_890']=manifest.get('version') in ('8.9.0','9.0.0','9.1.0','9.2.0','9.3.0','9.4.0','9.5.0','9.6.0','9.7.0','9.8.0','9.9.0','10.0.0','10.1.0','10.2.0','10.3.0','10.4.0','10.5.0','10.6.0','10.7.0')
     data['database_contract_unchanged']=manifest.get('schema_revision')=='850_001'
     data['writes_disabled_contract']=manifest.get('production_writes_default')=='disabled'
     data['independent_web_present']=all((ROOT/p).exists() for p in ('frontend/index.html','frontend/compose.yaml','frontend/nginx.conf'))
@@ -29,6 +29,12 @@ def check_source():
     data['v1060_draft_retention_only']=all(isinstance(v,int) and 1 <= v <= 365 for v in RETENTION.values())
     data['v1060_privacy_acceptance_pending']='production_privacy_acceptance' in GATES
     data['v1060_no_bridge_mutation']=data['v1050_no_wordpress_mutation'] and data['v1050_no_remote_proxy']
+    from app.delivery_infrastructure_v1070 import GATES as DELIVERY_GATES, CHANNELS as DELIVERY_CHANNELS, RETRY_SECONDS
+    data['v1070_no_transport_adapters']=manifest.get('outbound_messaging_enabled') is False and manifest.get('delivery_infrastructure_mode','').startswith('synthetic-')
+    data['v1070_review_gates_defined']='human_dispatch_approval' in DELIVERY_GATES and 'production_acceptance' in DELIVERY_GATES
+    data['v1070_delivery_channels']=set(DELIVERY_CHANNELS)=={'email','in-app','sms'}
+    data['v1070_retry_schedule_preview']=RETRY_SECONDS==(60,300,1800)
+    data['v1070_no_wordpress_mutation']=data['v1050_no_wordpress_mutation']
     return data
 
 def http_get(url):
