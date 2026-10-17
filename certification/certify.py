@@ -7,7 +7,7 @@ ROOT=Path(__file__).resolve().parents[1]
 def check_source():
     data={}
     manifest=json.loads((ROOT/'RELEASE-MANIFEST.json').read_text())
-    data['release_manifest_890']=manifest.get('version') in ('8.9.0','9.0.0','9.1.0','9.2.0','9.3.0','9.4.0','9.5.0','9.6.0','9.7.0','9.8.0','9.9.0','10.0.0','10.1.0','10.2.0','10.3.0','10.4.0')
+    data['release_manifest_890']=manifest.get('version') in ('8.9.0','9.0.0','9.1.0','9.2.0','9.3.0','9.4.0','9.5.0','9.6.0','9.7.0','9.8.0','9.9.0','10.0.0','10.1.0','10.2.0','10.3.0','10.4.0','10.5.0')
     data['database_contract_unchanged']=manifest.get('schema_revision')=='850_001'
     data['writes_disabled_contract']=manifest.get('production_writes_default')=='disabled'
     data['independent_web_present']=all((ROOT/p).exists() for p in ('frontend/index.html','frontend/compose.yaml','frontend/nginx.conf'))
@@ -20,6 +20,10 @@ def check_source():
     data['wordpress_bridge_present']='sc_engagement_communications' in plugin
     data['wordpress_five_existing_links']=all("array('"+label+"'," in plugin for label in ['Contact','Feedback','Feature Suggestions','Channel','Support'])
     data['wordpress_no_forms_or_redirects']=not any(x in plugin for x in ['wp_insert_post(', 'wp_delete_post(', 'wp_redirect(', 'wp_remote_post('])
+    import sys
+    sys.path.insert(0, str(ROOT / "backend"))
+    from app.wordpress_bridge_certification_v1050 import source_report
+    data.update({'v1050_'+k: v for k, v in source_report(ROOT).items()})
     return data
 
 def http_get(url):

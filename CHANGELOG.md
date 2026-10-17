@@ -104,3 +104,7 @@ See repository history for previous milestones.
 
 ## 9.0.0 — Human authentication and staged session authorization
 OIDC PKCE browser sign-in boundary (disabled by default); stateful revocable sessions, CSRF controls, server-side memberships; no production data writes or WordPress changes.
+
+## 10.5.0 — WordPress Intake Bridge Certification
+- Five-channel, read-only WordPress launcher and intake source-contract certification, consent-neutral, no PII echo, and fail-closed staging HTTP surface.
+- Entire public WordPress bridge and database migrations preserved; production operations remain disabled.

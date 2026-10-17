@@ -6,7 +6,7 @@ from .contracts.models import DomainDescriptor, HandoffEnvelope
 
 settings = Settings()
 validate_settings(settings)
-app = FastAPI(title='Sustainable Catalyst Engagement & Communications', version='10.4.0', description='Opt-in tenant-scoped contact and engagement persistence; legacy WordPress untouched.')
+app = FastAPI(title='Sustainable Catalyst Engagement & Communications', version='10.5.0', description='Opt-in tenant-scoped contact and engagement persistence; legacy WordPress untouched.')
 
 def require_service_token(authorization: str | None = Header(default=None)) -> None:
     from .identity import bound_mode, parse_token
@@ -20,7 +20,7 @@ def require_service_token(authorization: str | None = Header(default=None)) -> N
 
 @app.get('/health')
 def health():
-    return {'status':'ok', 'service':'engagement-communications', 'version':app.version, 'phase':'secure-persistence-transaction-foundation-staging'}
+    return {'status':'ok', 'service':'engagement-communications', 'version':app.version, 'phase':'wordpress-intake-bridge-certification-staging'}
 
 @app.get('/v1/capabilities', response_model=list[DomainDescriptor], dependencies=[Depends(require_service_token),Depends(require_permission('contracts:read'))])
 def capabilities():
@@ -191,3 +191,7 @@ app.include_router(tenant_authorization_router, dependencies=[Depends(require_se
 # v10.4: ephemeral transactions only; no production DB writes or activation.
 from .transaction_foundation_v1040 import router as transaction_router
 app.include_router(transaction_router, dependencies=[Depends(require_service_token)])
+
+# v10.5: read-only WordPress intake bridge certification. No live connections.
+from .wordpress_bridge_certification_v1050 import router as wordpress_bridge_cert_router
+app.include_router(wordpress_bridge_cert_router, dependencies=[Depends(require_service_token)])

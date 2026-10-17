@@ -1,7 +1,7 @@
 {
   "project": "sustainable-catalyst-engagement-communications",
-  "version": "10.4.0",
-  "phase": "secure-persistence-transaction-foundation-staging",
+  "version": "10.5.0",
+  "phase": "wordpress-intake-bridge-certification-staging",
   "schema_revision": "850_001",
   "production_writes_default": "disabled",
   "frontend_mode": "read-only-no-records",
@@ -30,5 +30,6 @@
   "shell_mode": "read-only-navigation-and-discovery",
   "identity_certification_mode": "staging-offline-regression-gated-no-live-session-activation",
   "tenant_authorization_mode": "synthetic-least-privilege-nonpersistent-certification",
-  "transaction_mode": "ephemeral-synthetic-sqlite-rehearsal-only"
+  "transaction_mode": "ephemeral-synthetic-sqlite-rehearsal-only",
+  "wordpress_intake_certification_mode": "source-only-no-pii-no-transport-no-live-wordpress-acceptance"
 }

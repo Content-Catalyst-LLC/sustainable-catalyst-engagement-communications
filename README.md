@@ -64,3 +64,6 @@ Offline synthetic policy assertions, nonpersistent staging authorization matrix,
 
 ## v10.4.0
 Ephemeral in-memory transaction rehearsal with fail-closed service-gated discovery. No production database mutations. See deployment/V1040-DEPLOY.md.
+
+### v10.5.0 WordPress Intake Bridge Certification
+The bridge certification engine inspects the bundled, unchanged WordPress launcher source and can produce nonpersistent, non-PII tenant-bound synthetic preview evidence. It makes **no live WordPress requests**, transmits no user submissions and never enables production changes. See `deployment/V1050-DEPLOY.md`.
