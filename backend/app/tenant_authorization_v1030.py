@@ -34,6 +34,10 @@ def report(org:UUID):
     payload["report_sha256"]=hashlib.sha256(json.dumps(payload,sort_keys=True,separators=(",", ":")).encode()).hexdigest()
     return payload
 
+# Staging certification only: require bound identity, tenant/header agreement,
+# explicit organization allowlist and an administrative role. Passing this
+# dependency permits inspection of a synthetic report, not production tenant
+# promotion or writes; the mutation-like routes below remain disabled.
 def scope(x_scec_organization_id:str|None=Header(default=None),actor:Principal|None=Depends(principal))->UUID:
     if os.getenv("SCEC_TENANT_CERT_STAGING_ENABLED","0")!="1":raise HTTPException(503,"Tenant authorization staging disabled")
     if not bound_mode():raise HTTPException(503,"Bound principal mode required")
