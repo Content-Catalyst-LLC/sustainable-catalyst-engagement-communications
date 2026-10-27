@@ -6,7 +6,7 @@ from .contracts.models import DomainDescriptor, HandoffEnvelope
 
 settings = Settings()
 validate_settings(settings)
-app = FastAPI(title='Sustainable Catalyst Engagement & Communications', version='11.2.0', description='Opt-in tenant-scoped contact and engagement persistence; legacy WordPress untouched.')
+app = FastAPI(title='Sustainable Catalyst Engagement & Communications', version='11.3.0', description='Opt-in tenant-scoped contact and engagement persistence; legacy WordPress untouched.')
 
 def require_service_token(authorization: str | None = Header(default=None)) -> None:
     from .identity import bound_mode, parse_token
@@ -20,7 +20,7 @@ def require_service_token(authorization: str | None = Header(default=None)) -> N
 
 @app.get('/health')
 def health():
-    return {'status':'ok', 'service':'engagement-communications', 'version':app.version, 'phase':'institutional-newsroom-staging'}
+    return {'status':'ok', 'service':'engagement-communications', 'version':app.version, 'phase':'newsletter-research-alerts-staging'}
 
 @app.get('/v1/capabilities', response_model=list[DomainDescriptor], dependencies=[Depends(require_service_token),Depends(require_permission('contracts:read'))])
 def capabilities():
@@ -223,3 +223,7 @@ app.include_router(feeds_router, dependencies=[Depends(require_service_token)])
 # v11.2 synthetic newsroom previews; no publication, writes, or delivery.
 from .institutional_newsroom_v1120 import router as newsroom_router
 app.include_router(newsroom_router, dependencies=[Depends(require_service_token)])
+
+# v11.3: synthetic-only, independently gated, nonpersistent alert previews.
+from .newsletter_alerts_v1130 import router as alerts_router
+app.include_router(alerts_router, dependencies=[Depends(require_service_token)])

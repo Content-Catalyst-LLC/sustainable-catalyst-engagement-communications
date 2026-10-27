@@ -1,3 +1,9 @@
+## 11.3.0 — Regenerated Newsletter & Research Alerts
+- Added bounded synthetic preference, consent/opt-out/suppression and offline alert composition contracts from issue #6.
+- Added deterministic tenant-bound segmentation and provenance; complete reviews cannot activate delivery or publication.
+- Added default-off privileged routes and adversarial validation, tenant, role and dangerous-action tests.
+- Protected WordPress/frontend/migrations unchanged; seven live gates still pending.
+
 ## 11.2.0 — Institutional Newsroom
 - Synthetic release-history and newsroom announcement manifests; fail-closed publication with deterministic provenance.
 - Preserves protected WordPress/public routes and all production acceptance restrictions.

@@ -7,7 +7,7 @@ ROOT=Path(__file__).resolve().parents[1]
 def check_source():
     data={}
     manifest=json.loads((ROOT/'RELEASE-MANIFEST.json').read_text())
-    data['release_manifest_890']=manifest.get('version') in ('8.9.0','9.0.0','9.1.0','9.2.0','9.3.0','9.4.0','9.5.0','9.6.0','9.7.0','9.8.0','9.9.0','10.0.0','10.1.0','10.2.0','10.3.0','10.4.0','10.5.0','10.6.0','10.7.0','10.8.0','10.9.0','11.0.0','11.1.0','11.2.0')
+    data['release_manifest_890']=manifest.get('version') in ('8.9.0','9.0.0','9.1.0','9.2.0','9.3.0','9.4.0','9.5.0','9.6.0','9.7.0','9.8.0','9.9.0','10.0.0','10.1.0','10.2.0','10.3.0','10.4.0','10.5.0','10.6.0','10.7.0','10.8.0','10.9.0','11.0.0','11.1.0','11.2.0','11.3.0')
     data['database_contract_unchanged']=manifest.get('schema_revision')=='850_001'
     data['writes_disabled_contract']=manifest.get('production_writes_default')=='disabled'
     data['independent_web_present']=all((ROOT/p).exists() for p in ('frontend/index.html','frontend/compose.yaml','frontend/nginx.conf'))
@@ -80,6 +80,17 @@ def check_source():
     data['v1120_seven_gates_pending']=preview['live_acceptance_gates_pending']==list(pending)
     data['v1120_wordpress_preserved']=data['v1110_five_wordpress_destinations_preserved']
     data['v1120_manifest_staging_only']=manifest.get('newsroom_mode')=='synthetic-editorial-release-history-preview-no-publication-transports-writes-or-federation'
+    from app.newsletter_alerts_v1130 import TOPICS, FREQUENCIES, CHANNELS, BLOCKED_ACTIONS as ALERT_BLOCKED, SubscriptionPreference, ResearchAlert, AlertPreview, compose
+    org = str(uuid4())
+    pref = SubscriptionPreference(synthetic=True, organization_id=org, subscriber_ref='synthetic:'+str(uuid4()), topics=['methods-data'], channels=['email'])
+    alert = ResearchAlert(synthetic=True, organization_id=org, object_ref='research:synthetic', revision='r1', headline='Synthetic review', summary='Synthetic source summary', source_refs=['source:synthetic'], topics=['methods-data'])
+    result = compose(AlertPreview(alert=alert, preferences=[pref]), org)
+    data['v1130_preference_contracts'] = len(TOPICS)==8 and FREQUENCIES==('immediate','daily','weekly','monthly') and CHANNELS==('email','in-app')
+    data['v1130_consent_optout_fail_closed'] = result['preview_eligible_count']==0 and pref.consent is False and pref.state=='opted-out'
+    data['v1130_no_production_side_effects'] = len(ALERT_BLOCKED)==11 and all(result[k] is False for k in ('publication_authorized','subscription_activation_enabled','outbound_communications_enabled','scheduled_delivery_enabled','persisted','source_fetch_performed','human_login_enabled','deletion_enabled','federation_enabled','token_exchange_enabled','production_writes_enabled','production_certified'))
+    data['v1130_seven_gates_pending'] = result['live_acceptance_gates_pending']==list(pending)
+    data['v1130_manifest_preview_only'] = manifest.get('newsletter_alerts_mode')=='offline-synthetic-preferences-segmentation-composition-no-subscribers-persistence-transport-or-publication'
+    data['v1130_wordpress_preserved'] = data['v1120_wordpress_preserved']
     return data
 
 def http_get(url):
