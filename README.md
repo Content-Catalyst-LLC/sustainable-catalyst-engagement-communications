@@ -1,3 +1,9 @@
+# Current release: v11.4.0 — Media Relations & Press Outreach
+
+Synthetic-only media outlet classifications, opaque spokesperson references, source/rights verification and embargo-aware press pitch previews. No real contact data, contact export, sending or public press publication. Default-off SCEC_MEDIA_STAGING_ENABLED, existing bound service/tenant/administrator gates. Source/revision and preview-as-of timestamps form deterministic evidence; embargo clearance and all reviews affect preview only. See deployment/V1140-DEPLOY.md. All seven live gates stay pending; production unchanged.
+
+---
+
 # Current release: v11.3.0 — Newsletter & Research Alerts
 
 Offline synthetic preferences, deterministic tenant-bound segmentation and source/revision fingerprints for reviewed alert composition. Eight topics, four frequency labels and email/in-app preview types; no real subscribers, contacts, persistence, sending, scheduling or public publication. The independent SCEC_ALERTS_STAGING_ENABLED flag defaults to 0. Enabled previews require existing bound service authentication, a matching allowlisted tenant and administrator role. All approvals affect preview eligibility only. Rejected payloads do not echo contact values.

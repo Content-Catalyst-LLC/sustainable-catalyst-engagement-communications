@@ -1,7 +1,7 @@
 {
   "project": "sustainable-catalyst-engagement-communications",
-  "version": "11.3.0",
-  "phase": "newsletter-research-alerts-staging",
+  "version": "11.4.0",
+  "phase": "media-relations-press-outreach-staging",
   "schema_revision": "850_001",
   "production_writes_default": "disabled",
   "frontend_mode": "read-only-no-records",
@@ -41,5 +41,6 @@
   "newsroom_mode": "synthetic-editorial-release-history-preview-no-publication-transports-writes-or-federation",
   "newsletter_alerts_mode": "offline-synthetic-preferences-segmentation-composition-no-subscribers-persistence-transport-or-publication",
   "subscription_activation_enabled": false,
-  "scheduled_delivery_enabled": false
+  "scheduled_delivery_enabled": false,
+  "media_relations_mode": "synthetic-classification-embargo-press-preview-no-contact-pii-or-delivery"
 }

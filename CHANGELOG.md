@@ -1,3 +1,8 @@
+## 11.4.0 — Media Relations & Press Outreach
+- Added synthetic outlet/spokesperson classification and embargo-aware reviewed press previews, suppression, source/rights checks and deterministic provenance.
+- Added shared internal offline-preview authorization/envelope helpers; no new service or transport.
+- Real contact fields, cross-tenant/duplicate fixtures, spoofed reviews and all delivery/export actions denied. Protected frontend/WordPress/migrations unchanged.
+
 ## 11.3.0 — Regenerated Newsletter & Research Alerts
 - Added bounded synthetic preference, consent/opt-out/suppression and offline alert composition contracts from issue #6.
 - Added deterministic tenant-bound segmentation and provenance; complete reviews cannot activate delivery or publication.
