@@ -1,3 +1,7 @@
+# v11.7.0 — Partnership and institutional routing previews
+
+Default-off synthetic, tenant-bound offline preview. No production activation. See RELEASE-MANIFEST-v11.7.0.md and deployment/V1170-DEPLOY.md.
+
 # v11.6.0 — Events and webinar previews
 
 Synthetic event metadata, timezone-aware schedules, reviewed speaker attribution, cancellation/update notices and offline ICS preview. No registration, calendar writes, invitations, publication or broadcasting. See RELEASE-MANIFEST-v11.6.0.md and deployment/V1160-DEPLOY.md.

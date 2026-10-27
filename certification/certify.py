@@ -7,7 +7,7 @@ ROOT=Path(__file__).resolve().parents[1]
 def check_source():
     data={}
     manifest=json.loads((ROOT/'RELEASE-MANIFEST.json').read_text())
-    data['release_manifest_890']=manifest.get('version') in ('8.9.0','9.0.0','9.1.0','9.2.0','9.3.0','9.4.0','9.5.0','9.6.0','9.7.0','9.8.0','9.9.0','10.0.0','10.1.0','10.2.0','10.3.0','10.4.0','10.5.0','10.6.0','10.7.0','10.8.0','10.9.0','11.0.0','11.1.0','11.2.0','11.3.0','11.4.0','11.5.0','11.6.0')
+    data['release_manifest_890']=manifest.get('version') in ('8.9.0','9.0.0','9.1.0','9.2.0','9.3.0','9.4.0','9.5.0','9.6.0','9.7.0','9.8.0','9.9.0','10.0.0','10.1.0','10.2.0','10.3.0','10.4.0','10.5.0','10.6.0','10.7.0','10.8.0','10.9.0','11.0.0','11.1.0','11.2.0','11.3.0','11.4.0','11.5.0','11.6.0','11.7.0')
     data['database_contract_unchanged']=manifest.get('schema_revision')=='850_001'
     data['writes_disabled_contract']=manifest.get('production_writes_default')=='disabled'
     data['independent_web_present']=all((ROOT/p).exists() for p in ('frontend/index.html','frontend/compose.yaml','frontend/nginx.conf'))
@@ -110,6 +110,13 @@ def check_source():
     data['v1160_unreviewed_calendar_withheld']=event_result['ics_preview'] is None
     data['v1160_no_registration_or_writes']=all(event_result[k] is False for k in ('production_certified','production_writes_enabled','actual_publication_enabled','invitations_enabled','calendar_writes_enabled','registration_capture_enabled','persisted'))
     data['v1160_gates_and_mode']=event_result['live_acceptance_gates_pending']==list(pending) and manifest.get('events_mode')=='offline-synthetic-event-calendar-preview-no-registration-or-invitations'
+    from app.partnerships_v1170 import Artifact, Partner, PartnerPackage, plan
+    artifact=Artifact(synthetic=True,organization_id=org,object_ref='object:fixture',revision='r1',object_kind='publication',source_refs=['source:fixture'])
+    partner=Partner(synthetic=True,organization_id=org,partner_ref='partner:fixture',institution_ref='institution:other',kind='academic',accepted_licenses=['cc-by'],allowed_classifications=['public'])
+    partner_result=plan(PartnerPackage(synthetic=True,organization_id=org,package_ref='package:fixture',revision='r1',institution_ref='institution:owner',artifacts=[artifact],partners=[partner]),org)
+    data['v1170_unreviewed_routing_denied']=partner_result['routing_decisions'][0]['eligible_for_synthetic_plan_only'] is False
+    data['v1170_no_export_or_federation']=all(partner_result[k] is False for k in ('production_certified','production_writes_enabled','data_exported','federation_authorized','partner_delivery_enabled','persisted'))
+    data['v1170_gates_and_mode']=partner_result['live_acceptance_gates_pending']==list(pending) and manifest.get('partnerships_mode')=='offline-synthetic-partner-routing-no-export-or-federation'
     return data
 
 def http_get(url):
