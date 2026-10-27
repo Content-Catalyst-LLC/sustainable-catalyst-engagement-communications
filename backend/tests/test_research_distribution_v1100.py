@@ -13,7 +13,7 @@ def item(**kwargs):
     data.update(kwargs)
     return DistributionPreview(**data)
 def test_app_version_and_registry():
-    assert app.version=='12.3.0'
+    assert app.version=='12.4.0'
     assert len(DISTRIBUTION_TARGETS)==6 and len(OBJECT_TYPES)==5
     assert len(REQUIRED_REVIEW)==6 and len(BLOCKED_ACTIONS)==7
 @pytest.mark.parametrize('target',DISTRIBUTION_TARGETS)
