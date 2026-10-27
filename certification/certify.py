@@ -7,7 +7,7 @@ ROOT=Path(__file__).resolve().parents[1]
 def check_source():
     data={}
     manifest=json.loads((ROOT/'RELEASE-MANIFEST.json').read_text())
-    data['release_manifest_890']=manifest.get('version') in ('8.9.0','9.0.0','9.1.0','9.2.0','9.3.0','9.4.0','9.5.0','9.6.0','9.7.0','9.8.0','9.9.0','10.0.0','10.1.0','10.2.0','10.3.0','10.4.0','10.5.0','10.6.0','10.7.0','10.8.0','10.9.0','11.0.0','11.1.0','11.2.0','11.3.0','11.4.0','11.5.0')
+    data['release_manifest_890']=manifest.get('version') in ('8.9.0','9.0.0','9.1.0','9.2.0','9.3.0','9.4.0','9.5.0','9.6.0','9.7.0','9.8.0','9.9.0','10.0.0','10.1.0','10.2.0','10.3.0','10.4.0','10.5.0','10.6.0','10.7.0','10.8.0','10.9.0','11.0.0','11.1.0','11.2.0','11.3.0','11.4.0','11.5.0','11.6.0')
     data['database_contract_unchanged']=manifest.get('schema_revision')=='850_001'
     data['writes_disabled_contract']=manifest.get('production_writes_default')=='disabled'
     data['independent_web_present']=all((ROOT/p).exists() for p in ('frontend/index.html','frontend/compose.yaml','frontend/nginx.conf'))
@@ -104,6 +104,12 @@ def check_source():
     data['v1150_missing_doi_not_invented']='DOI' not in citation['exports']['csl_json'] and 'identifier' not in citation['exports']['schema_org_jsonld']
     data['v1150_no_indexing_or_writes']=citation['indexing_registration_enabled'] is False and all(citation[k] is False for k in ('production_certified','production_writes_enabled','actual_publication_enabled','outbound_communications_enabled','persisted'))
     data['v1150_gates_and_mode']=citation['live_acceptance_gates_pending']==list(pending) and manifest.get('citation_discovery_mode')=='offline-synthetic-citation-exports-no-indexing-or-registration'
+    from app.events_v1160 import Event, Speaker, preview_event
+    event=Event(synthetic=True,organization_id=org,event_ref='event:synthetic',revision=0,kind='webinar',title='Synthetic event',description='Synthetic fixture',canonical_url='https://example.org/event',starts_at='2026-11-01T12:00:00Z',ends_at='2026-11-01T13:00:00Z',updated_at='2026-10-27T00:00:00Z',timezone_name='UTC',speakers=[Speaker(synthetic=True,organization_id=org,speaker_ref='synthetic:'+str(uuid4()),attribution='Synthetic Speaker')],source_refs=['source:fixture'])
+    event_result=preview_event(event,org)
+    data['v1160_unreviewed_calendar_withheld']=event_result['ics_preview'] is None
+    data['v1160_no_registration_or_writes']=all(event_result[k] is False for k in ('production_certified','production_writes_enabled','actual_publication_enabled','invitations_enabled','calendar_writes_enabled','registration_capture_enabled','persisted'))
+    data['v1160_gates_and_mode']=event_result['live_acceptance_gates_pending']==list(pending) and manifest.get('events_mode')=='offline-synthetic-event-calendar-preview-no-registration-or-invitations'
     return data
 
 def http_get(url):

@@ -61,4 +61,4 @@ def test_portal_disabled():
         r=c.post('/v1/institutional-newsroom/'+action)
         assert r.status_code in (401,403,503)
 def test_main_version():
-    assert app.version=='11.5.0'
+    assert app.version=='11.6.0'
