@@ -1,0 +1,15 @@
+# v12.2.0 — Multi-channel campaign composition
+
+Verified predecessor v12.1.0: `00593dcdbcc822f2e6ab2d88babf0e72352f220e`.
+
+Existing-service `/v1/campaign-composer/status` and POST `/preview` are default-off under `SCEC_CAMPAIGNS_STAGING_ENABLED=0`. Bound service identity, allowlisted tenant and administrator role are required; any dangerous flag denies access. All seven production gates remain pending.
+
+A synthetic campaign supplies validated v12.0 lineage, its exact envelope hash, an announcement evidence pointer, strict distribution and newsroom fixtures, selected topics and at most four channel types. Regenerate the actual v11.0 distribution manifest and v11.2 newsroom digest under the same tenant; require both to match lineage source digests, artifact/root revisions and exact provenance references. Restrict research-kind mappings to compatible research, methodology or dataset announcements. Reject altered facts, stale/wrong pointers, source mismatch, cross-tenant references and unexpected recipient/contact fields. This verifies supplied fixture consistency, not external truth, real consent or legal approval.
+
+Only approved-preview announcements with complete rights/editorial/source/privacy/institutional and distribution reviews can produce a bundle. Suppression or any incomplete review withholds every variation. Strict booleans prevent historical coercion from granting preview eligibility. Headline/summary use the shared safe text contract; summary is bounded at500 characters to fit every supported serializer.
+
+Supported variations: newsroom metadata, JSON Feed digest through the existing v11.1 serializer, research-alert metadata through the v11.3 typed contract, and a non-dispatching press brief. Every variation preserves source headline/summary, research revision and provenance. No new scientific claim, author, DOI, event time or spokesperson is inferred. The digest uses the supplied newsroom reference as an offline identity; no live feed URL or public serving is claimed. Press briefs do not grant embargo clearance or assign spokespeople. No subscriber preferences, recipient lists or matching/composition call selecting recipients is used.
+
+Normalized complete input fingerprints include evidence, source review metadata, topics, channel selection, campaign revision and suppression. Derived source hashes retain their historical meanings. Variations remain JSON data, not automatically rendered HTML or messages. Send, publish, subscribe, export-recipients, schedule, enqueue, activate, delete and federate routes remain503, including for fully reviewed administrators.
+
+Also clarifies V11-READINESS.md as a historical source snapshot: the owner confirmed separately performing GitHub merges. The agent has not merged or deployed. No changes to production, frontend, WordPress, migrations, database, credentials or dependencies. See deployment/V1220-DEPLOY.md. Full Mac/Contabo tests, preflight, protected16 hashes, complete ZIP/source checks, exact-commit loopback safety and shutdown must close before v12.3.

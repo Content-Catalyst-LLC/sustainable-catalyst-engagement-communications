@@ -7,7 +7,7 @@ ROOT=Path(__file__).resolve().parents[1]
 def check_source():
     data={}
     manifest=json.loads((ROOT/'RELEASE-MANIFEST.json').read_text())
-    data['release_manifest_890']=manifest.get('version') in ('8.9.0','9.0.0','9.1.0','9.2.0','9.3.0','9.4.0','9.5.0','9.6.0','9.7.0','9.8.0','9.9.0','10.0.0','10.1.0','10.2.0','10.3.0','10.4.0','10.5.0','10.6.0','10.7.0','10.8.0','10.9.0','11.0.0','11.1.0','11.2.0','11.3.0','11.4.0','11.5.0','11.6.0','11.7.0','11.8.0','11.9.0','12.0.0','12.1.0')
+    data['release_manifest_890']=manifest.get('version') in ('8.9.0','9.0.0','9.1.0','9.2.0','9.3.0','9.4.0','9.5.0','9.6.0','9.7.0','9.8.0','9.9.0','10.0.0','10.1.0','10.2.0','10.3.0','10.4.0','10.5.0','10.6.0','10.7.0','10.8.0','10.9.0','11.0.0','11.1.0','11.2.0','11.3.0','11.4.0','11.5.0','11.6.0','11.7.0','11.8.0','11.9.0','12.0.0','12.1.0','12.2.0')
     data['database_contract_unchanged']=manifest.get('schema_revision')=='850_001'
     data['writes_disabled_contract']=manifest.get('production_writes_default')=='disabled'
     data['independent_web_present']=all((ROOT/p).exists() for p in ('frontend/index.html','frontend/compose.yaml','frontend/nginx.conf'))
@@ -144,6 +144,16 @@ def check_source():
     data['v1210_missing_reviews_deny']=calendar['windows'][0]['eligible_for_plan_only'] is False
     data['v1210_no_calendar_or_writes']=all(calendar[k] is False for k in ('production_certified','production_writes_enabled','cron_enabled','calendar_writes_enabled','notifications_enabled','persisted'))
     data['v1210_gates_and_mode']=calendar['live_acceptance_gates_pending']==list(pending) and manifest.get('editorial_planning_mode')=='offline-evidence-bound-calendar-no-cron-or-writes'
+    from app.campaigns_v1220 import StrictEntry, StrictDistribution, Campaign, compose_campaign
+    entry=StrictEntry(announcement_ref=test.object_ref,revision=test.revision,kind='research-release',headline='Synthetic research headline',summary='Synthetic summary',canonical_url='https://example.org/research',updated_at='2026-10-27T00:00:00Z',source_refs=test.source_refs)
+    from app.institutional_newsroom_v1120 import assess as campaign_newsroom
+    source_news=campaign_newsroom(NewsroomPreview(newsroom_title='Synthetic newsroom',newsroom_url='https://example.org/news',entries=[entry]),org)
+    announcement=make_node(synthetic=True,organization_id=org,node_ref='node:announcement',kind='announcement',research_ref=test.object_ref,research_revision=test.revision,artifact_ref=entry.announcement_ref,artifact_revision=entry.revision,source_release='11.2.0',source_hash_kind='envelope',source_digest=source_news['sha256'],source_refs=tuple(entry.source_refs),parents=(EvidencePointer(synthetic=True,organization_id=org,node_ref=evidence.node_ref,evidence_sha256=evidence.evidence_sha256),))
+    campaign_object=CommunicationObject(synthetic=True,organization_id=org,communication_ref='communication:campaign',revision='r1',root_node_ref=evidence.node_ref,nodes=(evidence,announcement))
+    campaign_result=compose_campaign(Campaign(synthetic=True,organization_id=org,campaign_ref='campaign:fixture',revision='r1',communication=campaign_object,communication_sha256=preview_object(campaign_object,org)['sha256'],announcement_evidence=EvidencePointer(synthetic=True,organization_id=org,node_ref=announcement.node_ref,evidence_sha256=announcement.evidence_sha256),source_entry=entry,source_distribution=StrictDistribution(**test.model_dump()),newsroom_title='Synthetic newsroom',newsroom_url='https://example.org/news',channels=('newsroom','digest'),topics=('methods-data',)),org)
+    data['v1220_unreviewed_bundle_withheld']=campaign_result['variations']==[] and campaign_result['eligible_for_bundle_only'] is False
+    data['v1220_no_recipients_or_dispatch']=all(campaign_result[k] is False for k in ('production_certified','production_writes_enabled','recipient_collection_enabled','campaign_dispatch_enabled','recipient_selection_performed','persisted'))
+    data['v1220_gates_and_mode']=campaign_result['live_acceptance_gates_pending']==list(pending) and manifest.get('campaign_composer_mode')=='synthetic-source-regenerated-channel-bundles-no-recipients-or-dispatch'
     return data
 
 def http_get(url):

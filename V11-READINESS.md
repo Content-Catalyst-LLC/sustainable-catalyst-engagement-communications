@@ -1,3 +1,5 @@
+> Historical v11.9 source snapshot. The owner subsequently merged PR7–PR14 separately; remote main was observed at efc68fa358a1c56ccbbb0fd53bbea48d200f983e, with a tree identical to certified v12.0 source. This agent did not merge or deploy. Statements below about main remaining v11.2 or unmerged PRs describe the earlier snapshot. Exact-SHA test evidence remains valid.
+
 # v11 staging readiness and v12 interface handoff
 
 **Production NOT CERTIFIED.** This is an offline/source and isolated-staging program, not a live production acceptance program. Draft release branches are pushed for review; no PR is merged into main. Main remains the preserved v11.2 baseline. Five WordPress destinations, existing services, credentials, databases, Docker, proxies and public URLs are outside this program's changes.

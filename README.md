@@ -1,3 +1,7 @@
+# v12.2.0 — Evidence-derived multi-channel campaign bundles
+
+Default-off synthetic, tenant-bound offline preview. No production activation. See RELEASE-MANIFEST-v12.2.0.md and deployment/V1220-DEPLOY.md.
+
 # v12.1.0 — Evidence-bound editorial calendar simulation
 
 Default-off synthetic, tenant-bound offline preview. No production activation. See RELEASE-MANIFEST-v12.1.0.md and deployment/V1210-DEPLOY.md.
