@@ -16,10 +16,12 @@ git diff --check
 Compare frontend/, wordpress-bridge/, backend/alembic/ and backend/alembic.ini against baseline 61543658d111eac2993abc86206dc8a8479dc562 (15 historical protected files plus additional configuration). Verify every RELEASE-CHECKSUMS-v11.3.0.json entry and actual ZIP member. Review the diff, commit only release files, push normally, then record the actual SHA; never force-push.
 
 ## Contabo
-Inspect /opt/scec-v1130/repository and port 8842 before creating anything. If either is occupied, preserve and review it, never stop an unrelated process or overwrite a checkout. When absent, create /opt/scec-v1130 owned by the existing staging operator, clone the reviewed branch and checkout its exact SHA in detached mode. No production credential or migration is required.
+
+Owner-approved exception: catalystadmin cannot create new /opt folders without an administrator. The owner explicitly authorized the dedicated user-owned path below. No sudo, production Docker operation or privilege workaround is needed.
+Inspect /home/catalystadmin/scec-v1130/repository and port 8842 before creating anything. If either is occupied, preserve and review it, never stop an unrelated process or overwrite a checkout. When absent, create /home/catalystadmin/scec-v1130 owned by the existing staging operator, clone the reviewed branch and checkout its exact SHA in detached mode. No production credential or migration is required.
 
 ```sh
-cd /opt/scec-v1130/repository
+cd /home/catalystadmin/scec-v1130/repository
 python3 -m venv backend/.venv
 backend/.venv/bin/python -m pip install -r backend/requirements-lock-v1130.txt
 (cd backend && PYTHONPATH=. .venv/bin/python -m pytest -q -o addopts="")

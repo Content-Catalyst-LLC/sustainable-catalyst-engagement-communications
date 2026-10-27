@@ -16,8 +16,8 @@ import urllib.request
 
 def verify(root, expected_sha, version, phase, port, route):
     root = Path(root).resolve()
-    if not re.fullmatch(r'/opt/scec-v[0-9]+/repository', str(root)):
-        raise ValueError('Only isolated /opt/scec-vNNNN/repository checkouts are allowed')
+    if not re.fullmatch(r'(?:/opt|/home/catalystadmin)/scec-v[0-9]+/repository', str(root)):
+        raise ValueError('Only dedicated /opt or owner-approved catalystadmin home staging checkouts are allowed')
     if not 8838 <= port <= 8868 or not route.startswith('/v1/'):
         raise ValueError('Unexpected staging port or status route')
     actual = subprocess.check_output(['git','-C',str(root),'rev-parse','HEAD'], text=True).strip()

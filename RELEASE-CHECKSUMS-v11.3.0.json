@@ -162,7 +162,7 @@
     "deployment/V1100-DEPLOY.md": "6972912f89934541e6d8ce956673bf5efb9332082a1722b5007c79c995c3970a",
     "deployment/V1110-DEPLOY.md": "b98faecce233d8116543fb4183e1a647a2637d34e28e8faf12a52d0c39290d1b",
     "deployment/V1120-DEPLOY.md": "a1d0335a72fd68139560a887faecc47a0df8a5752442f228e9ad360e193d9ba9",
-    "deployment/V1130-DEPLOY.md": "172c834bb49464c78d00f62492e3f01122d3d95aab0a4ad843a5e537e17cf590",
+    "deployment/V1130-DEPLOY.md": "64d769bd2fb02a6c0f56bc74c3f5c9913f06ec26b40327b4d1e94840a49e9dce",
     "deployment/V810-DEPLOY.md": "84bc87a89ad637a5eb716ae5098d8b80824577ad5a046019490b765ae5bdd6cb",
     "deployment/V820-DEPLOY.md": "81b3ceb7adbaf11234d1dd5c403a4a9fe9a42ccb26b11a3011ac8d67cd101c95",
     "deployment/V830-DEPLOY.md": "3cd3831ed279e56ac99a5e44c67084265417f33990e418b0d34c53d08ca30a8c",
@@ -199,7 +199,7 @@
     "frontend/nginx.conf": "2ecd10b2877a3361a30c73c0b78e29a1b72836eb528c84361358b6517c2b371a",
     "schemas/handoff-envelope.schema.json": "874b45b135e47d0ec3779c738400a9ca32495186f6cc8b13393db87bab2b6341",
     "tools/package_release.py": "52aa66c42f0a8eebd6ccf8bbe398332d24e1d4191ca874eb96c2b752d102ebe8",
-    "tools/verify_staging.py": "defa414c10e1db01acff0f0a1f64ee4e15952aa2dcbfadf79c4565b9179aef20",
+    "tools/verify_staging.py": "ea630bcda4f934fb2307a36e7a3c3782f464a150837861f7984a946789cf94ec",
     "wordpress-bridge/README.md": "567cd56eb55222b6cbc228bc1c3f50c23e41f12b5048d47f85a51aa169427ba8",
     "wordpress-bridge/sustainable-catalyst-engagement-communications/assets/bridge.css": "f8034ca8b8e86d1f911314b31daa8c651586067727a9be4637edafe41c7c531c",
     "wordpress-bridge/sustainable-catalyst-engagement-communications/sustainable-catalyst-engagement-communications.php": "206f51e447109971b6cf059d0f2d30694340ba2bd5f2327d8d0b402c0da484eb"
