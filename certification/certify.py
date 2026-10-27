@@ -7,7 +7,7 @@ ROOT=Path(__file__).resolve().parents[1]
 def check_source():
     data={}
     manifest=json.loads((ROOT/'RELEASE-MANIFEST.json').read_text())
-    data['release_manifest_890']=manifest.get('version') in ('8.9.0','9.0.0','9.1.0','9.2.0','9.3.0','9.4.0','9.5.0','9.6.0','9.7.0','9.8.0','9.9.0','10.0.0','10.1.0','10.2.0','10.3.0','10.4.0','10.5.0','10.6.0','10.7.0','10.8.0','10.9.0','11.0.0','11.1.0','11.2.0','11.3.0','11.4.0','11.5.0','11.6.0','11.7.0','11.8.0','11.9.0','12.0.0')
+    data['release_manifest_890']=manifest.get('version') in ('8.9.0','9.0.0','9.1.0','9.2.0','9.3.0','9.4.0','9.5.0','9.6.0','9.7.0','9.8.0','9.9.0','10.0.0','10.1.0','10.2.0','10.3.0','10.4.0','10.5.0','10.6.0','10.7.0','10.8.0','10.9.0','11.0.0','11.1.0','11.2.0','11.3.0','11.4.0','11.5.0','11.6.0','11.7.0','11.8.0','11.9.0','12.0.0','12.1.0')
     data['database_contract_unchanged']=manifest.get('schema_revision')=='850_001'
     data['writes_disabled_contract']=manifest.get('production_writes_default')=='disabled'
     data['independent_web_present']=all((ROOT/p).exists() for p in ('frontend/index.html','frontend/compose.yaml','frontend/nginx.conf'))
@@ -136,6 +136,14 @@ def check_source():
     data['v1200_typed_hash_lineage']=canonical['object']['nodes'][0]['source_digest']==root_distribution['manifest_sha256'] and canonical['immutable_fixture_contract'] is True
     data['v1200_no_attestation_or_writes']=all(canonical[k] is False for k in ('production_certified','production_writes_enabled','source_digests_independently_verified','persisted'))
     data['v1200_gates_and_mode']=canonical['live_acceptance_gates_pending']==list(pending) and manifest.get('communication_objects_mode')=='frozen-synthetic-lineage-integrity-no-external-attestation-or-writes'
+    from app.editorial_planning_v1210 import LaunchWindow, EditorialPlan, simulate_plan
+    from app.communication_objects_v1200 import EvidencePointer
+    canonical_fixture=CommunicationObject(synthetic=True,organization_id=org,communication_ref='communication:fixture',revision='r1',root_node_ref=evidence.node_ref,nodes=(evidence,))
+    launch=LaunchWindow(synthetic=True,organization_id=org,window_ref='window:fixture',evidence=EvidencePointer(synthetic=True,organization_id=org,node_ref=evidence.node_ref,evidence_sha256=evidence.evidence_sha256),starts_at='2026-11-01T12:00:00Z',ends_at='2026-11-01T13:00:00Z',timezone_name='UTC')
+    calendar=simulate_plan(EditorialPlan(synthetic=True,organization_id=org,plan_ref='plan:fixture',revision='r1',communication=canonical_fixture,communication_sha256=canonical['sha256'],as_of='2026-10-27T00:00:00Z',windows=(launch,)),org)
+    data['v1210_missing_reviews_deny']=calendar['windows'][0]['eligible_for_plan_only'] is False
+    data['v1210_no_calendar_or_writes']=all(calendar[k] is False for k in ('production_certified','production_writes_enabled','cron_enabled','calendar_writes_enabled','notifications_enabled','persisted'))
+    data['v1210_gates_and_mode']=calendar['live_acceptance_gates_pending']==list(pending) and manifest.get('editorial_planning_mode')=='offline-evidence-bound-calendar-no-cron-or-writes'
     return data
 
 def http_get(url):

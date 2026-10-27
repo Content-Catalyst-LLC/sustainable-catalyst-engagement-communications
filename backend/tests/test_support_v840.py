@@ -8,7 +8,7 @@ from app.contracts.canonical import Case
 from app.contact_service import ALLOWED
 
 def test_health_v840():
- assert TestClient(app).get('/health').json()['version']=='12.0.0'
+ assert TestClient(app).get('/health').json()['version']=='12.1.0'
 
 def test_disabled_support_rejected():
  assert TestClient(app).get('/v1/support/cases').status_code in (401,503)
