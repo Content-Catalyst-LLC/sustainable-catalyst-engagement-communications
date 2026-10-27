@@ -28,4 +28,4 @@ def test_staging_default_closed(monkeypatch,path,method):
  monkeypatch.setenv("SCEC_TENANT_CERT_STAGING_ENABLED","0")
  resp=getattr(TestClient(app),method)("/v1/tenant-authorization/"+path)
  assert resp.status_code in (401,403,503)
-def test_health_version():assert TestClient(app).get("/health").json()["version"]=="11.3.0"
+def test_health_version():assert TestClient(app).get("/health").json()["version"]=="11.4.0"

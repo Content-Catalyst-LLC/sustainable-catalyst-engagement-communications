@@ -1,0 +1,7 @@
+# v11.4.0 — Media Relations & Press Outreach
+
+Predecessor: staging-certified v11.3.0 at 12f58a3ad3ac1779b0045f1cb36acdcdcc74a920. Synthetic-only outlet kinds academic/trade/general/policy/broadcast, opaque synthetic outlet and spokesperson IDs, bounded topic classifications and source/revision metadata. Strict boolean source, rights, spokesperson, institutional, editorial and privacy review flags; draft/review/denied or suppressed packages cannot show a pitch. Outlet suppression excludes that fixture. Timezone-aware as_of/embargo metadata is compared using the explicit fixture clock, never a scheduler. Future embargo keeps preview blocked even if every review is true.
+
+GET /v1/media-relations/status and POST /preview default off via SCEC_MEDIA_STAGING_ENABLED=0. Existing bound service identity, matching allowlisted tenant and administrator role are required. All dangerous flags deny access. Synthetic fixture-only helpers reuse existing FastAPI/Pydantic and identity interfaces; no service, database or transport is introduced.
+
+All eight send/publish/enqueue/schedule/export-contacts/activate/delete/federate operations remain unavailable. All seven live gates remain pending, all production booleans false. No PII fields, contact exports, actual press sending, cron, public feeds or production changes. Fifteen historical protected files plus Alembic config unchanged from predecessor. Source checksums and external archive evidence cover every source member; actual host test counts and reviewed SHA are external certification evidence.

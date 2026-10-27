@@ -7,7 +7,7 @@ ROOT=Path(__file__).resolve().parents[1]
 def check_source():
     data={}
     manifest=json.loads((ROOT/'RELEASE-MANIFEST.json').read_text())
-    data['release_manifest_890']=manifest.get('version') in ('8.9.0','9.0.0','9.1.0','9.2.0','9.3.0','9.4.0','9.5.0','9.6.0','9.7.0','9.8.0','9.9.0','10.0.0','10.1.0','10.2.0','10.3.0','10.4.0','10.5.0','10.6.0','10.7.0','10.8.0','10.9.0','11.0.0','11.1.0','11.2.0','11.3.0')
+    data['release_manifest_890']=manifest.get('version') in ('8.9.0','9.0.0','9.1.0','9.2.0','9.3.0','9.4.0','9.5.0','9.6.0','9.7.0','9.8.0','9.9.0','10.0.0','10.1.0','10.2.0','10.3.0','10.4.0','10.5.0','10.6.0','10.7.0','10.8.0','10.9.0','11.0.0','11.1.0','11.2.0','11.3.0','11.4.0')
     data['database_contract_unchanged']=manifest.get('schema_revision')=='850_001'
     data['writes_disabled_contract']=manifest.get('production_writes_default')=='disabled'
     data['independent_web_present']=all((ROOT/p).exists() for p in ('frontend/index.html','frontend/compose.yaml','frontend/nginx.conf'))
@@ -91,6 +91,13 @@ def check_source():
     data['v1130_seven_gates_pending'] = result['live_acceptance_gates_pending']==list(pending)
     data['v1130_manifest_preview_only'] = manifest.get('newsletter_alerts_mode')=='offline-synthetic-preferences-segmentation-composition-no-subscribers-persistence-transport-or-publication'
     data['v1130_wordpress_preserved'] = data['v1120_wordpress_preserved']
+    from app.media_relations_v1140 import OutletClassification, PressPackage, assess as press_assess
+    outlet=OutletClassification(synthetic=True,organization_id=org,outlet_ref='synthetic:'+str(uuid4()),kind='academic',topics=['methods'])
+    package=PressPackage(synthetic=True,organization_id=org,package_ref='press:synthetic',revision='r1',headline='Synthetic brief',pitch='Synthetic editorial pitch',source_refs=['source:synthetic'],spokesperson_ref='synthetic:'+str(uuid4()),as_of=datetime(2026,10,27,tzinfo=timezone.utc),outlets=[outlet])
+    press=press_assess(package,org)
+    data['v1140_reviews_fail_closed']=press['pitch_preview'] is None and not press['eligible_synthetic_outlets']
+    data['v1140_no_delivery']=all(press[k] is False for k in ('production_certified','production_writes_enabled','actual_publication_enabled','outbound_communications_enabled','scheduled_delivery_enabled','persisted','federation_enabled'))
+    data['v1140_gates_and_mode']=press['live_acceptance_gates_pending']==list(pending) and manifest.get('media_relations_mode')=='synthetic-classification-embargo-press-preview-no-contact-pii-or-delivery'
     return data
 
 def http_get(url):
