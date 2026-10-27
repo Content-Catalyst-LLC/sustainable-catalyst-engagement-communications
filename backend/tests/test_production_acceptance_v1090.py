@@ -11,7 +11,7 @@ def sample(**kw):
     return EvidencePreview(**data)
 def test_release_and_lineage():
     assert RELEASES==tuple(f'10.{i}.0' for i in range(10))
-    assert app.version=='12.3.0'
+    assert app.version=='12.4.0'
     assert set(PROTECTED)=={'contact','feedback','feature-suggestions','channel','support'}
 def test_all_seven_pending():
     report=acceptance_report(source_preflight_passed=True)

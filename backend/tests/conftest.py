@@ -29,3 +29,16 @@ def _campaign_fixture(entry_changes=None,distribution_changes=None,**changes):
 @pytest.fixture
 def campaign_factory():
     return _campaign_fixture
+
+
+@pytest.fixture
+def policy_factory(campaign_factory):
+    from app.campaigns_v1220 import compose_campaign
+    from app.rights_suppression_v1230 import PurposeRule, RightsRule, RetentionRule, PolicySimulation
+    def build(**changes):
+        campaign=campaign_factory(channels=('digest','research-alert'))
+        purpose=PurposeRule(purpose='research-alert',consent_state='granted',consent_reviewed=True,evidence_ref='consent:fixture',allowed_channels=('digest','research-alert'),valid_from='2026-10-26T00:00:00Z',valid_until='2026-10-28T00:00:00Z',**SYNTH)
+        rights=RightsRule(source_ref='source:fixture',policy_revision='r1',license='cc-by',rights_reviewed=True,attribution_reviewed=True,**SYNTH)
+        retention=RetentionRule(recorded_day='2026-10-01',retention_days=90,privacy_reviewed=True,**SYNTH)
+        return PolicySimulation(**{**dict(policy_ref='policy:fixture',revision='r1',campaign=campaign,campaign_sha256=compose_campaign(campaign,ORG)['sha256'],as_of='2026-10-27T00:00:00Z',purpose_rule=purpose,rights=(rights,),retention=retention,classification='public',embargo_reviewed=True,**SYNTH),**changes})
+    return build
