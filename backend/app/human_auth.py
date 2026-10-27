@@ -129,6 +129,11 @@ def login():
     return response
 
 
+# Complete OIDC authorization-code/PKCE login after matching the flow cookie
+# and stored state, then issue a short-lived local session with separate CSRF
+# material. This consumes the stored flow and writes a session; provider or
+# state failures return 401. Same-origin proxy/cookie behavior must still be
+# verified in the deployed environment.
 @router.get('/callback')
 def callback(request:Request, code:str='', state:str='', error:str=''):
     cfg=config()

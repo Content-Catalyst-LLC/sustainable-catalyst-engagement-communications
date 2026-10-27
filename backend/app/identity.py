@@ -52,6 +52,10 @@ def mint_token(*, subject, organization_id, roles, expires_at, secret):
     sig=_encode(hmac.new(secret.encode(),raw.encode(),hashlib.sha256).digest())
     return raw+'.'+sig
 
+# Verify the bounded, signed engagement principal token before accepting its
+# organization and roles. Invalid signature, audience, expiry or shape returns
+# HTTP 401. The legacy identity mode bypasses this parser elsewhere; a token
+# check here is not proof that every route runs in bound mode.
 def parse_token(token: str, *, now=None):
     try:
         if len(token)>8192:raise ValueError()
