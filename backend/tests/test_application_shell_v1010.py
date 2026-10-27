@@ -33,4 +33,4 @@ def test_all_mutations_are_denied_in_default_mode(monkeypatch):
 
 def test_release_state():
     r=TestClient(app).get('/health')
-    assert r.status_code==200 and r.json()['version']=='11.4.0'
+    assert r.status_code==200 and r.json()['version']=='11.5.0'
