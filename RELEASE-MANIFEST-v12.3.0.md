@@ -1,0 +1,15 @@
+# v12.3.0 — Consent, rights and suppression simulation
+
+Verified predecessor v12.2.0: `e43bbc0f4ed9db33c81095f608bb925e738b90c8`.
+
+Default-off `SCEC_POLICY_STAGING_ENABLED=0`; existing-service `/v1/communications-policy/status` and POST `/preview` require bound service identity, allowlisted tenant and administrator role. Every dangerous flag denies access; all seven live production gates remain pending.
+
+A synthetic policy contains a validated v12.2 campaign and exact bundle hash, purpose/channel metadata, declared consent fixture state and evidence reference, finite consent validity, source-specific licence/review rules, retention metadata, classification, embargo review and suppression. Missing consent, validity, rights, attribution, permission or retention metadata denies previews. A stale bundle, duplicate/unregistered rights source or cross-tenant nested fixture rejects the contract. No subscriber identity, recipient list or actual consent record is admitted.
+
+Reuse the existing v9.7 metadata-only governance inspection for future collection dates, retention expiry, missing dates/duration, consent status and deletion holds. Dates are evaluated at UTC day precision; consent validity and embargo comparisons use UTC instants, including DST ambiguity. All times and as-of are caller-supplied; there is no scheduler or policy enforcement worker.
+
+Purpose limits: research-alert supports digest/research-alert; institutional-update supports newsroom/digest; press-information supports press-brief. The purpose rule must also explicitly list each allowed channel. Unknown/restricted licences deny, all sources require rights/attribution review, and author-owned/permission-required fixtures require explicit permission documentation. Nonpublic classification denies this bounded public-channel simulation. Existing campaign suppression/review denials cannot be overridden. Eligible variations are filtered from the actual evidence-derived campaign; no new content or recipient is generated.
+
+These are declared synthetic policy facts, not verified consent, legal permission, licence-compliance certification or a binding retention policy. A reference and matching hash do not attest external documents. Legal determination, consent verification/mutation, erasure authority, actual deletion and authorization to deliver all remain false, even for eligible previews. No production record is retained or removed. Grant-consent, subscribe, delete-records, send, publish, activate, federate and export-identities routes remain503.
+
+Complete normalized policy facts and the campaign digest bind the evidence envelope. Strict booleans and retention integers reject coercion. Shared test-only synthetic campaign fixtures avoid real credentials and recipients; production modules and historical contracts remain intact. No new dependencies, database, frontend, WordPress, migration, credential or production changes. See deployment/V1230-DEPLOY.md. Full Mac/Contabo regression, preflight, protected16 hashes, complete ZIP/source checks and exact-SHA loopback/shutdown evidence must close before v12.4.
