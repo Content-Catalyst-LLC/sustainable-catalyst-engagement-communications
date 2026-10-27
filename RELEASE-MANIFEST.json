@@ -1,7 +1,7 @@
 {
   "project": "sustainable-catalyst-engagement-communications",
-  "version": "11.7.0",
-  "phase": "partnerships-institutional-distribution-staging",
+  "version": "11.8.0",
+  "phase": "embeds-distribution-api-staging",
   "schema_revision": "850_001",
   "production_writes_default": "disabled",
   "frontend_mode": "read-only-no-records",
@@ -45,5 +45,6 @@
   "media_relations_mode": "synthetic-classification-embargo-press-preview-no-contact-pii-or-delivery",
   "citation_discovery_mode": "offline-synthetic-citation-exports-no-indexing-or-registration",
   "events_mode": "offline-synthetic-event-calendar-preview-no-registration-or-invitations",
-  "partnerships_mode": "offline-synthetic-partner-routing-no-export-or-federation"
+  "partnerships_mode": "offline-synthetic-partner-routing-no-export-or-federation",
+  "embeds_mode": "offline-versioned-synthetic-embed-contract-no-public-serving-or-cors"
 }
