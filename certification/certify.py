@@ -7,7 +7,7 @@ ROOT=Path(__file__).resolve().parents[1]
 def check_source():
     data={}
     manifest=json.loads((ROOT/'RELEASE-MANIFEST.json').read_text())
-    data['release_manifest_890']=manifest.get('version') in ('8.9.0','9.0.0','9.1.0','9.2.0','9.3.0','9.4.0','9.5.0','9.6.0','9.7.0','9.8.0','9.9.0','10.0.0','10.1.0','10.2.0','10.3.0','10.4.0','10.5.0','10.6.0','10.7.0','10.8.0','10.9.0','11.0.0','11.1.0','11.2.0','11.3.0','11.4.0','11.5.0','11.6.0','11.7.0','11.8.0','11.9.0')
+    data['release_manifest_890']=manifest.get('version') in ('8.9.0','9.0.0','9.1.0','9.2.0','9.3.0','9.4.0','9.5.0','9.6.0','9.7.0','9.8.0','9.9.0','10.0.0','10.1.0','10.2.0','10.3.0','10.4.0','10.5.0','10.6.0','10.7.0','10.8.0','10.9.0','11.0.0','11.1.0','11.2.0','11.3.0','11.4.0','11.5.0','11.6.0','11.7.0','11.8.0','11.9.0','12.0.0')
     data['database_contract_unchanged']=manifest.get('schema_revision')=='850_001'
     data['writes_disabled_contract']=manifest.get('production_writes_default')=='disabled'
     data['independent_web_present']=all((ROOT/p).exists() for p in ('frontend/index.html','frontend/compose.yaml','frontend/nginx.conf'))
@@ -129,6 +129,13 @@ def check_source():
     data['v1190_small_cohort_suppressed']=audience['rows'] is None and audience['suppression_applied'] is True
     data['v1190_no_tracking_or_writes']=all(audience[k] is False for k in ('production_certified','production_writes_enabled','tracking_enabled','identity_export_enabled','persisted'))
     data['v1190_gates_and_mode']=audience['live_acceptance_gates_pending']==list(pending) and manifest.get('audience_mode')=='offline-synthetic-deduplicated-suppressed-aggregate-no-tracking'
+    from app.communication_objects_v1200 import make_node, CommunicationObject, preview_object
+    root_distribution=distribution_preview(test,org)
+    evidence=make_node(synthetic=True,organization_id=org,node_ref='node:research',kind='research',research_ref=test.object_ref,research_revision=test.revision,artifact_ref=test.object_ref,artifact_revision=test.revision,source_release='11.0.0',source_hash_kind='source-manifest',source_digest=root_distribution['manifest_sha256'],source_refs=tuple(test.source_refs))
+    canonical=preview_object(CommunicationObject(synthetic=True,organization_id=org,communication_ref='communication:fixture',revision='r1',root_node_ref=evidence.node_ref,nodes=(evidence,)),org)
+    data['v1200_typed_hash_lineage']=canonical['object']['nodes'][0]['source_digest']==root_distribution['manifest_sha256'] and canonical['immutable_fixture_contract'] is True
+    data['v1200_no_attestation_or_writes']=all(canonical[k] is False for k in ('production_certified','production_writes_enabled','source_digests_independently_verified','persisted'))
+    data['v1200_gates_and_mode']=canonical['live_acceptance_gates_pending']==list(pending) and manifest.get('communication_objects_mode')=='frozen-synthetic-lineage-integrity-no-external-attestation-or-writes'
     return data
 
 def http_get(url):
