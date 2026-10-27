@@ -1,3 +1,7 @@
+# v11.5.0 — Academic citation and discovery previews
+
+Synthetic metadata exports: BibTeX, RIS, CSL-JSON and schema.org JSON-LD. No DOI invention, identifier lookup, indexing registration or publication. See RELEASE-MANIFEST-v11.5.0.md and deployment/V1150-DEPLOY.md.
+
 # Current release: v11.4.0 — Media Relations & Press Outreach
 
 Synthetic-only media outlet classifications, opaque spokesperson references, source/rights verification and embargo-aware press pitch previews. No real contact data, contact export, sending or public press publication. Default-off SCEC_MEDIA_STAGING_ENABLED, existing bound service/tenant/administrator gates. Source/revision and preview-as-of timestamps form deterministic evidence; embargo clearance and all reviews affect preview only. See deployment/V1140-DEPLOY.md. All seven live gates stay pending; production unchanged.

@@ -1,3 +1,7 @@
+# v11.5.0 — Academic citation and discovery previews
+
+Synthetic metadata exports: BibTeX, RIS, CSL-JSON and schema.org JSON-LD. No DOI invention, identifier lookup, indexing registration or publication. See RELEASE-MANIFEST-v11.5.0.md and deployment/V1150-DEPLOY.md.
+
 ## 11.4.0 — Media Relations & Press Outreach
 - Added synthetic outlet/spokesperson classification and embargo-aware reviewed press previews, suppression, source/rights checks and deterministic provenance.
 - Added shared internal offline-preview authorization/envelope helpers; no new service or transport.
