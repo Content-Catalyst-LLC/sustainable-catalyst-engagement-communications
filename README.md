@@ -1,3 +1,11 @@
+# Current release: v11.3.0 — Newsletter & Research Alerts
+
+Offline synthetic preferences, deterministic tenant-bound segmentation and source/revision fingerprints for reviewed alert composition. Eight topics, four frequency labels and email/in-app preview types; no real subscribers, contacts, persistence, sending, scheduling or public publication. The independent SCEC_ALERTS_STAGING_ENABLED flag defaults to 0. Enabled previews require existing bound service authentication, a matching allowlisted tenant and administrator role. All approvals affect preview eligibility only. Rejected payloads do not echo contact values.
+
+See deployment/V1130-DEPLOY.md and RELEASE-MANIFEST-v11.3.0.md. Five WordPress destinations, frontend and migrations remain unchanged; all seven production gates remain pending. Historical documentation below is not production authorization.
+
+---
+
 # Current release: v10.1.0 — Unified Application Shell & Navigation
 Read-only standalone UI; no network calls, persistence or real identity federation. Production certification pending. See `deployment/V1010-DEPLOY.md`.
 
