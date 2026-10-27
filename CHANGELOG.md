@@ -1,3 +1,7 @@
+# v12.1.0 — Evidence-bound editorial calendar simulation
+
+Default-off synthetic, tenant-bound offline preview. No production activation. See RELEASE-MANIFEST-v12.1.0.md and deployment/V1210-DEPLOY.md.
+
 # v12.0.0 — Unified communication object lineage contracts
 
 Default-off synthetic, tenant-bound offline preview. No production activation. See RELEASE-MANIFEST-v12.0.0.md and deployment/V1200-DEPLOY.md.
