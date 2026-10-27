@@ -61,7 +61,7 @@ def headers(organization=ORG,roles=('administrator',),expiry=None):
 def test_contract_registry_and_current_health():
     assert len(TOPICS)==8 and len(STATES)==4
     assert TestClient(app).get('/health').json()=={'status':'ok','service':'engagement-communications',
-          'version':'11.5.0','phase':'academic-citation-discovery-staging'}
+          'version':'11.6.0','phase':'events-webinar-distribution-staging'}
 
 
 @pytest.mark.parametrize('topic',list(TOPICS))
