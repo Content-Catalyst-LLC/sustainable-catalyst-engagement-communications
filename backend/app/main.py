@@ -6,7 +6,7 @@ from .contracts.models import DomainDescriptor, HandoffEnvelope
 
 settings = Settings()
 validate_settings(settings)
-app = FastAPI(title='Sustainable Catalyst Engagement & Communications', version='12.4.0', description='Opt-in tenant-scoped contact and engagement persistence; legacy WordPress untouched.')
+app = FastAPI(title='Sustainable Catalyst Engagement & Communications', version='12.5.0', description='Opt-in tenant-scoped contact and engagement persistence; legacy WordPress untouched.')
 
 def require_service_token(authorization: str | None = Header(default=None)) -> None:
     from .identity import bound_mode, parse_token
@@ -20,7 +20,7 @@ def require_service_token(authorization: str | None = Header(default=None)) -> N
 
 @app.get('/health')
 def health():
-    return {'status':'ok', 'service':'engagement-communications', 'version':app.version, 'phase':'editorial-separation-of-duties-staging'}
+    return {'status':'ok', 'service':'engagement-communications', 'version':app.version, 'phase':'institutional-templates-brand-staging'}
 
 @app.get('/v1/capabilities', response_model=list[DomainDescriptor], dependencies=[Depends(require_service_token),Depends(require_permission('contracts:read'))])
 def capabilities():
@@ -263,3 +263,6 @@ app.include_router(policy_router, dependencies=[Depends(require_service_token)])
 
 from .editorial_workflows_v1240 import router as workflows_router
 app.include_router(workflows_router, dependencies=[Depends(require_service_token)])
+
+from .templates_v1250 import router as templates_router
+app.include_router(templates_router, dependencies=[Depends(require_service_token)])

@@ -42,3 +42,15 @@ def policy_factory(campaign_factory):
         retention=RetentionRule(recorded_day='2026-10-01',retention_days=90,privacy_reviewed=True,**SYNTH)
         return PolicySimulation(**{**dict(policy_ref='policy:fixture',revision='r1',campaign=campaign,campaign_sha256=compose_campaign(campaign,ORG)['sha256'],as_of='2026-10-27T00:00:00Z',purpose_rule=purpose,rights=(rights,),retention=retention,classification='public',embargo_reviewed=True,**SYNTH),**changes})
     return build
+
+
+@pytest.fixture
+def workflow_factory(policy_factory):
+    from uuid import UUID
+    from app.rights_suppression_v1230 import simulate_policy
+    from app.editorial_workflows_v1240 import make_decision, ReviewWorkflow, ROLES
+    def build(policy=None,**changes):
+        policy=policy or policy_factory();digest=simulate_policy(policy,ORG)['sha256']
+        decisions=tuple(make_decision(decision_ref='decision:'+role,reviewer_ref='synthetic:'+str(UUID(int=20+i)),role=role,outcome='approve',subject_sha256=digest,subject_revision=policy.revision,decided_at=policy.as_of,reason_code='approved-synthetic',**SYNTH) for i,role in enumerate(ROLES))
+        return ReviewWorkflow(**{**dict(workflow_ref='workflow:fixture',revision='r1',author_ref='synthetic:'+str(UUID(int=10)),policy=policy,policy_sha256=digest,as_of=policy.as_of,decisions=decisions,**SYNTH),**changes})
+    return build

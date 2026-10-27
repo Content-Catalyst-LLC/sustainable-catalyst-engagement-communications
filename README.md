@@ -1,3 +1,7 @@
+# v12.5.0 — Evidence-bound institutional template previews
+
+Default-off synthetic, tenant-bound offline preview. No production activation. See RELEASE-MANIFEST-v12.5.0.md and deployment/V1250-DEPLOY.md.
+
 # v12.4.0 — Editorial review and separation-of-duties simulation
 
 Default-off synthetic, tenant-bound offline preview. No production activation. See RELEASE-MANIFEST-v12.4.0.md and deployment/V1240-DEPLOY.md.
