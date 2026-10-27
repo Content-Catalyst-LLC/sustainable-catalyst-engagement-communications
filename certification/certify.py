@@ -7,7 +7,7 @@ ROOT=Path(__file__).resolve().parents[1]
 def check_source():
     data={}
     manifest=json.loads((ROOT/'RELEASE-MANIFEST.json').read_text())
-    data['release_manifest_890']=manifest.get('version') in ('8.9.0','9.0.0','9.1.0','9.2.0','9.3.0','9.4.0','9.5.0','9.6.0','9.7.0','9.8.0','9.9.0','10.0.0','10.1.0','10.2.0','10.3.0','10.4.0','10.5.0','10.6.0','10.7.0','10.8.0','10.9.0','11.0.0','11.1.0','11.2.0','11.3.0','11.4.0','11.5.0','11.6.0','11.7.0','11.8.0')
+    data['release_manifest_890']=manifest.get('version') in ('8.9.0','9.0.0','9.1.0','9.2.0','9.3.0','9.4.0','9.5.0','9.6.0','9.7.0','9.8.0','9.9.0','10.0.0','10.1.0','10.2.0','10.3.0','10.4.0','10.5.0','10.6.0','10.7.0','10.8.0','10.9.0','11.0.0','11.1.0','11.2.0','11.3.0','11.4.0','11.5.0','11.6.0','11.7.0','11.8.0','11.9.0')
     data['database_contract_unchanged']=manifest.get('schema_revision')=='850_001'
     data['writes_disabled_contract']=manifest.get('production_writes_default')=='disabled'
     data['independent_web_present']=all((ROOT/p).exists() for p in ('frontend/index.html','frontend/compose.yaml','frontend/nginx.conf'))
@@ -123,6 +123,12 @@ def check_source():
     data['v1180_unreviewed_embed_withheld']=embed_result['content'] is None and embed_result['html_fragment_preview'] is None
     data['v1180_no_public_serving_or_writes']=all(embed_result[k] is False for k in ('production_certified','production_writes_enabled','public_embed_serving_enabled','cors_enabled','remote_resources_enabled','persisted'))
     data['v1180_gates_and_mode']=embed_result['live_acceptance_gates_pending']==list(pending) and manifest.get('embeds_mode')=='offline-versioned-synthetic-embed-contract-no-public-serving-or-cors'
+    from app.audience_v1190 import AudienceEvent, MetricSource, AudienceBatch, aggregate_audience
+    metric=AudienceEvent(synthetic=True,organization_id=org,event_ref='synthetic:'+str(uuid4()),reader_ref='synthetic:'+str(uuid4()),object_ref='object:fixture',revision='r1',channel='embed',kind='view',occurred_day='2026-10-27',source_ref='source:fixture')
+    audience=aggregate_audience(AudienceBatch(synthetic=True,organization_id=org,events=[metric],sources=[MetricSource(synthetic=True,organization_id=org,source_ref='source:fixture',edition='fixture-r1')]),org)
+    data['v1190_small_cohort_suppressed']=audience['rows'] is None and audience['suppression_applied'] is True
+    data['v1190_no_tracking_or_writes']=all(audience[k] is False for k in ('production_certified','production_writes_enabled','tracking_enabled','identity_export_enabled','persisted'))
+    data['v1190_gates_and_mode']=audience['live_acceptance_gates_pending']==list(pending) and manifest.get('audience_mode')=='offline-synthetic-deduplicated-suppressed-aggregate-no-tracking'
     return data
 
 def http_get(url):

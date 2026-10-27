@@ -6,7 +6,7 @@ from .contracts.models import DomainDescriptor, HandoffEnvelope
 
 settings = Settings()
 validate_settings(settings)
-app = FastAPI(title='Sustainable Catalyst Engagement & Communications', version='11.8.0', description='Opt-in tenant-scoped contact and engagement persistence; legacy WordPress untouched.')
+app = FastAPI(title='Sustainable Catalyst Engagement & Communications', version='11.9.0', description='Opt-in tenant-scoped contact and engagement persistence; legacy WordPress untouched.')
 
 def require_service_token(authorization: str | None = Header(default=None)) -> None:
     from .identity import bound_mode, parse_token
@@ -20,7 +20,7 @@ def require_service_token(authorization: str | None = Header(default=None)) -> N
 
 @app.get('/health')
 def health():
-    return {'status':'ok', 'service':'engagement-communications', 'version':app.version, 'phase':'embeds-distribution-api-staging'}
+    return {'status':'ok', 'service':'engagement-communications', 'version':app.version, 'phase':'audience-analytics-assurance-staging'}
 
 @app.get('/v1/capabilities', response_model=list[DomainDescriptor], dependencies=[Depends(require_service_token),Depends(require_permission('contracts:read'))])
 def capabilities():
@@ -245,3 +245,6 @@ install_embed_headers(app)
 
 from .embeds_v1180 import router as embeds_router
 app.include_router(embeds_router, dependencies=[Depends(require_service_token)])
+
+from .audience_v1190 import router as audience_router
+app.include_router(audience_router, dependencies=[Depends(require_service_token)])

@@ -1,3 +1,7 @@
+# v11.9.0 — Synthetic audience aggregates and v11 integration assurance
+
+Default-off synthetic, tenant-bound offline preview. No production activation. See RELEASE-MANIFEST-v11.9.0.md and deployment/V1190-DEPLOY.md.
+
 # v11.8.0 — Read-only embed and distribution API contracts
 
 Default-off synthetic, tenant-bound offline preview. No production activation. See RELEASE-MANIFEST-v11.8.0.md and deployment/V1180-DEPLOY.md.
