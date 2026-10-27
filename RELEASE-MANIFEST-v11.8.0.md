@@ -1,0 +1,15 @@
+# v11.8.0 — Read-only embed and distribution API contracts
+
+Baseline v11.7.0: `74bfb048570f9d26411091ede2340e5a1cd657af`.
+
+Authenticated existing-service `/v1/research-embeds/status` and POST `/preview` use default-off `SCEC_EMBEDS_STAGING_ENABLED=0`, bound service identity, allowlisted tenant and administrator role. All dangerous flags deny access; seven production gates remain pending. No public HTML-serving endpoint, CORS activation, remote fetch, browser integration, persistent cache or distribution transport is added.
+
+Schema `scec.distribution-preview/1` contains strict synthetic title/summary, object revision, canonical HTTPS reference, provenance, timestamps, reviews and content status. Extra fields, unsafe URLs, control characters, HTML input and cross-tenant requests fail closed. Corrected/retracted/withdrawn objects require a notice with a registered source reference. Suppression, withdrawal/retraction, expiry, future-dated input or incomplete rights/editorial/privacy/distribution review withholds both content and markup. Input and normalized origin-policy fingerprints preserve evidence without echoing suppressed title or summary.
+
+The operator sets `SCEC_EMBED_ALLOWED_ORIGINS` to at most ten exact canonical HTTPS origins. Empty or invalid policy denies preview requests. Payload origins cannot grant themselves access; suffix/prefix matching, wildcards, paths, userinfo and ports are forbidden. A supplied Origin header must match the requested allowlisted origin. This is a preview policy check, not CORS authorization or an authentication substitute; origin ownership is not verified.
+
+Escaped HTML fragments contain only fixed article/text/link markup. They are returned as JSON string data, never served as a document or inserted into a browser by this service. JSON is not safe to inline into an HTML script element. Consumers must retain provenance and notices. The preview specifies restrictive future HTML response headers: no resources, scripts, forms or base URL, sandbox without privileges, exact frame ancestor and private no-store caching. [W3C CSP](https://www.w3.org/TR/CSP3/) frame-ancestor and sandbox policies must be delivered in an actual HTTP header by any separately reviewed future renderer; the string contract does not activate or demonstrate browser enforcement.
+
+Actual API responses under this module prefix, including handled 401/403/404/422/503 errors, have private no-store/no-cache, nosniff, no-referrer, DENY framing and a deny-all CSP. No Access-Control-Allow-Origin or ETag is emitted. Historical routes are unaffected. Publish, serve-public, enable-cors, activate, send, federate and delete remain503, including for reviewed administrators.
+
+No frontend, WordPress, historical migrations, database or new dependencies. deployment/V1180-DEPLOY.md describes fresh-environment and isolated-loopback checks. v11.9 is gated on full Mac/Contabo regression, preflight, protected-file hashes, exact-commit HTTP/shutdown evidence and complete archive verification. This is source/staging certification, not live embed/browser or production certification.

@@ -1,3 +1,7 @@
+# v11.8.0 — Read-only embed and distribution API contracts
+
+Default-off synthetic, tenant-bound offline preview. No production activation. See RELEASE-MANIFEST-v11.8.0.md and deployment/V1180-DEPLOY.md.
+
 # v11.7.0 — Partnership and institutional routing previews
 
 Default-off synthetic, tenant-bound offline preview. No production activation. See RELEASE-MANIFEST-v11.7.0.md and deployment/V1170-DEPLOY.md.

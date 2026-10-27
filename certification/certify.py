@@ -7,7 +7,7 @@ ROOT=Path(__file__).resolve().parents[1]
 def check_source():
     data={}
     manifest=json.loads((ROOT/'RELEASE-MANIFEST.json').read_text())
-    data['release_manifest_890']=manifest.get('version') in ('8.9.0','9.0.0','9.1.0','9.2.0','9.3.0','9.4.0','9.5.0','9.6.0','9.7.0','9.8.0','9.9.0','10.0.0','10.1.0','10.2.0','10.3.0','10.4.0','10.5.0','10.6.0','10.7.0','10.8.0','10.9.0','11.0.0','11.1.0','11.2.0','11.3.0','11.4.0','11.5.0','11.6.0','11.7.0')
+    data['release_manifest_890']=manifest.get('version') in ('8.9.0','9.0.0','9.1.0','9.2.0','9.3.0','9.4.0','9.5.0','9.6.0','9.7.0','9.8.0','9.9.0','10.0.0','10.1.0','10.2.0','10.3.0','10.4.0','10.5.0','10.6.0','10.7.0','10.8.0','10.9.0','11.0.0','11.1.0','11.2.0','11.3.0','11.4.0','11.5.0','11.6.0','11.7.0','11.8.0')
     data['database_contract_unchanged']=manifest.get('schema_revision')=='850_001'
     data['writes_disabled_contract']=manifest.get('production_writes_default')=='disabled'
     data['independent_web_present']=all((ROOT/p).exists() for p in ('frontend/index.html','frontend/compose.yaml','frontend/nginx.conf'))
@@ -117,6 +117,12 @@ def check_source():
     data['v1170_unreviewed_routing_denied']=partner_result['routing_decisions'][0]['eligible_for_synthetic_plan_only'] is False
     data['v1170_no_export_or_federation']=all(partner_result[k] is False for k in ('production_certified','production_writes_enabled','data_exported','federation_authorized','partner_delivery_enabled','persisted'))
     data['v1170_gates_and_mode']=partner_result['live_acceptance_gates_pending']==list(pending) and manifest.get('partnerships_mode')=='offline-synthetic-partner-routing-no-export-or-federation'
+    from app.embeds_v1180 import Embed, render_embed
+    embed=Embed(synthetic=True,organization_id=org,object_ref='embed:fixture',revision='r1',title='Synthetic title',summary='Synthetic summary',canonical_url='https://example.org/source',requested_origin='https://example.org',source_refs=['source:fixture'],updated_at='2026-10-26T00:00:00Z',expires_at='2026-10-28T00:00:00Z',as_of='2026-10-27T00:00:00Z')
+    embed_result=render_embed(embed,org,['https://example.org'])
+    data['v1180_unreviewed_embed_withheld']=embed_result['content'] is None and embed_result['html_fragment_preview'] is None
+    data['v1180_no_public_serving_or_writes']=all(embed_result[k] is False for k in ('production_certified','production_writes_enabled','public_embed_serving_enabled','cors_enabled','remote_resources_enabled','persisted'))
+    data['v1180_gates_and_mode']=embed_result['live_acceptance_gates_pending']==list(pending) and manifest.get('embeds_mode')=='offline-versioned-synthetic-embed-contract-no-public-serving-or-cors'
     return data
 
 def http_get(url):
