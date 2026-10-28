@@ -1,0 +1,68 @@
+# Coordinated backup and rollback proposal — Issue #15
+
+2026-10-28. **Not executed; production recovery gate remains open.** No production backup, credential copy, writer pause, restart, restore, proxy change or activation has been performed. Synthetic fixture restoration evidence is distinct from production recovery proof.
+
+## Scope and prerequisites
+
+Known SCEC resources: systemd `scec-v800` through `scec-v860`, their inventoried source/runtime directories; frontend checkout `/opt/scec-v870/repository/frontend`; Docker container `scec-engagement-web-v870` with no mounts; immutable image `sha256:04e8fe6b7cc4701fb4cba71cb6a2891fa095dc54df17dd6a7bfbc7012f199652`; unit files; `/etc/sustainable-catalyst/engagement/v800.env` and `v860.env` (restricted secrets); Caddy `/etc/caddy/Caddyfile` plus actual runtime configuration and approved TLS recovery material. Environment files are unreadable to audit account. An authorized administrator must back them up encrypted without printing contents. Do not use Docker privilege to bypass file permissions.
+
+Running v8.6 persistence is 0 and no SCEC database URL was observed. **Exact production SCEC database, historical stores, object/artifact/session volumes, other external writers and retention are NOT verified.** Do not dump shared PostgreSQL, choose a plausible database, or infer no data exists. Map them using authorized metadata-only inspection before any data backup. WordPress is on a different host; its backup and recovery must be separately mapped and owner-authorized. No shared database/proxy/identity service restart is part of this plan.
+
+Owner must approve: backup scope, deployment/config change freeze, destination outside source/public web roots, encryption tool already available or separately approved, recipient/key custodian and recovery test, off-host copy destination, RPO/RTO and retention, audit access, exact privilege/commands and restore sandbox. No encryption recipient, off-host target, database service profile or approved retention currently exists in this evidence. The privacy draft's 30-day backup proposal is not approval.
+
+## Non-disruptive consistency decision
+
+An immutable Docker image can be saved without stopping it. Source/config files can be archived without pausing application traffic only if their change sources are frozen and before/after hashes/identities match; otherwise discard the candidate backup and retry after reviewing the change. Preserve restricted authentication configuration as part of that encrypted snapshot. This does not prove consistency with unknown external/session/data stores.
+
+For a verified standalone PostgreSQL store, `pg_dump -Fc` supplies a transactional database snapshot without stopping writers. It does not synchronize mutable filesystem objects, other databases or live session files. Equivalent cross-store recovery requires an application checkpoint that ties DB references to versioned immutable objects and a documented recoverable point. This has not been established. Therefore neither a zero-downtime whole-system guarantee nor a required pause can yet be asserted.
+
+If quiescence proves necessary, list every SCEC HTTP write endpoint/process, scheduler/worker, object ingester, external bridge and administrative writer that can modify the mapped store. Gate only those writers using a reviewed reversible application/proxy control. Leave health/read traffic and unrelated Workspace/WordPress/Workbench services running. Drain in-flight transactions/jobs and record the checkpoint before the snapshot. No such complete writer inventory or drain mechanism is yet verified, so **no safe exact pause/resume commands or outage duration can be claimed**. Obtain separate approval naming the exact controls and operational impact before quiescing. Resume in reverse order, restore original flags/routes, verify health/queue state and record any missed/replayed work even if backup fails.
+
+## Command forms for the future approved backup
+
+These are blocked preparation forms, not an executable production certificate. A reviewed operator script must substitute the approved scope and refuse missing prerequisites, collisions, baseline drift or encryption failure. Use `set -euo pipefail`, restrictive umask and no shell tracing. Never interpolate secrets or passwords into command arguments/logs.
+
+```bash
+# Only in the explicitly approved root backup session:
+umask 077
+command -v age                         # prerequisite, not permission to install
+: "${APPROVED_BACKUP_DIR:?approved restricted destination required}"
+: "${APPROVED_AGE_RECIPIENT:?approved public recipient required}"
+test ! -e "$APPROVED_BACKUP_DIR"
+install -d -m 0700 "$APPROVED_BACKUP_DIR"
+# APPROVED_SCOPE_FILE: reviewed fixed path list, mode 0600, includes only approved resources.
+# Do not include a live PostgreSQL data directory in a filesystem tar.
+tar --acls --xattrs -C / -cf - --files-from="$APPROVED_SCOPE_FILE" |
+  age -r "$APPROVED_AGE_RECIPIENT" -o "$APPROVED_BACKUP_DIR/config-source-runtime.tar.age"
+docker image save sha256:04e8fe6b7cc4701fb4cba71cb6a2891fa095dc54df17dd6a7bfbc7012f199652 |
+  age -r "$APPROVED_AGE_RECIPIENT" -o "$APPROVED_BACKUP_DIR/frontend-image.tar.age"
+# Only after a dedicated SCEC DB and restricted PGSERVICE profile are verified/approved:
+pg_dump --dbname='service=scec_backup' --format=custom --no-owner --no-acl |
+  age -r "$APPROVED_AGE_RECIPIENT" -o "$APPROVED_BACKUP_DIR/database.dump.age"
+sha256sum "$APPROVED_BACKUP_DIR/"*.age > "$APPROVED_BACKUP_DIR/SHA256SUMS"
+```
+
+Database profile and decryption keys must be supplied through approved restricted files/agent access, never chat/Git/shell tracing. PostgreSQL major/version compatibility and database identity must be checked before dump. A restricted metadata manifest must record source SHA, actual running version/image, DB revision/server version if applicable, object versions/checkpoint, source/config hashes before and after, snapshot times, file sizes/checksums and backup operator. Publish only a sanitized status, never configuration archives, records or keys. Encrypted archives still require approved access/retention and an independent off-host copy. `sha256sum` alone is not restore proof.
+
+## Independent restore and abort conditions
+
+1. Independently verify encrypted file checksums after off-host transfer. Test decryption with the designated recovery custodian. If keys or copies fail, **abort deployment**.
+2. Restore into a fresh isolated host/network and empty dedicated database, with no production DNS, identity credentials, mail, webhooks or federation. Do not run restored production credentials or proxy/TLS configuration against real systems; inspect restricted restored secrets only under the authorized recovery process and use synthetic replacements for service execution.
+3. Inspect decrypted tar paths before extraction, prevent absolute/traversal paths and extract into a sandbox. Verify every included file hash. Load the saved frontend image only into the isolated Docker context and verify its immutable ID. Record dependency/interpreter/OS compatibility.
+4. Run `pg_restore --list` against the decrypted custom archive, then `pg_restore --exit-on-error --no-owner --no-acl --dbname='service=scec_restore_isolated' < database.dump` only after independently confirming the service profile points to the isolated empty target. Compare revision, constraints/indexes, tenant-scoped record counts/hashes and referenced artifact bytes/version IDs to the backup manifest. Do not report private rows in evidence.
+5. With synthetic authentication and outbound flags all off, verify reads, role/tenant negatives, session safety, startup/recovery, dump/restore repeatability and observable rollback. Reapply approved suppression/deletion/hold records before any restored service can process real data. Measure actual RPO/RTO against approved targets.
+6. Abort for incomplete scope/writer map, inconsistent before/after identities, wrong DB/profile/host, full disk, dump/transfer/decryption error, mismatched checksum/schema/object reference, concurrent deployment, unexpected secrets exposure, unplanned writes/outbound activity or missing owner authorization. Preserve diagnosis securely. Resume only previously approved paused writers using recorded original controls; no permission to restart unrelated services.
+
+## Rollback
+
+Current rollback assets are identified but their production backup and restore are **not verified**. Leave the current `scec-v860` and frontend container running throughout an eventual side-by-side rollout. Install the approved candidate under a new directory/unit/loopback port; no in-place source replacement, production schema migration or Docker Compose collision.
+
+After an approved SCEC-only cutover, failure rollback should restore the **reviewed narrow SCEC proxy diff** to its previous route/upstream, validate with `sudo caddy validate --config /etc/caddy/Caddyfile`, then `sudo systemctl reload caddy`; verify other routes stayed unchanged, public health/auth behavior and old image/source/version. Only then `sudo systemctl stop scec-v1220` to stop the newly created candidate. These privileged operations require the explicit approved rollback scope. The old public route serves static frontend port 8097; do not invent a pre-existing public backend upstream to 8816.
+
+An exact inverse proxy patch cannot be supplied until the forward integration diff is reviewed; restoring the entire old Caddyfile could overwrite other projects' changes. Compare approved before/after hashes and abort on concurrent changes. No whole-host proxy overwrite is authorized.
+
+If separately authorized later write activation occurred, a code rollback alone is insufficient. Quiesce only mapped writers with separate approval, restore the verified consistent database/object/session backup into a new isolated target, validate revision/constraints/tenants and suppression records, and obtain approval before switching to it. Do not overwrite the old database or run destructive Alembic downgrade. Source expressly refuses downgrade. Production data loss/RPO decisions belong to the owner.
+
+## Future approval request contents
+
+When gates and prerequisites are resolved, submit one concrete request listing exact host/services/database/stores; encrypted backup files/destination/key custody; dump/checkpoint/drain/resume commands and expected impact; independent restore evidence; final source/image/runtime/proxy hashes; allowed routes/flags; cutover/rollback operations and stop conditions. Keep backup, writer pause, deployment and outbound approval scopes distinct. **No such go/no-go is requested now.**
