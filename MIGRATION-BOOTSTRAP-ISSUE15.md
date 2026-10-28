@@ -1,0 +1,11 @@
+# Issue #15: initial migration owns only its original tables
+
+The merged v12.2 baseline baf31877 fails to initialize an empty PostgreSQL database: Alembic env.py imports the later audit table into shared application metadata, and 820_001 creates every registered table before 830_001 creates engagement_audit_log again.
+
+This correction explicitly selects the 13 original tables in 820_001. Later revision IDs and their operations, schema head 850_001, application endpoints, flags and destructive downgrade prohibitions remain unchanged. No additional revision can repair this bootstrap failure because migration 830 cannot be reached successfully on an empty database.
+
+Compatibility: already-applied revisions are not rerun by Alembic, so this changes only execution of the initial revision on new/rehearsal databases. Never stamp an unknown partially initialized database, add checkfirst to conceal an incompatible table, drop an audit ledger, or run this against production to test it. Existing installations require a schema/revision inventory before any migration; such an inventory and production backup remain open gates. Explicit table selection still imports current definitions of the original tables; this is a narrow bootstrap correction, not a claim of a fully frozen historical schema redesign.
+
+Tests compile the actual initial and full Alembic chain. `tools/verify_postgres_rehearsal.py` requires an exact clean source SHA, dedicated staging checkout, and local immutable PostgreSQL image ID. It creates only synthetic records on an owned internal Docker network, checks service-principal tenant/role boundaries, dumps and restores into a separate empty database, compares fixture rows and checks destructive downgrade refusal. It removes its container/network and temporary generated credentials, retaining only the synthetic dump and sanitized report in the dedicated staging root. It does not read production configuration, use human accounts, or certify any live production gate.
+
+The protected initial migration intentionally differs from the prior 16-file protected baseline. Other protected files must remain byte-identical. Do not label the corrected source baf31877; record the new commit and tests independently. No production merge/deployment/activation authorization is implied.
