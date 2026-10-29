@@ -46,6 +46,14 @@
         "encryption": "PENDING",
         "destination": "PENDING",
         "independent_custody": "PENDING"
+      },
+      "owner_direction": {
+        "format": "GPG proposed single format",
+        "key_provisioning": "PROCEDURE_ONLY_SEPARATE_APPROVAL",
+        "primary_custodian": "business owner PROPOSED_NOT_APPOINTED",
+        "independent_verifier": "UNAPPOINTED",
+        "alternate_custodian": "UNAPPOINTED",
+        "retention": "30-day rolling PROPOSED_NOT_APPROVED"
       }
     },
     {

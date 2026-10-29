@@ -1,4 +1,8 @@
 
+## 2026-10-28 — R02 provisioning and destination proposal
+
+GPG is the owner-directed proposed single format. Dedicated provisioning procedure/final owner matrix saved in SCEC-R02-OWNER-DECISION-MATRIX.md. Business owner proposed primary custodian, not appointed; independent verifier/alternate unappointed. Daily/30-day rolling schedule and RPO/RTO remain unapproved. Read-only mounted-volume capacity observed; security/custody and total backup size unverified. No key generation/import, backup, transfer, pause or deployment. R02 NO-GO.
+
 ## 2026-10-28 — R02 owner-selection preparation
 
 Encryption, off-host destination and independent custody remain **PENDING**. Public-only inventory found no audit-account GPG keyring or public key in checked locations; root scope uninspected. GPG recommended; age proposal superseded. No backup, transfer, private-key access, writer pause or production change. See Recovery-Activation/SCEC-R02-DECISIONS.md for options and custody matrix. Overall NO-GO.
