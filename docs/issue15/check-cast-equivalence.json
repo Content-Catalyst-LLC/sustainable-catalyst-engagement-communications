@@ -1,0 +1,191 @@
+{
+  "scope": "exact metadata-only production CHECK variants tested on synthetic restore; no production DB/data/config access",
+  "tests": [
+    {
+      "case_count": 20,
+      "truth_values_equal": true,
+      "check_acceptance_equal": true,
+      "table": "advisory_approvals",
+      "constraint": "ck_advisory_approvals_ck_advisory_approval_state",
+      "column": "state",
+      "type": "character varying(20)"
+    },
+    {
+      "case_count": 20,
+      "truth_values_equal": true,
+      "check_acceptance_equal": true,
+      "table": "advisory_engagements",
+      "constraint": "ck_advisory_engagements_classification",
+      "column": "classification",
+      "type": "character varying(16)"
+    },
+    {
+      "case_count": 30,
+      "truth_values_equal": true,
+      "check_acceptance_equal": true,
+      "table": "advisory_workflow_history",
+      "constraint": "ck_advisory_workflow_history_ck_advisory_event_type",
+      "column": "event_type",
+      "type": "character varying(40)"
+    },
+    {
+      "case_count": 20,
+      "truth_values_equal": true,
+      "check_acceptance_equal": true,
+      "table": "assessments",
+      "constraint": "ck_assessments_classification",
+      "column": "classification",
+      "type": "character varying(16)"
+    },
+    {
+      "case_count": 20,
+      "truth_values_equal": true,
+      "check_acceptance_equal": true,
+      "table": "cases",
+      "constraint": "ck_cases_classification",
+      "column": "classification",
+      "type": "character varying(16)"
+    },
+    {
+      "case_count": 20,
+      "truth_values_equal": true,
+      "check_acceptance_equal": true,
+      "table": "contacts",
+      "constraint": "ck_contacts_classification",
+      "column": "classification",
+      "type": "character varying(16)"
+    },
+    {
+      "case_count": 20,
+      "truth_values_equal": true,
+      "check_acceptance_equal": true,
+      "table": "engagement_audit_log",
+      "constraint": "ck_engagement_audit_log_ck_engagement_audit_log_operation",
+      "column": "operation",
+      "type": "character varying(20)"
+    },
+    {
+      "case_count": 20,
+      "truth_values_equal": true,
+      "check_acceptance_equal": true,
+      "table": "engagement_events",
+      "constraint": "ck_engagement_events_classification",
+      "column": "classification",
+      "type": "character varying(16)"
+    },
+    {
+      "case_count": 20,
+      "truth_values_equal": true,
+      "check_acceptance_equal": true,
+      "table": "forms",
+      "constraint": "ck_forms_classification",
+      "column": "classification",
+      "type": "character varying(16)"
+    },
+    {
+      "case_count": 15,
+      "truth_values_equal": true,
+      "check_acceptance_equal": true,
+      "table": "import_batches",
+      "constraint": "ck_import_batches_mode",
+      "column": "mode",
+      "type": "character varying(12)"
+    },
+    {
+      "case_count": 20,
+      "truth_values_equal": true,
+      "check_acceptance_equal": true,
+      "table": "import_batches",
+      "constraint": "ck_import_batches_state",
+      "column": "state",
+      "type": "character varying(20)"
+    },
+    {
+      "case_count": 20,
+      "truth_values_equal": true,
+      "check_acceptance_equal": true,
+      "table": "inquiries",
+      "constraint": "ck_inquiries_classification",
+      "column": "classification",
+      "type": "character varying(16)"
+    },
+    {
+      "case_count": 20,
+      "truth_values_equal": true,
+      "check_acceptance_equal": true,
+      "table": "newsletters",
+      "constraint": "ck_newsletters_classification",
+      "column": "classification",
+      "type": "character varying(16)"
+    },
+    {
+      "case_count": 20,
+      "truth_values_equal": true,
+      "check_acceptance_equal": true,
+      "table": "organizations",
+      "constraint": "ck_organizations_classification",
+      "column": "classification",
+      "type": "character varying(16)"
+    },
+    {
+      "case_count": 20,
+      "truth_values_equal": true,
+      "check_acceptance_equal": true,
+      "table": "submissions",
+      "constraint": "ck_submissions_classification",
+      "column": "classification",
+      "type": "character varying(16)"
+    },
+    {
+      "case_count": 15,
+      "truth_values_equal": true,
+      "check_acceptance_equal": true,
+      "table": "submissions",
+      "constraint": "ck_submissions_submission_privacy",
+      "column": "classification",
+      "type": "character varying(16)"
+    },
+    {
+      "case_count": 20,
+      "truth_values_equal": true,
+      "check_acceptance_equal": true,
+      "table": "support_history",
+      "constraint": "ck_support_history_ck_support_history_type",
+      "column": "event_type",
+      "type": "character varying(40)"
+    },
+    {
+      "case_count": 20,
+      "truth_values_equal": true,
+      "check_acceptance_equal": true,
+      "table": "surveys",
+      "constraint": "ck_surveys_classification",
+      "column": "classification",
+      "type": "character varying(16)"
+    },
+    {
+      "case_count": 20,
+      "truth_values_equal": true,
+      "check_acceptance_equal": true,
+      "table": "tests",
+      "constraint": "ck_tests_classification",
+      "column": "classification",
+      "type": "character varying(16)"
+    }
+  ],
+  "production_data_accessed": false,
+  "restored_expected_fingerprint": "38f1a9fa093e72785551064e5749a7d8e3b819c5b97da3073524e6b56ee97704",
+  "server_version_num": "160015",
+  "varchar_to_text_cast": {
+    "method": "b",
+    "context": "i"
+  },
+  "production_variant_reproduced_fingerprint": "38f1a9fa093e72785551064e5749a7d8e3b819c5b97da3073524e6b56ee97704",
+  "production_fingerprint_reproduced_in_isolation": false,
+  "production_definitions_reparsed_to_expected_fingerprint": true,
+  "result": "PASS_ISOLATED_CAST_EQUIVALENCE",
+  "constraint_count": 19,
+  "total_value_cases": 380,
+  "deployment_go": false,
+  "owned_container_removed": true
+}

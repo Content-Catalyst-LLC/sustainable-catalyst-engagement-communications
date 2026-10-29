@@ -1,0 +1,158 @@
+{
+  "date": "2026-10-28",
+  "primary_operating_record": "GitHub Issue #15",
+  "production_release_decision": "NO_GO",
+  "seven_live_gates_closed": 0,
+  "production_backend": "8.6.0",
+  "production_frontend": "8.7",
+  "newly_activated_features": [],
+  "production_mutations_performed": false,
+  "packages": [
+    {
+      "id": "SCEC-R01",
+      "name": "Database schema reconciliation",
+      "approved_baseline": "381a5a382c9b613136c091d0c1f235f36907c037",
+      "tested_tree_commit": "d16bf44202de38db90aebdd29283b88febb71d1b",
+      "decision": "GO_PRESERVE_DATABASE_UNCHANGED_ONLY",
+      "supporting_evidence": [
+        "18 tables,159 columns,68 constraints,70 indexes compared",
+        "19 CHECK cast variants;380 isolated cases equivalent",
+        "Migration/model source lineage checked"
+      ],
+      "remaining_blockers": [
+        "Recovery, broader identity/privacy/security and data acceptance separate"
+      ],
+      "production_impact": "No production data,grant,service or deployment configuration mutation",
+      "rollback": "No production rollback required for read-only preparation; owned synthetic resources removed. Future scoped rollback evidence required before cutover."
+    },
+    {
+      "id": "SCEC-R02",
+      "name": "Coordinated backup and rollback",
+      "approved_baseline": "381a5a382c9b613136c091d0c1f235f36907c037",
+      "tested_tree_commit": "d16bf44202de38db90aebdd29283b88febb71d1b",
+      "decision": "NO_GO",
+      "supporting_evidence": [
+        "Synthetic dump/restore and fresh-container restore passed"
+      ],
+      "remaining_blockers": [
+        "Approved encryption recipient/key custody/off-host destination",
+        "Complete writer/store scope",
+        "Actual production backup/independent restoration/rollback"
+      ],
+      "production_impact": "No production data,grant,service or deployment configuration mutation",
+      "rollback": "No production rollback required for read-only preparation; owned synthetic resources removed. Future scoped rollback evidence required before cutover."
+    },
+    {
+      "id": "SCEC-R03",
+      "name": "OIDC authentication and tenant-security acceptance",
+      "approved_baseline": "381a5a382c9b613136c091d0c1f235f36907c037",
+      "tested_tree_commit": "d16bf44202de38db90aebdd29283b88febb71d1b",
+      "decision": "NO_GO",
+      "supporting_evidence": [
+        "Source and synthetic service-principal negatives recorded"
+      ],
+      "remaining_blockers": [
+        "Verified isolated provider/client/two organizations/identities",
+        "Session-to-principal/CSRF integration",
+        "Live role/tenant/security evidence"
+      ],
+      "production_impact": "No production data,grant,service or deployment configuration mutation",
+      "rollback": "No production rollback required for read-only preparation; owned synthetic resources removed. Future scoped rollback evidence required before cutover."
+    },
+    {
+      "id": "SCEC-R04",
+      "name": "Operational privacy certification",
+      "approved_baseline": "381a5a382c9b613136c091d0c1f235f36907c037",
+      "tested_tree_commit": "d16bf44202de38db90aebdd29283b88febb71d1b",
+      "decision": "NO_GO",
+      "supporting_evidence": [
+        "Same-person primary/deputy roles confirmed",
+        "Policy matrix/procedures drafted"
+      ],
+      "remaining_blockers": [
+        "Policy/periods/procedures unapproved",
+        "Independent coverage/review where required",
+        "Operational rights/consent/withdrawal/unsubscribe/suppression evidence"
+      ],
+      "production_impact": "No production data,grant,service or deployment configuration mutation",
+      "rollback": "No production rollback required for read-only preparation; owned synthetic resources removed. Future scoped rollback evidence required before cutover."
+    },
+    {
+      "id": "SCEC-R05",
+      "name": "Public API routing and WordPress",
+      "approved_baseline": "381a5a382c9b613136c091d0c1f235f36907c037",
+      "tested_tree_commit": "d16bf44202de38db90aebdd29283b88febb71d1b",
+      "decision": "NO_GO",
+      "supporting_evidence": [
+        "Draft PR23 isolated fail-closed nginx/HTTP checks passed",
+        "Four published destinations checked"
+      ],
+      "remaining_blockers": [
+        "Authenticated API routing",
+        "Actual existing Feedback destination",
+        "Site backup/review/acceptance"
+      ],
+      "production_impact": "No production data,grant,service or deployment configuration mutation",
+      "rollback": "No production rollback required for read-only preparation; owned synthetic resources removed. Future scoped rollback evidence required before cutover.",
+      "proposed_fix_commit": "0d565362238ef092ff823ddd942ae984d8956cd5"
+    },
+    {
+      "id": "SCEC-R06",
+      "name": "Homepage Release Console",
+      "approved_baseline": "381a5a382c9b613136c091d0c1f235f36907c037",
+      "tested_tree_commit": "d16bf44202de38db90aebdd29283b88febb71d1b",
+      "decision": "NO_GO",
+      "supporting_evidence": [
+        "Public/source registry inspection"
+      ],
+      "remaining_blockers": [
+        "Authenticated mapping and narrow implementation",
+        "Actual-runtime attestation distinct from available GitHub release",
+        "Homepage acceptance/rollback"
+      ],
+      "production_impact": "No production data,grant,service or deployment configuration mutation",
+      "rollback": "No production rollback required for read-only preparation; owned synthetic resources removed. Future scoped rollback evidence required before cutover.",
+      "inspected_registry_source_commit": "d454431946d1b376c9b37af89bd1b9d87efea4d2"
+    },
+    {
+      "id": "SCEC-R07",
+      "name": "Version-pinned production deployment",
+      "approved_baseline": "381a5a382c9b613136c091d0c1f235f36907c037",
+      "tested_tree_commit": "d16bf44202de38db90aebdd29283b88febb71d1b",
+      "decision": "NO_GO",
+      "supporting_evidence": [
+        "381a5a3 merged artifact tree equals tested d16bf44",
+        "1038 regression tests each host reused without repetition"
+      ],
+      "remaining_blockers": [
+        "R02-R06 acceptance",
+        "Exact forward/inverse changes and explicit scoped owner cutover approval"
+      ],
+      "production_impact": "No production data,grant,service or deployment configuration mutation",
+      "rollback": "No production rollback required for read-only preparation; owned synthetic resources removed. Future scoped rollback evidence required before cutover."
+    },
+    {
+      "id": "SCEC-R08",
+      "name": "Phased activation and closure",
+      "approved_baseline": "381a5a382c9b613136c091d0c1f235f36907c037",
+      "tested_tree_commit": "d16bf44202de38db90aebdd29283b88febb71d1b",
+      "decision": "NO_GO",
+      "supporting_evidence": [
+        "No production activation performed"
+      ],
+      "remaining_blockers": [
+        "Verified deployed runtime/security/console agreement",
+        "Approved read-only discovery/newsroom capability list",
+        "Separate additional controls/authorization for writes/outbound/subscriptions/deletion/federation"
+      ],
+      "production_impact": "No production data,grant,service or deployment configuration mutation",
+      "rollback": "No production rollback required for read-only preparation; owned synthetic resources removed. Future scoped rollback evidence required before cutover."
+    }
+  ],
+  "later_verified_releases_preserved": [
+    "8a58c703ac5d9d48373e90aada75f891c71074cd",
+    "ba9cd9da07f5ef98ebcbe82d9072fd2213a3d126",
+    "1143a3f24f6239109701fc8f1e6b8d6da1b1a8af"
+  ],
+  "v12_6_v13_work_paused": true
+}

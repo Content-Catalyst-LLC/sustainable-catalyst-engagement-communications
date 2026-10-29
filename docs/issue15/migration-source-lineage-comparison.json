@@ -1,0 +1,37 @@
+{
+  "backend/alembic/versions/820_001_initial.py": {
+    "production_hash": "e2ef42e333709858c533a61cbad518eebfc9aebd0cedb28f9d74b922615859bc",
+    "target_hash": "204e5f41d797c5a3edade50ec58db24d926508824b1a04e28edad0fe258a5ad8",
+    "equal": false
+  },
+  "backend/alembic/versions/830_001_audit.py": {
+    "production_hash": "f78b3d3ede2dd2804113029abaa0ee5be531f46b31e0e2633025e3582f8aaee9",
+    "target_hash": "f78b3d3ede2dd2804113029abaa0ee5be531f46b31e0e2633025e3582f8aaee9",
+    "equal": true
+  },
+  "backend/alembic/versions/840_001_support_history.py": {
+    "production_hash": "c17aa3c5bea62f6f103917dca076fcdc1d89b1dd7b2c69716cb08d7f595b35af",
+    "target_hash": "c17aa3c5bea62f6f103917dca076fcdc1d89b1dd7b2c69716cb08d7f595b35af",
+    "equal": true
+  },
+  "backend/alembic/versions/850_001_advisory_workflows.py": {
+    "production_hash": "1a4a56595f8bf0bf3041be4ef5368c1c338254f11cd516d3417efb2a04e6370d",
+    "target_hash": "1a4a56595f8bf0bf3041be4ef5368c1c338254f11cd516d3417efb2a04e6370d",
+    "equal": true
+  },
+  "backend/app/persistence/models.py": {
+    "production_hash": "2a79ce9df40ba215fa9c04f3a5f870902f59b7351cefbd517a913ec4aaa16834",
+    "target_hash": "2a79ce9df40ba215fa9c04f3a5f870902f59b7351cefbd517a913ec4aaa16834",
+    "equal": true
+  },
+  "backend/app/persistence/audit.py": {
+    "production_hash": "40bad871fc9031c0cd557f245644b108dd75d4c0416814e90dc463c5e05dc966",
+    "target_hash": "40bad871fc9031c0cd557f245644b108dd75d4c0416814e90dc463c5e05dc966",
+    "equal": true
+  },
+  "backend/app/contracts/canonical.py": {
+    "production_hash": "fd4cca2f5d03cc19deedf9a4b83f0debb4de1991d452438ea1ff56fbf181504e",
+    "target_hash": "fd4cca2f5d03cc19deedf9a4b83f0debb4de1991d452438ea1ff56fbf181504e",
+    "equal": true
+  }
+}
