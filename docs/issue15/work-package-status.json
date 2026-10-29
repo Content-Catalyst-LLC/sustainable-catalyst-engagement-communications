@@ -32,7 +32,8 @@
       "tested_tree_commit": "d16bf44202de38db90aebdd29283b88febb71d1b",
       "decision": "NO_GO",
       "supporting_evidence": [
-        "Synthetic dump/restore and fresh-container restore passed"
+        "Synthetic dump/restore and fresh-container restore passed",
+        "Read-only public-key/tool inventory: no audit-account keyring/public key observed; GPG installed, age absent"
       ],
       "remaining_blockers": [
         "Approved encryption recipient/key custody/off-host destination",
@@ -40,7 +41,12 @@
         "Actual production backup/independent restoration/rollback"
       ],
       "production_impact": "No production data,grant,service or deployment configuration mutation",
-      "rollback": "No production rollback required for read-only preparation; owned synthetic resources removed. Future scoped rollback evidence required before cutover."
+      "rollback": "No production rollback required for read-only preparation; owned synthetic resources removed. Future scoped rollback evidence required before cutover.",
+      "prerequisites": {
+        "encryption": "PENDING",
+        "destination": "PENDING",
+        "independent_custody": "PENDING"
+      }
     },
     {
       "id": "SCEC-R03",

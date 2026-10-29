@@ -6,7 +6,7 @@
 
 Known SCEC resources: systemd `scec-v800` through `scec-v860`, their inventoried source/runtime directories; frontend checkout `/opt/scec-v870/repository/frontend`; Docker container `scec-engagement-web-v870` with no mounts; immutable image `sha256:04e8fe6b7cc4701fb4cba71cb6a2891fa095dc54df17dd6a7bfbc7012f199652`; unit files; `/etc/sustainable-catalyst/engagement/v800.env` and `v860.env` (restricted secrets); Caddy `/etc/caddy/Caddyfile` plus actual runtime configuration and approved TLS recovery material. Environment files are unreadable to audit account. An authorized administrator must back them up encrypted without printing contents. Do not use Docker privilege to bypass file permissions.
 
-Running v8.6 persistence is 0 and no SCEC database URL was observed. **Exact production SCEC database, historical stores, object/artifact/session volumes, other external writers and retention are NOT verified.** Do not dump shared PostgreSQL, choose a plausible database, or infer no data exists. Map them using authorized metadata-only inspection before any data backup. WordPress is on a different host; its backup and recovery must be separately mapped and owner-authorized. No shared database/proxy/identity service restart is part of this plan.
+Running v8.6 persistence is 0 and no SCEC database URL was observed. **Production database is `scec_engagement_v820`, owner `scec_engagement_migrator`, revision `850_001`; eight historical SCEC databases must be preserved. Object/artifact/session volumes, complete external writers and retention remain unverified.** Do not dump shared PostgreSQL, choose a plausible database, or infer no data exists. Map them using authorized metadata-only inspection before any data backup. WordPress is on a different host; its backup and recovery must be separately mapped and owner-authorized. No shared database/proxy/identity service restart is part of this plan.
 
 Owner must approve: backup scope, deployment/config change freeze, destination outside source/public web roots, encryption tool already available or separately approved, recipient/key custodian and recovery test, off-host copy destination, RPO/RTO and retention, audit access, exact privilege/commands and restore sandbox. No encryption recipient, off-host target, database service profile or approved retention currently exists in this evidence. The privacy draft's 30-day backup proposal is not approval.
 
@@ -22,25 +22,7 @@ If quiescence proves necessary, list every SCEC HTTP write endpoint/process, sch
 
 These are blocked preparation forms, not an executable production certificate. A reviewed operator script must substitute the approved scope and refuse missing prerequisites, collisions, baseline drift or encryption failure. Use `set -euo pipefail`, restrictive umask and no shell tracing. Never interpolate secrets or passwords into command arguments/logs.
 
-```bash
-# Only in the explicitly approved root backup session:
-umask 077
-command -v age                         # prerequisite, not permission to install
-: "${APPROVED_BACKUP_DIR:?approved restricted destination required}"
-: "${APPROVED_AGE_RECIPIENT:?approved public recipient required}"
-test ! -e "$APPROVED_BACKUP_DIR"
-install -d -m 0700 "$APPROVED_BACKUP_DIR"
-# APPROVED_SCOPE_FILE: reviewed fixed path list, mode 0600, includes only approved resources.
-# Do not include a live PostgreSQL data directory in a filesystem tar.
-tar --acls --xattrs -C / -cf - --files-from="$APPROVED_SCOPE_FILE" |
-  age -r "$APPROVED_AGE_RECIPIENT" -o "$APPROVED_BACKUP_DIR/config-source-runtime.tar.age"
-docker image save sha256:04e8fe6b7cc4701fb4cba71cb6a2891fa095dc54df17dd6a7bfbc7012f199652 |
-  age -r "$APPROVED_AGE_RECIPIENT" -o "$APPROVED_BACKUP_DIR/frontend-image.tar.age"
-# Only after a dedicated SCEC DB and restricted PGSERVICE profile are verified/approved:
-pg_dump --dbname='service=scec_backup' --format=custom --no-owner --no-acl |
-  age -r "$APPROVED_AGE_RECIPIENT" -o "$APPROVED_BACKUP_DIR/database.dump.age"
-sha256sum "$APPROVED_BACKUP_DIR/"*.age > "$APPROVED_BACKUP_DIR/SHA256SUMS"
-```
+The previous age command block is superseded: age is absent; installed GPG is recommended pending owner selection. **No executable encryption/backup command is finalized** because no approved full recipient fingerprint/public-key file, isolated keyring, destination or independent custodian exists. See [R02 decisions](SCEC-R02-DECISIONS.md). Final commands must retain database ownership/grant recovery metadata securely (do not rely only on `--no-owner --no-acl` data restoration), use a verified restricted PostgreSQL service profile for `scec_engagement_v820`, and refuse unset inputs. No key creation, import, production backup or transfer is authorized by this document.
 
 Database profile and decryption keys must be supplied through approved restricted files/agent access, never chat/Git/shell tracing. PostgreSQL major/version compatibility and database identity must be checked before dump. A restricted metadata manifest must record source SHA, actual running version/image, DB revision/server version if applicable, object versions/checkpoint, source/config hashes before and after, snapshot times, file sizes/checksums and backup operator. Publish only a sanitized status, never configuration archives, records or keys. Encrypted archives still require approved access/retention and an independent off-host copy. `sha256sum` alone is not restore proof.
 
