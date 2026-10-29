@@ -1,0 +1,31 @@
+{
+  "mode": "production",
+  "hostname": "vmi3544820",
+  "label": "SCEC-PRODUCTION-APPROVAL-REQUIRED",
+  "gpg_home": "/APPROVAL_REQUIRED/public-recovery-keyring",
+  "recipient": "UNPROVISIONED",
+  "output": "/home/catalystadmin/scec-r02-backups/APPROVAL_REQUIRED/bundle.tar.gpg",
+  "minimum_free_bytes": 3221225472,
+  "database": "scec_engagement_v820",
+  "revision": "850_001",
+  "db_host": "/var/run/postgresql",
+  "db_port": 5432,
+  "db_user": "APPROVAL_REQUIRED",
+  "pgservicefile": "/APPROVAL_REQUIRED/pg_service.conf",
+  "pgservice": "scec_r02_backup",
+  "image": "sha256:04e8fe6b7cc4701fb4cba71cb6a2891fa095dc54df17dd6a7bfbc7012f199652",
+  "source_archive_name": "source-config-runtime.tar",
+  "roles_metadata_name": "scec-role-grant-recovery.json",
+  "capture_files": [
+    {
+      "name": "source-config-runtime.tar",
+      "path": "/APPROVAL_REQUIRED/source-config-runtime.tar",
+      "sha256": "UNMEASURED"
+    },
+    {
+      "name": "scec-role-grant-recovery.json",
+      "path": "/APPROVAL_REQUIRED/scec-role-grant-recovery.json",
+      "sha256": "UNMEASURED"
+    }
+  ]
+}

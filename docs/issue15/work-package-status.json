@@ -62,7 +62,16 @@
         "gpg_key": "NOT_GENERATED; CREATION_NOT_AUTHORIZED"
       },
       "technical_preparation": "EXECUTABLE_TOOLS_SYNTHETIC_VALIDATION_PASS",
-      "recommended_destination": "Owner-approved allocation on existing Mothership volume; NOT APPROVED"
+      "recommended_destination": "Owner-approved allocation on existing Mothership volume; NOT APPROVED",
+      "storage_verification": {
+        "capacity": "PASS_PROVISIONAL_ENVELOPE",
+        "filesystem": "HFS+ journaled; noowners",
+        "encryption": "UNVERIFIED",
+        "health": "UNVERIFIED",
+        "approval": "NOT_APPROVED"
+      },
+      "protected_scope_completion": "BLOCKED_OS_ADMIN_ACCESS_UNAVAILABLE",
+      "execution_plan": "GUARDED_SEQUENCE_AND_BLOCKED_INPUTS_PREPARED"
     },
     {
       "id": "SCEC-R03",

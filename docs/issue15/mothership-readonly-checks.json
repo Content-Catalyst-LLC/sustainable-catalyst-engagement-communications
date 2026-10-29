@@ -1,0 +1,20 @@
+{
+  "scope": "read-only Mothership metadata; no file contents or writes",
+  "mount_record": [
+    "/dev/disk4s2 on /Volumes/Mothership (hfs, local, nodev, nosuid, journaled, noowners)"
+  ],
+  "diskutil_info": "failed: DiskManagement framework unavailable",
+  "system_profiler_storage": "empty result",
+  "smartctl_available": false,
+  "capacity": {
+    "total_bytes": 8001219248128,
+    "available_bytes": 4726131449856,
+    "formula_34B_with_20percent_reserve_max_B_bytes": 111203092937
+  },
+  "ioreg_returncode": 1,
+  "matching_media": [],
+  "encryption": "NOT_VERIFIED",
+  "hardware_health": "NOT_VERIFIED; no SMART or filesystem verification run",
+  "ownership_control": "mount reports noowners; suitable enforcement not established",
+  "production_changes": false
+}
