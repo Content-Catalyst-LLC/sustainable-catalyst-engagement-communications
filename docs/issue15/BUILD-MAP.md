@@ -1,4 +1,8 @@
 
+## 2026-10-28 — Primary Recovery-Key Custodian appointment confirmed
+
+Business owner explicitly accepted Primary Recovery-Key Custodian appointment. Independent verifier and alternate remain NOT APPOINTED; backup operator acceptance pending. Secure storage unverified; GPG key not generated/creation unauthorized; off-host destination unapproved; retention/recovery targets pending. R02 NO-GO. Next review package: Recovery-Activation/SCEC-R02-NEXT-OWNER-REVIEW.md. No keys, transfers, backups or production changes. This entry supersedes earlier proposed-custodian status without altering historical evidence.
+
 ## 2026-10-28 — R02 provisioning and destination proposal
 
 GPG is the owner-directed proposed single format. Dedicated provisioning procedure/final owner matrix saved in SCEC-R02-OWNER-DECISION-MATRIX.md. Business owner proposed primary custodian, not appointed; independent verifier/alternate unappointed. Daily/30-day rolling schedule and RPO/RTO remain unapproved. Read-only mounted-volume capacity observed; security/custody and total backup size unverified. No key generation/import, backup, transfer, pause or deployment. R02 NO-GO.

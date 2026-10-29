@@ -4,7 +4,7 @@
 
 ## Dedicated key-provisioning procedure — separate approval required
 
-1. Owner appoints the primary recovery-key custodian, independent verifier and alternate; records each individual's acceptance, recovery availability and separation of duties. Business owner is only the **proposed** primary custodian, pending explicit appointment and verified storage. Privacy primary/deputy appointments are one person and do not supply independent verification.
+1. Owner appoints the primary recovery-key custodian, independent verifier and alternate; records each individual's acceptance, recovery availability and separation of duties. Business owner has explicitly accepted appointment as **Primary Recovery-Key Custodian — CONFIRMED**. Secure storage remains unverified; this appointment does not authorize key creation. Privacy primary/deputy appointments are one person and do not supply independent verification.
 2. Approve a dedicated custodian-controlled offline provisioning workstation, encrypted storage and separate recovery-media locations. Verify installed GPG version and supported algorithms on both custodian and Contabo systems before generation; record compatibility without installing or changing anything under this proposal. Proposed profile: certification/signing primary key plus encryption subkey, RSA-4096 for both, one-year expiry with review/renewal beginning 60 days before expiry. This profile and expiry require approval, not silent selection.
 3. Only after separate authorization, create an isolated mode-0700 GPG home on that workstation and invoke interactive `gpg --homedir "$APPROVED_KEY_HOME" --full-generate-key`. Select the approved profile, approved non-personal SCEC recovery UID, expiry and strong passphrase through local pinentry. Do not put a passphrase in commands, chat, environment, logs or Git. Verify resulting primary and encryption-subkey fingerprints/capabilities/expiry. No such command has run.
 4. Record the full primary and encryption-subkey fingerprints, public export hash, UID, generation time, version, expiry and custody attestations. Independently verify the public fingerprint through a separate trusted channel. Only the approved public export may later reach Contabo's dedicated restricted backup keyring; no keyserver auto-discovery or default-keyring import. Public export/import are future approved operations, not executed now.
@@ -53,7 +53,8 @@ Rollback preserves existing backend v8.6.0 and frontend v8.7 source/image/config
 |---|---|---|
 | Encryption format | GPG only | Owner directs proposal; execution not authorized. |
 | Key profile/UID/expiry and provisioning workstation | Dedicated RSA-4096 primary + encryption subkey, one-year expiry | PENDING approval and compatibility review; no generation/import. |
-| Primary recovery-key custodian | Business owner | PENDING explicit appointment, acceptance and verified secure storage. |
+| Primary recovery-key custodian | Business owner — CONFIRMED | Appointment accepted; secure storage verification remains pending. |
+| Backup operator | Existing authorized administrator is a candidate only | PENDING formal acceptance. |
 | Independent recovery verifier | Separate individual | UNAPPOINTED; identity/acceptance/independence required. |
 | Alternate custodian | Separate authorized individual | UNAPPOINTED; contingency access and secure storage required. |
 | Primary destination | Existing independently administered off-host allocation first | PENDING exact endpoint, capacity B/F, jurisdiction/access/cost and recovery verification. |

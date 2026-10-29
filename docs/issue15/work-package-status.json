@@ -50,10 +50,13 @@
       "owner_direction": {
         "format": "GPG proposed single format",
         "key_provisioning": "PROCEDURE_ONLY_SEPARATE_APPROVAL",
-        "primary_custodian": "business owner PROPOSED_NOT_APPOINTED",
+        "primary_custodian": "business owner CONFIRMED; secure storage unverified",
         "independent_verifier": "UNAPPOINTED",
         "alternate_custodian": "UNAPPOINTED",
-        "retention": "30-day rolling PROPOSED_NOT_APPROVED"
+        "retention": "30-day rolling PROPOSED_NOT_APPROVED",
+        "backup_operator": "PENDING_FORMAL_ACCEPTANCE",
+        "recovery_targets": "PENDING_FINAL_APPROVAL",
+        "gpg_key": "NOT_GENERATED; CREATION_NOT_AUTHORIZED"
       }
     },
     {
