@@ -1,0 +1,16 @@
+{
+  "scope": "new ARM64 recovery compatibility evidence; known synthetic fixture only",
+  "production_data_copied": false,
+  "image_id": "sha256:9e2cf6287f25c3151f4c9421ccce2b17f3e60061c111a29165e0d2cdd9ff0a97",
+  "architecture": "arm64",
+  "dump_sha256": "df98761383ee60c5f9b539af949669be16b7cae84e21d38a95da827d6164e14c",
+  "source_commit": "381a5a382c9b613136c091d0c1f235f36907c037",
+  "revision": "850_001",
+  "table_count": 18,
+  "contacts": 1,
+  "organizations": 2,
+  "result": "PASS_ARM64_SYNTHETIC_RESTORE",
+  "synthetic_fixture_preserved_at": "/mnt/catalyst-ssd/backups/scec/source-381a5a38/SYNTHETIC-postgres-fixture.dump",
+  "owned_container_removed": true,
+  "temporary_bootstrap_secret_removed": true
+}
