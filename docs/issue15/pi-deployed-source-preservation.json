@@ -1,0 +1,20 @@
+[
+  {
+    "label": "backend",
+    "commit": "280c6b9516f9a9cafca0682f7656964077367d7d",
+    "sha256": "e6c9844b472750d282848756e6bfa0ba267cb46964169a382a89aa44ce295afa",
+    "path": "/mnt/catalyst-ssd/backups/scec/deployed-source/scec-deployed-backend-280c6b95-source.zip",
+    "files_verified": 59,
+    "result": "PASS_PUBLIC_GIT_SOURCE_ONLY",
+    "production_runtime_files_copied": false
+  },
+  {
+    "label": "frontend",
+    "commit": "35b5ac363fdebd471f94d8092e943722bc7267e3",
+    "sha256": "d9739a9cb18c37f0ecddff77c46375d138f4c2a06486e11a944ded873978603a",
+    "path": "/mnt/catalyst-ssd/backups/scec/deployed-source/scec-deployed-frontend-35b5ac36-source.zip",
+    "files_verified": 68,
+    "result": "PASS_PUBLIC_GIT_SOURCE_ONLY",
+    "production_runtime_files_copied": false
+  }
+]

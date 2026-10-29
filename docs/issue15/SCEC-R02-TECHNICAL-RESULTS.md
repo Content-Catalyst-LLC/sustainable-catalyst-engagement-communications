@@ -1,3 +1,5 @@
+> SUPERSEDED DESTINATION: the owner infrastructure directive designates Raspberry Pi as development/backup. Mothership/cloud proposals below are historical and must not be executed. Use PI-CONTABO-OPERATIONAL-REPORT.md. Preserve valid tooling/tests; private production synchronization still requires explicit scope/authorization.
+
 # SCEC-R02 technical execution results
 
 2026-10-28. Application baseline `381a5a382c9b613136c091d0c1f235f36907c037`. **R02 NO-GO for production execution; synthetic recovery path PASS.** Primary Recovery-Key Custodian: business owner CONFIRMED, decision closed. No additional appointment confirmation requested.

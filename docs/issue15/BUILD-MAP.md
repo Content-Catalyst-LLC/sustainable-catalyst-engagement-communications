@@ -1,4 +1,8 @@
 
+## 2026-10-28 — Infrastructure directive implemented
+
+Pi is designated development/backup; Mothership/cloud destination proposals superseded and stopped. Approved 381a5a38 source fetched to separate clean Pi worktree; verified source/tools/labelled synthetic recovery assets saved on SSD. 256 source file hashes and focused ARM64 PG16 fixture restore passed; production backup NOT complete. Contabo remains v8.6.0/backend 280c6b95 and v8.7 frontend unchanged. See Recovery-Activation/PI-CONTABO-OPERATIONAL-REPORT.md. Primary custody CONFIRMED/CLOSED; no repeated custody review or broad tests. R02 private production execution and overall deployment NO-GO.
+
 ## 2026-10-28 — R02 storage and execution-plan audit
 
 Mothership capacity sufficient for provisional envelope; mounted HFS+ noowners, health/encryption unverified (platform metadata unavailable). Protected hashes/DB-target metadata reused; noninteractive sudo unavailable, remaining gap script staged for authorized administrator. Audit-account cron references WordPress launcher; preserve it. Exact guarded execution sequence/blocked inputs saved in SCEC-R02-EXECUTION-PLAN.md. Primary custody CONFIRMED/CLOSED; R02 NO-GO. No synthetic retests, keys, production backup/transfer, writer pause or service change.

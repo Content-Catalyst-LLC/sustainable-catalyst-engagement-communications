@@ -1,3 +1,5 @@
+> SUPERSEDED DESTINATION: the owner infrastructure directive designates Raspberry Pi as development/backup. Mothership/cloud proposals below are historical and must not be executed. Use PI-CONTABO-OPERATIONAL-REPORT.md. Preserve valid tooling/tests; private production synchronization still requires explicit scope/authorization.
+
 # SCEC-R02 — Guarded execution plan and read-only findings
 
 2026-10-28. Reuses recovery tooling/synthetic evidence at `ca2f08e`; no synthetic tests repeated and no production tool changes. **Primary recovery-key custody CONFIRMED/CLOSED. R02 production execution NO-GO.** This is an operational runbook/evidence update, not another owner-review package.

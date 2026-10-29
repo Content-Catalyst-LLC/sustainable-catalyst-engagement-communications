@@ -1,0 +1,52 @@
+{
+  "hostname": "raspberrypi",
+  "architecture": "aarch64",
+  "capacity": {
+    "/": {
+      "total_bytes": 62464655360,
+      "available_bytes": 28431130624
+    },
+    "/mnt/catalyst-ssd": {
+      "total_bytes": 502921412608,
+      "available_bytes": 409665204224
+    }
+  },
+  "tools": {
+    "git": "/usr/bin/git",
+    "docker": "/usr/bin/docker",
+    "gpg": "/usr/bin/gpg",
+    "pg_restore": "/usr/bin/pg_restore",
+    "rsync": "/usr/bin/rsync",
+    "sha256sum": "/usr/bin/sha256sum",
+    "python3": "/usr/bin/python3"
+  },
+  "scec": {
+    "path": "/mnt/catalyst-ssd/repositories/sustainable-catalyst-engagement-communications",
+    "sha": "61543658d111eac2993abc86206dc8a8479dc562",
+    "branch": "main",
+    "status": "",
+    "tracked_template_paths": [
+      ".env.example",
+      "backend/alembic/versions/820_001_initial.py",
+      "backend/alembic/versions/830_001_audit.py",
+      "backend/alembic/versions/840_001_support_history.py",
+      "backend/alembic/versions/850_001_advisory_workflows.py",
+      "frontend/compose.yaml"
+    ]
+  },
+  "existing_scec_recovery_files": [],
+  "backup_root_exists": true,
+  "backup_root_mode": "0o755",
+  "docker": {
+    "returncode": 1,
+    "names": [],
+    "error_class": "socket inaccessible"
+  },
+  "docker_service": "active",
+  "memory": {
+    "MemTotal": "        8008416 kB",
+    "MemAvailable": "    3817088 kB"
+  },
+  "ssd_mount": "/dev/sda1 ext4   rw,relatime",
+  "docker_authorized_access_followup": "sudo -n docker succeeds; existing development containers enumerated without changes"
+}

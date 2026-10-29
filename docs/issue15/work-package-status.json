@@ -36,7 +36,9 @@
         "Read-only public-key/tool inventory: no audit-account keyring/public key observed; GPG installed, age absent",
         "16 disposable-key GPG/failure/real synthetic PostgreSQL restore checks PASS",
         "8 mocked collector guard/assembly checks PASS",
-        "Read-only footprint and unit dependency audit"
+        "Read-only footprint and unit dependency audit",
+        "Pi source restore 256 files SHA256 PASS",
+        "ARM64 PG16 synthetic restore PASS; no production data"
       ],
       "remaining_blockers": [
         "Approved encryption recipient/key custody/off-host destination",
@@ -47,7 +49,7 @@
       "rollback": "No production rollback required for read-only preparation; owned synthetic resources removed. Future scoped rollback evidence required before cutover.",
       "prerequisites": {
         "encryption": "PENDING",
-        "destination": "PENDING",
+        "destination": "PI_DESIGNATED; PRIVATE_DATA_SCOPE_NOT_AUTHORIZED",
         "independent_custody": "PENDING"
       },
       "owner_direction": {
@@ -62,13 +64,13 @@
         "gpg_key": "NOT_GENERATED; CREATION_NOT_AUTHORIZED"
       },
       "technical_preparation": "EXECUTABLE_TOOLS_SYNTHETIC_VALIDATION_PASS",
-      "recommended_destination": "Owner-approved allocation on existing Mothership volume; NOT APPROVED",
+      "recommended_destination": "Raspberry Pi SSD \u2014 OWNER_DESIGNATED; destination selection CLOSED",
       "storage_verification": {
-        "capacity": "PASS_PROVISIONAL_ENVELOPE",
-        "filesystem": "HFS+ journaled; noowners",
-        "encryption": "UNVERIFIED",
-        "health": "UNVERIFIED",
-        "approval": "NOT_APPROVED"
+        "destination": "Pi /mnt/catalyst-ssd",
+        "capacity": "SUFFICIENT_PROVISIONAL_ENVELOPE",
+        "source_integrity": "256_FILES_PASS",
+        "arm64_synthetic_recovery": "PASS",
+        "production_backup_complete": false
       },
       "protected_scope_completion": "BLOCKED_OS_ADMIN_ACCESS_UNAVAILABLE",
       "execution_plan": "GUARDED_SEQUENCE_AND_BLOCKED_INPUTS_PREPARED"
@@ -185,5 +187,11 @@
     "ba9cd9da07f5ef98ebcbe82d9072fd2213a3d126",
     "1143a3f24f6239109701fc8f1e6b8d6da1b1a8af"
   ],
-  "v12_6_v13_work_paused": true
+  "v12_6_v13_work_paused": true,
+  "infrastructure": {
+    "production": "Contabo vmi3544820",
+    "development_and_backup": "Raspberry Pi raspberrypi /mnt/catalyst-ssd",
+    "source_control": "GitHub",
+    "mothership_work": "STOPPED_SUPERSEDED"
+  }
 }
