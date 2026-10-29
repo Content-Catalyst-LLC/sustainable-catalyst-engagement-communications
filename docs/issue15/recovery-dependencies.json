@@ -1,0 +1,55 @@
+{
+  "scope": "read-only service dependencies and immutable identities; no env values",
+  "dependencies": {
+    "scec-v800.service": {
+      "Requires": "system.slice -.mount sysinit.target",
+      "Wants": "tmp.mount",
+      "After": "tmp.mount basic.target system.slice systemd-tmpfiles-setup.service -.mount sysinit.target systemd-journald.socket network.target",
+      "RequiresMountsFor": "/var/tmp /opt/scec-v800/sustainable-catalyst-engagement-communications-v8.0.0/backend"
+    },
+    "scec-v810.service": {
+      "Requires": "-.mount sysinit.target system.slice",
+      "Wants": "tmp.mount",
+      "After": "-.mount sysinit.target system.slice tmp.mount basic.target systemd-tmpfiles-setup.service network.target systemd-journald.socket",
+      "RequiresMountsFor": "/opt/scec-v810/repository/backend /var/tmp"
+    },
+    "scec-v820.service": {
+      "Requires": "-.mount sysinit.target system.slice",
+      "Wants": "tmp.mount",
+      "After": "basic.target system.slice systemd-tmpfiles-setup.service -.mount sysinit.target network.target systemd-journald.socket tmp.mount",
+      "RequiresMountsFor": "/var/tmp /opt/scec-v820/repository/backend"
+    },
+    "scec-v830.service": {
+      "Requires": "system.slice -.mount sysinit.target",
+      "Wants": "",
+      "After": "network.target system.slice postgresql.service sysinit.target systemd-journald.socket -.mount basic.target",
+      "RequiresMountsFor": "/opt/scec-v830/repository/backend"
+    },
+    "scec-v840.service": {
+      "Requires": "sysinit.target -.mount system.slice",
+      "Wants": "",
+      "After": "systemd-journald.socket -.mount system.slice sysinit.target postgresql.service basic.target network.target",
+      "RequiresMountsFor": "/opt/scec-v840/repository/backend"
+    },
+    "scec-v850.service": {
+      "Requires": "sysinit.target -.mount system.slice",
+      "Wants": "",
+      "After": "system.slice postgresql.service -.mount sysinit.target systemd-journald.socket basic.target network.target",
+      "RequiresMountsFor": "/opt/scec-v850/repository/backend"
+    },
+    "scec-v860.service": {
+      "Requires": "sysinit.target -.mount system.slice",
+      "Wants": "",
+      "After": "network.target basic.target sysinit.target system.slice systemd-journald.socket postgresql.service -.mount",
+      "RequiresMountsFor": "/opt/scec-v860/repository/backend"
+    }
+  },
+  "backend_sha": "280c6b9516f9a9cafca0682f7656964077367d7d",
+  "frontend_image_id": "sha256:04e8fe6b7cc4701fb4cba71cb6a2891fa095dc54df17dd6a7bfbc7012f199652",
+  "backend_health": {
+    "status": "ok",
+    "service": "engagement-communications",
+    "version": "8.6.0",
+    "phase": "identity-authorization-privacy"
+  }
+}

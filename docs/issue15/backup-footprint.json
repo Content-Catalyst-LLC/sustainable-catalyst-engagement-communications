@@ -1,0 +1,137 @@
+{
+  "scope": "read-only size/dependency metadata; no data dump or backup",
+  "paths": [
+    {
+      "path": "/opt/scec-v800",
+      "apparent_bytes": 45482561,
+      "complete": true
+    },
+    {
+      "path": "/opt/scec-v810",
+      "apparent_bytes": 39831381,
+      "complete": true
+    },
+    {
+      "path": "/opt/scec-v820",
+      "apparent_bytes": 81077184,
+      "complete": true
+    },
+    {
+      "path": "/opt/scec-v830",
+      "apparent_bytes": 83684746,
+      "complete": true
+    },
+    {
+      "path": "/opt/scec-v840",
+      "apparent_bytes": 83737815,
+      "complete": true
+    },
+    {
+      "path": "/opt/scec-v850",
+      "apparent_bytes": 83817160,
+      "complete": true
+    },
+    {
+      "path": "/opt/scec-v860",
+      "apparent_bytes": 83871199,
+      "complete": true
+    },
+    {
+      "path": "/opt/scec-v870",
+      "apparent_bytes": 245197,
+      "complete": true
+    }
+  ],
+  "frontend_image": {
+    "id": "sha256:04e8fe6b7cc4701fb4cba71cb6a2891fa095dc54df17dd6a7bfbc7012f199652",
+    "uncompressed_image_bytes": 20983111
+  },
+  "configuration_sizes": [
+    {
+      "path": "/etc/sustainable-catalyst/engagement/v800.env",
+      "bytes": null
+    },
+    {
+      "path": "/etc/sustainable-catalyst/engagement/v860.env",
+      "bytes": null
+    },
+    {
+      "path": "/etc/caddy/Caddyfile",
+      "bytes": 2979
+    }
+  ],
+  "unit_sizes": [
+    {
+      "path": "/etc/systemd/system/scec-v810.service",
+      "bytes": 519
+    },
+    {
+      "path": "/etc/systemd/system/scec-v830.service",
+      "bytes": 508
+    },
+    {
+      "path": "/etc/systemd/system/scec-v850.service",
+      "bytes": 508
+    },
+    {
+      "path": "/etc/systemd/system/scec-v860.service",
+      "bytes": 570
+    },
+    {
+      "path": "/etc/systemd/system/scec-v820.service",
+      "bytes": 519
+    },
+    {
+      "path": "/etc/systemd/system/scec-v800.service",
+      "bytes": 606
+    },
+    {
+      "path": "/etc/systemd/system/scec-v840.service",
+      "bytes": 508
+    }
+  ],
+  "enabled_active": {
+    "scec-v800.service": {
+      "is-active": "active",
+      "is-enabled": "enabled"
+    },
+    "scec-v810.service": {
+      "is-active": "active",
+      "is-enabled": "enabled"
+    },
+    "scec-v820.service": {
+      "is-active": "active",
+      "is-enabled": "enabled"
+    },
+    "scec-v830.service": {
+      "is-active": "active",
+      "is-enabled": "enabled"
+    },
+    "scec-v840.service": {
+      "is-active": "active",
+      "is-enabled": "enabled"
+    },
+    "scec-v850.service": {
+      "is-active": "active",
+      "is-enabled": "enabled"
+    },
+    "scec-v860.service": {
+      "is-active": "active",
+      "is-enabled": "enabled"
+    }
+  },
+  "disk_free_bytes": 60076003328,
+  "gpg_version": "gpg (GnuPG) 2.4.4",
+  "postgres_client_version": "pg_dump (PostgreSQL) 16.15 (Ubuntu 16.15-0ubuntu0.24.04.1)",
+  "limits": "Protected contents, unknown artifact/session stores and historical ownership classification not bypassed. Size metadata is not a dump size.",
+  "calculated": {
+    "directory_bytes": 501747243,
+    "historical_and_main_database_catalog_bytes": 77544655,
+    "known_logical_bytes_including_all_nine_db_catalog_sizes": 600281726,
+    "known_logical_MiB": 572.47,
+    "provisional_budget_B_bytes": 1073741824,
+    "rolling_34B_bytes": 36507222016,
+    "minimum_free_at_20pct_reserve_bytes": 45634027520,
+    "caveat": "B=1GiB is provisional envelope, not measured encrypted dump. Unknown stores/config/TLS/roles and image-tar overhead remain; catalog sizes do not equal dump sizes."
+  }
+}

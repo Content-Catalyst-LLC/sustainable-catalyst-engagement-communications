@@ -1,4 +1,8 @@
 
+## 2026-10-28 — R02 executable technical progress
+
+16 synthetic GPG/checksum/failure/PostgreSQL-restore checks and 8 mocked collector guard tests passed. Known footprint 572.47 MiB; provisional 1 GiB/set requires 42.5 GiB free for rolling schedule. Recommend approved Mothership allocation, capacity observed but protection/custody unverified. Executable guarded recovery tools saved; see Recovery-Activation/SCEC-R02-TECHNICAL-RESULTS.md. Primary custody CONFIRMED/CLOSED; verifier/alternate/operator acceptance, storage, retention/targets and key-provisioning approval remain. R02 production NO-GO; production unchanged.
+
 ## 2026-10-28 — Primary Recovery-Key Custodian appointment confirmed
 
 Business owner explicitly accepted Primary Recovery-Key Custodian appointment. Independent verifier and alternate remain NOT APPOINTED; backup operator acceptance pending. Secure storage unverified; GPG key not generated/creation unauthorized; off-host destination unapproved; retention/recovery targets pending. R02 NO-GO. Next review package: Recovery-Activation/SCEC-R02-NEXT-OWNER-REVIEW.md. No keys, transfers, backups or production changes. This entry supersedes earlier proposed-custodian status without altering historical evidence.

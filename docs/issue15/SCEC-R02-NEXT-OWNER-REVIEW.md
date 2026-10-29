@@ -1,3 +1,5 @@
+> Technical execution update: see [SCEC-R02-TECHNICAL-RESULTS.md](SCEC-R02-TECHNICAL-RESULTS.md). Prior planning/test-status statements below are historical; primary custody is confirmed and closed. No additional owner-review package is requested.
+
 # SCEC-R02 — Next owner-review package
 
 2026-10-28. **NO-GO; documentation only.** Business owner explicitly accepted Primary Recovery-Key Custodian appointment. This is not secure-storage verification or authority to generate/import a key, run backups, transfer production data, pause writers or deploy.

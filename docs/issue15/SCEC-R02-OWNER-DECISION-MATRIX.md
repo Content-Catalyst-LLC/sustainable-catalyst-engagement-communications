@@ -1,3 +1,5 @@
+> Technical execution update: see [SCEC-R02-TECHNICAL-RESULTS.md](SCEC-R02-TECHNICAL-RESULTS.md). Prior planning/test-status statements below are historical; primary custody is confirmed and closed. No additional owner-review package is requested.
+
 # SCEC-R02 — Final owner decision matrix and provisioning proposal
 
 2026-10-28, America/Chicago. Application baseline `381a5a382c9b613136c091d0c1f235f36907c037`; builds on reviewed docs `50b76a8`. **R02 NO-GO. Preparation only.** GPG is the owner-directed proposed single format; key generation/import, backups, transfers, writer pause and deployment remain unauthorized.

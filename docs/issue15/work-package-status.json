@@ -33,7 +33,10 @@
       "decision": "NO_GO",
       "supporting_evidence": [
         "Synthetic dump/restore and fresh-container restore passed",
-        "Read-only public-key/tool inventory: no audit-account keyring/public key observed; GPG installed, age absent"
+        "Read-only public-key/tool inventory: no audit-account keyring/public key observed; GPG installed, age absent",
+        "16 disposable-key GPG/failure/real synthetic PostgreSQL restore checks PASS",
+        "8 mocked collector guard/assembly checks PASS",
+        "Read-only footprint and unit dependency audit"
       ],
       "remaining_blockers": [
         "Approved encryption recipient/key custody/off-host destination",
@@ -57,7 +60,9 @@
         "backup_operator": "PENDING_FORMAL_ACCEPTANCE",
         "recovery_targets": "PENDING_FINAL_APPROVAL",
         "gpg_key": "NOT_GENERATED; CREATION_NOT_AUTHORIZED"
-      }
+      },
+      "technical_preparation": "EXECUTABLE_TOOLS_SYNTHETIC_VALIDATION_PASS",
+      "recommended_destination": "Owner-approved allocation on existing Mothership volume; NOT APPROVED"
     },
     {
       "id": "SCEC-R03",

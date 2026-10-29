@@ -1,0 +1,13 @@
+test_dump_failure_cleans_staging (test_capture.CaptureTests.test_dump_failure_cleans_staging) ... ok
+test_endpoint_mismatch (test_capture.CaptureTests.test_endpoint_mismatch) ... ok
+test_expired_approval (test_capture.CaptureTests.test_expired_approval) ... ok
+test_missing_approval (test_capture.CaptureTests.test_missing_approval) ... ok
+test_source_drift (test_capture.CaptureTests.test_source_drift) ... ok
+test_success_preserves_authority_and_cleanup (test_capture.CaptureTests.test_success_preserves_authority_and_cleanup) ... ok
+test_wrong_database (test_capture.CaptureTests.test_wrong_database) ... ok
+test_wrong_host (test_capture.CaptureTests.test_wrong_host) ... ok
+
+----------------------------------------------------------------------
+Ran 8 tests in 0.022s
+
+OK
