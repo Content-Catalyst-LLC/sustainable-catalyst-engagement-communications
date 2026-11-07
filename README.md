@@ -1,3 +1,9 @@
+# Product identity decision — 2026-11-07
+
+**Approved information architecture (documentation only):** The customer-facing identity of Engagement & Communications is **Press**, while **Publications** is the existing WordPress editorial blog/articles surface. No repository, API, service or URL rename and no production activation has occurred. See [Press/Publications handoff](docs/handoffs/2026-11-07-PRESS-PUBLICATIONS-PRODUCT-BOUNDARY.md) and the [canonical cross-product decision](https://github.com/Content-Catalyst-LLC/sustainable-catalyst-platform-core/blob/main/docs/PRODUCT-BOUNDARIES-PUBLICATIONS-PRESS-RESEARCH-2026-11-07.md).
+
+---
+
 # v12.2.0 — Evidence-derived multi-channel campaign bundles
 
 Default-off synthetic, tenant-bound offline preview. No production activation. See RELEASE-MANIFEST-v12.2.0.md and deployment/V1220-DEPLOY.md.
