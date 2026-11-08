@@ -189,9 +189,11 @@ def safe_package(row):
             'publishing_enabled':False, 'sending_enabled':False, 'production_certified':False,
             'wordpress_actor_identity_independently_verified':False}
 
-def find_package(db, org, pkg_id):
-    result = db.execute(select(packages).where(
-        packages.c.id==pkg_id,packages.c.organization_id==org)).mappings().first()
+def find_package(db, org, pkg_id, *, lock=False):
+    stmt = select(packages).where(packages.c.id==pkg_id,packages.c.organization_id==org)
+    if lock:
+        stmt = stmt.with_for_update()
+    result = db.execute(stmt).mappings().first()
     if result is None:
         raise HTTPException(404, 'Media package not found')
     return result
@@ -235,7 +237,7 @@ def register(db: Session, org: str, submission: Submission):
     return safe_package(find_package(db,org,pkg_id))
 
 def review(db: Session, org: str, pkg_id: str, decision: Decision):
-    row = find_package(db,org,pkg_id)
+    row = find_package(db,org,pkg_id,lock=True)
     if row['state'] != 'in_review':
         raise HTTPException(409, 'Package not in review')
     if row['approved_hash'] != decision.approved_package_sha256:
