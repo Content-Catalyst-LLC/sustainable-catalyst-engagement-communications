@@ -67,3 +67,39 @@ MEDIA-02 — LIVE ACTIVATION AND REDIRECTS
 
 Does not configure your live WordPress site or prove public HTTP results.
 No automatic site/menu edits, publishing, subscriber storage or distribution.
+
+MEDIA-03 — UNIFIED CHANNEL DISCOVERY (v8.8.7)
+============================================
+1. Make a backup of the active Engagement & Communications Bridge plugin.
+2. Install this ZIP by WordPress > Plugins > Add New > Upload Plugin; choose
+   "Replace current" if WordPress reports an existing plugin.
+3. Keep [sc_media] in the published /media/ page. [sc_press] remains supported.
+4. Open Settings > Media & Communications. Under MEDIA-03:
+   - To show the unified public activity list, turn ON "Unified public updates".
+   - Enter the YouTube channel's canonical 24-character ID beginning with UC.
+     The @handle is not the channel ID. Leave empty if not known.
+   - Leave "WordPress updates" on to show ONLY published, non-password-protected
+     WordPress posts tagged "media-update". Tag posts intentionally.
+   - The existing "Recent newsletter issues" checkbox also controls whether
+     the Substack feed appears in the unified list.
+5. Save changes. Check the MEDIA-03 Discovery readiness table in Settings.
+6. View /media/ while signed out. Confirm that every item links to the actual
+   source, chronological ordering is sensible, no unpublished content appears,
+   and the no-updates fallback displays when feeds cannot be reached.
+7. Confirm /press/ and /channel/ legacy redirect behavior separately under
+   MEDIA-02. This package preserves the disabled-by-default redirect setting.
+
+IMPORTANT BOUNDARIES
+- MEDIA-03 additional RSS/Atom fetching is server-side and opt-in. The
+  legacy Substack recent-issues preview has its own separate setting.
+  The browser receives
+  only an HTML list of escaped text links; it never loads tracking images.
+- Responses are capped at 256 KB and a 5-second timeout, with no redirects.
+  Successes cache for 60 minutes; errors cache for 10 minutes. YouTube's
+  public feed availability is not guaranteed.
+- Substack subscriptions and delivery remain on Substack, videos on YouTube.
+  LinkedIn and social profiles remain approved manual links. No OAuth, contact
+  lists, outbound posting, newsletter sending or Research/Workspace API writes.
+- Website owner should verify that PHP SimpleXML is available for public XML
+  feeds. Without it, automatic external feed discovery fails closed.
+- Roll back by unchecking "Unified public updates", or reinstall v8.8.6.

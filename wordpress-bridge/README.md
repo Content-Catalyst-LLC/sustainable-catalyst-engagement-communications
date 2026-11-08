@@ -1,3 +1,13 @@
+# MEDIA-03 — Unified Channel Discovery (WordPress v8.8.7)
+
+**Packaged source; local QA passed; production not yet accepted.** The `[sc_media]` page can show an optional, server-rendered and cached stream of public Substack RSS issues, YouTube Atom uploads (explicit 24-character UC channel ID required), and *published WordPress posts explicitly tagged* `media-update`. It links to source publishers; it does **not** post content to external channels, transmit subscribers, or access private Engagement & Communications data. The new MEDIA-03 feed requests remain disabled until the owner enables discovery in **Settings → Media & Communications**; the existing Substack recent-issues widget has its own independent switch.
+
+The feed uses safe HTTPS-only 5-second/256-KB fetches with redirects disallowed, source-host validation, XML parse safeguards, 60-minute positive and 10-minute negative caching, and a visible empty state. Public source availability, WordPress SimpleXML and anonymous browser behavior require live acceptance.
+
+See [MEDIA-03 release notes](sustainable-catalyst-engagement-communications/MEDIA-03-RELEASE.md), [MEDIA-03 local test report](MEDIA-03-TEST-REPORT.md) and [installation instructions](sustainable-catalyst-engagement-communications/INSTALLATION.txt). MEDIA-02 v8.8.6 readiness checks, legacy 301 redirect safeguards and old shortcodes remain supported. Target site: `https://sustainablecatalyst.com/media/`.
+
+---
+
 # MEDIA-02 — Public Media activation candidate v8.8.6
 
 The public WordPress hub is now **Media** at the intended `/media/` page, while the internal backend remains **Engagement & Communications**. This plugin build includes [sc_media], legacy [sc_press] compatibility, Substack, YouTube, LinkedIn and public social links. It also adds **Settings → Media & Communications → MEDIA-02 Launch readiness** and conservative, optional legacy redirects.
