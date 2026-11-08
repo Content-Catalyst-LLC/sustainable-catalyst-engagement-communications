@@ -33,8 +33,11 @@ final class SC_Media06_Operations {
         $path = self::value('SCEC_MEDIA06_PRIVATE_KEY_PATH');
         if ($path === '' || $path[0] !== '/' || !is_file($path) || !is_readable($path)) { return ''; }
         $perms = @fileperms($path);
-        if ($perms === false || ($perms & 0022) !== 0) { return ''; }
-        return $path;
+        $actual = realpath($path);
+        $webroot = realpath(ABSPATH);
+        if ($perms === false || ($perms & 0077) !== 0 || !$actual || !$webroot ||
+            strpos($actual, rtrim($webroot, DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR) === 0) { return ''; }
+        return $actual;
     }
     public static function readiness() {
         return array(
