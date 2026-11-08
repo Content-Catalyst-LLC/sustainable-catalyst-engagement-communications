@@ -90,7 +90,9 @@ MEDIA-03 — UNIFIED CHANNEL DISCOVERY (v8.8.7)
    MEDIA-02. This package preserves the disabled-by-default redirect setting.
 
 IMPORTANT BOUNDARIES
-- Public RSS/Atom fetching is server-side and opt-in. The browser receives
+- MEDIA-03 additional RSS/Atom fetching is server-side and opt-in. The
+  legacy Substack recent-issues preview has its own separate setting.
+  The browser receives
   only an HTML list of escaped text links; it never loads tracking images.
 - Responses are capped at 256 KB and a 5-second timeout, with no redirects.
   Successes cache for 60 minutes; errors cache for 10 minutes. YouTube's
