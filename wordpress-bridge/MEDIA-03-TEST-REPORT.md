@@ -2,7 +2,7 @@
 
 **Build:** MEDIA-03 · WordPress v8.8.7  
 **Package:** `sustainable-catalyst-media-wordpress-MEDIA-03-v8.8.7.zip`  
-**SHA-256:** `32c09ecda8d7be4e33880005c3e5301a99eab57bca6acdb085a11c37d59eb6e4`
+**SHA-256:** `3b3169d102caf4ca4ea36326342934febd00647edbb6a25241e0dcf6618dab4f`
 
 ## Local verification
 
