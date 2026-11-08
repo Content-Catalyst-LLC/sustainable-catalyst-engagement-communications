@@ -261,3 +261,7 @@ app.include_router(campaigns_router, dependencies=[Depends(require_service_token
 # MEDIA-05 — private, nonpersistent WordPress metadata preview bridge (default-off).
 from .media_bridge_v1250 import router as media_bridge_router
 app.include_router(media_bridge_router, dependencies=[Depends(require_service_token)])
+
+# MEDIA-06: separate, default-off signed editorial operations; no provider dispatch.
+from .media_operations_v1260 import router as media_ops_router
+app.include_router(media_ops_router)
