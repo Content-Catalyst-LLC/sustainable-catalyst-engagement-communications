@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Sustainable Catalyst — Media & Communications Bridge
  * Description: Public Media hub for newsletters, video, LinkedIn, social channels and read-only Engagement & Communications bridge.
- * Version: 8.8.6
+ * Version: 8.8.7
  * Author: Content Catalyst LLC
  * Text Domain: sc-engagement-bridge
  */
@@ -10,7 +10,7 @@ if (!defined('ABSPATH')) { exit; }
 
 final class SC_Engagement_Bridge_882 {
     const OPTION = 'sc_ec880_app_url';
-    const VERSION = '8.8.6';
+    const VERSION = '8.8.7';
     const MEDIA_OPTION = 'sc_ec_media_settings';
     const REDIRECT_OPTION = 'sc_ec_media_legacy_redirects';
 
@@ -71,6 +71,12 @@ final class SC_Engagement_Bridge_882 {
         add_settings_field('sc_media_featured', 'Featured video / playlist', array(__CLASS__, 'field_media_video'), 'sc_ec880', 'sc_ec_media');
         add_settings_field('sc_media_feed', 'Recent newsletter issues', array(__CLASS__, 'field_media_feed'), 'sc_ec880', 'sc_ec_media');
         add_settings_field('sc_media_embed', 'On-page signup form', array(__CLASS__, 'field_media_embed'), 'sc_ec880', 'sc_ec_media');
+        add_settings_section('sc_ec_media03', 'MEDIA-03 — Unified Channel Discovery', function() {
+            echo '<p>Optional read-only discovery of public Substack and YouTube feeds and selected published WordPress posts. WordPress fetches and caches public metadata. No subscriber data, passwords, tokens, cross-posting or automatic outgoing messages.</p>';
+        }, 'sc_ec880');
+        add_settings_field('sc_media03_enable', 'Unified public updates', array(__CLASS__, 'field_media_discovery'), 'sc_ec880', 'sc_ec_media03');
+        add_settings_field('sc_media03_youtube_id', 'YouTube channel ID', array(__CLASS__, 'field_media_youtube_id'), 'sc_ec880', 'sc_ec_media03');
+        add_settings_field('sc_media03_wordpress', 'WordPress updates', array(__CLASS__, 'field_media_wordpress_updates'), 'sc_ec880', 'sc_ec_media03');
         register_setting('sc_ec880_settings', self::REDIRECT_OPTION, array('type' => 'string', 'default' => '0', 'sanitize_callback' => array(__CLASS__, 'sanitize_media_redirect_option')));
         add_settings_section('sc_ec_media02', 'MEDIA-02 — Site activation and legacy URLs', function() { echo '<p>Optional redirects are off by default. Enable only after the Media page is public and the former page slugs no longer serve separate content.</p>'; }, 'sc_ec880');
         add_settings_field('sc_ec_media_redirect', 'Redirect old Press / Channel URLs', array(__CLASS__, 'field_media_redirect'), 'sc_ec880', 'sc_ec_media02');
@@ -168,6 +174,24 @@ final class SC_Engagement_Bridge_882 {
         echo '</tbody></table>';
         if ($checks['media_url']) { echo '<p><a href="' . esc_url($checks['media_url']) . '" target="_blank" rel="noopener noreferrer">Open Media page</a> (also test while signed out).</p>'; }
         echo '<p><strong>Legacy redirects:</strong> ' . ($checks['redirect_opt_in'] ? 'Enabled conditionally' : 'Disabled') . '. The plugin does not update WordPress menus or host-level redirects.</p>';
+        $options = self::media_settings();
+        $enabled = ($options['enable_discovery'] ?? '0') === '1';
+        $channel_id = (string)($options['youtube_channel_id'] ?? '');
+        echo '<h2>MEDIA-03 — Discovery readiness</h2>';
+        echo '<p>Read-only configuration checks only; no live external feed request is made by this dashboard.</p>';
+        echo '<table class="widefat striped" style="max-width:860px"><tbody>';
+        $states = array(
+            'Public discovery' => $enabled ? 'Enabled (read-only)' : 'Disabled (safe default)',
+            'Substack source' => self::media_validate_url($options['substack_url'] ?? '', 'substack') !== '' ? 'Configured' : 'Not configured',
+            'YouTube discovery ID' => preg_match('/^UC[A-Za-z0-9_-]{22}$/D', $channel_id) ? 'Configured' : 'Not configured; channel link still works',
+            'WordPress curated posts' => ($options['show_wp_updates'] ?? '0') === '1' ? 'Enabled — tag media-update' : 'Disabled',
+            'PHP XML parser' => function_exists('simplexml_load_string') ? 'Available' : 'Missing — external feed discovery unavailable',
+            'Safe HTTP support' => function_exists('wp_safe_remote_get') ? 'Available' : 'Missing — external feed discovery unavailable',
+        );
+        foreach ($states as $name => $status) {
+            echo '<tr><td><strong>' . esc_html($name) . '</strong></td><td>' . esc_html($status) . '</td></tr>';
+        }
+        echo '</tbody></table><p>Public feeds are cached for 60 minutes (errors: 10 minutes). Source links are displayed only; no content is automatically published to external channels.</p>';
     }
     /** No redirect for admin, preview, API, POST, path collisions or unpublished targets. */
     public static function maybe_legacy_media_redirect() {
@@ -264,6 +288,9 @@ final class SC_Engagement_Bridge_882 {
             'social_tiktok_url' => '',
             'show_feed' => '1',
             'show_subscribe_embed' => '1',
+            'enable_discovery' => '0',
+            'youtube_channel_id' => '',
+            'show_wp_updates' => '1',
         );
     }
     private static function media_settings() {
@@ -404,6 +431,11 @@ final class SC_Engagement_Bridge_882 {
                 add_settings_error(self::MEDIA_OPTION, 'invalid_social_' . $kind, 'Invalid public ' . $descriptor[0] . ' profile URL.');
             }
         }
+        $channel_id = is_string($input['youtube_channel_id'] ?? null) ? trim($input['youtube_channel_id']) : '';
+        if ($channel_id !== '' && !preg_match('/^UC[A-Za-z0-9_-]{22}$/D', $channel_id)) {
+            add_settings_error(self::MEDIA_OPTION, 'invalid_youtube_channel_id', 'YouTube discovery requires a public channel ID beginning UC with 24 total characters.');
+            $channel_id = '';
+        }
         return array_merge(array(
             'substack_url' => $substack,
             'youtube_url' => $youtube,
@@ -411,6 +443,9 @@ final class SC_Engagement_Bridge_882 {
             'linkedin_url' => $linkedin,
             'show_feed' => !empty($input['show_feed']) ? '1' : '0',
             'show_subscribe_embed' => !empty($input['show_subscribe_embed']) ? '1' : '0',
+            'enable_discovery' => !empty($input['enable_discovery']) ? '1' : '0',
+            'youtube_channel_id' => $channel_id,
+            'show_wp_updates' => !empty($input['show_wp_updates']) ? '1' : '0',
         ), $socials);
     }
     public static function field_media_substack() { self::media_field_url('substack_url', 'Substack publication URL (custom domains supported).'); }
@@ -433,6 +468,13 @@ final class SC_Engagement_Bridge_882 {
     }
     public static function field_media_feed() { self::media_field_checkbox('show_feed', 'Show latest public Substack posts from its RSS feed (cached by WordPress).'); }
     public static function field_media_embed() { self::media_field_checkbox('show_subscribe_embed', 'Enable click-to-load native Substack signup form. No third-party requests from a visitor until clicked.'); }
+    public static function field_media_discovery() { self::media_field_checkbox('enable_discovery', 'Show a unified chronological list of public source links. Off until explicitly enabled.'); }
+    public static function field_media_wordpress_updates() { self::media_field_checkbox('show_wp_updates', 'Include published, non-password-protected WordPress posts tagged media-update.'); }
+    public static function field_media_youtube_id() {
+        $options = self::media_settings();
+        echo '<input type="text" class="regular-text" maxlength="24" pattern="UC[A-Za-z0-9_-]{22}" name="' . esc_attr(self::MEDIA_OPTION . '[youtube_channel_id]') . '" value="' . esc_attr((string)($options['youtube_channel_id'] ?? '')) . '" autocomplete="off">';
+        echo '<p class="description">The 24-character UC… channel ID from the public YouTube channel URL (not the @handle). Leave blank to omit automatic video headlines. YouTube feeds are best-effort and may be unavailable.</p>';
+    }
     private static function media_field_checkbox($key, $description) {
         $options = self::media_settings();
         echo '<label><input type="checkbox" name="' . esc_attr(self::MEDIA_OPTION . '[' . $key . ']') . '" value="1" ' . checked($options[$key], '1', false) . '> ' . esc_html($description) . '</label>';
@@ -469,6 +511,139 @@ final class SC_Engagement_Bridge_882 {
         }
         return $rows !== '' ? '<div class="scec-media-issues"><h4>Recent newsletter issues</h4><ul>' . $rows . '</ul></div>' : '';
     }
+    /** MEDIA-03 uses safe same-source public feed metadata only, never private backend records. */
+    private static function media03_fetch($url, $kind, $source_host = '', $channel_id = '') {
+        if (!function_exists('wp_safe_remote_get') || !function_exists('get_transient') || !function_exists('set_transient')) { return array(); }
+        if (!wp_http_validate_url($url) || !preg_match('~^https://~i', $url)) { return array(); }
+        $key = 'scec_media03_' . md5($kind . '|' . $url . '|v1');
+        $cached = get_transient($key);
+        if (is_array($cached)) { return $cached; }
+        $response = wp_safe_remote_get($url, array(
+            'timeout' => 5, 'redirection' => 0, 'limit_response_size' => 262144,
+            'headers' => array('Accept' => 'application/rss+xml, application/atom+xml, application/xml'),
+            'user-agent' => 'SustainableCatalyst-Media/8.8.7 (public feed metadata)',
+        ));
+        if (is_wp_error($response) || (int)wp_remote_retrieve_response_code($response) !== 200) {
+            set_transient($key, array(), 10 * MINUTE_IN_SECONDS);
+            return array();
+        }
+        $body = wp_remote_retrieve_body($response);
+        if (!is_string($body) || strlen($body) > 262144 || stripos($body, '<!DOCTYPE') !== false ||
+            stripos($body, '<!ENTITY') !== false || !function_exists('simplexml_load_string')) {
+            set_transient($key, array(), 10 * MINUTE_IN_SECONDS);
+            return array();
+        }
+        $prior = libxml_use_internal_errors(true);
+        $xml = simplexml_load_string($body, 'SimpleXMLElement', LIBXML_NONET | LIBXML_NOCDATA);
+        libxml_clear_errors();
+        libxml_use_internal_errors($prior);
+        if ($xml === false || !in_array(strtolower($xml->getName()), array('rss', 'feed'), true)) {
+            set_transient($key, array(), 10 * MINUTE_IN_SECONDS);
+            return array();
+        }
+        $items = $xml->xpath('//*[local-name()="item" or local-name()="entry"]');
+        if (!is_array($items)) { $items = array(); }
+        $results = array();
+        foreach (array_slice($items, 0, 12) as $item) {
+            $titles = $item->xpath('./*[local-name()="title"]');
+            $title = trim(wp_strip_all_tags((string)($titles[0] ?? '')));
+            if ($title === '') { continue; }
+            $title = function_exists('mb_substr') ? mb_substr($title, 0, 180) : substr($title, 0, 180);
+            $dates = $item->xpath('./*[local-name()="pubDate" or local-name()="published" or local-name()="updated"]');
+            $when = strtotime((string)($dates[0] ?? ''));
+            $when = is_int($when) && $when > 0 && $when < time() + DAY_IN_SECONDS ? $when : 0;
+            if ($kind === 'youtube') {
+                $video_nodes = $item->xpath('./*[local-name()="videoId"]');
+                $video_id = trim((string)($video_nodes[0] ?? ''));
+                $channel_nodes = $item->xpath('./*[local-name()="channelId"]');
+                if ($channel_nodes && trim((string)$channel_nodes[0]) !== $channel_id) { continue; }
+                if (!preg_match('/^[A-Za-z0-9_-]{11}$/D', $video_id)) { continue; }
+                $link = 'https://www.youtube.com/watch?v=' . $video_id;
+                $label = 'YouTube';
+            } else {
+                $links = $item->xpath('./*[local-name()="link"]');
+                $link = '';
+                foreach ((array)$links as $node) {
+                    $attrs = $node->attributes();
+                    $rel = isset($attrs['rel']) ? (string)$attrs['rel'] : '';
+                    if ($rel !== '' && $rel !== 'alternate') { continue; }
+                    $candidate = isset($attrs['href']) ? (string)$attrs['href'] : trim((string)$node);
+                    if ($candidate !== '') { $link = $candidate; break; }
+                }
+                $parts = wp_parse_url($link);
+                if (!is_array($parts) || strtolower((string)($parts['scheme'] ?? '')) !== 'https' ||
+                    strtolower((string)($parts['host'] ?? '')) !== $source_host ||
+                    isset($parts['user']) || isset($parts['pass']) || isset($parts['port']) ||
+                    !wp_http_validate_url($link)) { continue; }
+                $label = 'Substack';
+            }
+            $results[] = array('title' => $title, 'url' => $link, 'date' => $when, 'source' => $label);
+            if (count($results) >= 5) { break; }
+        }
+        set_transient($key, $results, HOUR_IN_SECONDS);
+        return $results;
+    }
+    private static function media03_wp_updates() {
+        if (!function_exists('get_posts')) { return array(); }
+        $posts = get_posts(array('post_type' => 'post', 'post_status' => 'publish', 'tag' => 'media-update',
+            'posts_per_page' => 5, 'ignore_sticky_posts' => true, 'no_found_rows' => true));
+        $items = array();
+        foreach ((array)$posts as $post) {
+            if (!is_object($post) || ($post->post_status ?? '') !== 'publish' || post_password_required($post)) { continue; }
+            $link = get_permalink($post);
+            if (!$link || !wp_http_validate_url($link) ||
+                strtolower((string)wp_parse_url($link, PHP_URL_HOST)) !== strtolower((string)wp_parse_url(home_url('/'), PHP_URL_HOST))) { continue; }
+            $title = trim(wp_strip_all_tags((string)get_the_title($post)));
+            if ($title === '') { continue; }
+            $date = strtotime((string)($post->post_date_gmt ?? ''));
+            $items[] = array('title' => $title, 'url' => $link,
+                'date' => is_int($date) && $date > 0 ? $date : 0, 'source' => 'Publications');
+        }
+        return $items;
+    }
+    private static function media03_updates($options, $substack) {
+        if (($options['enable_discovery'] ?? '0') !== '1') { return ''; }
+        $items = array();
+        if ($substack !== '' && ($options['show_feed'] ?? '0') === '1') {
+            $feed_url = rtrim($substack, '/') . '/feed';
+            $items = array_merge($items, self::media03_fetch($feed_url, 'substack', strtolower((string)wp_parse_url($substack, PHP_URL_HOST))));
+        }
+        $channel_id = (string)($options['youtube_channel_id'] ?? '');
+        if (preg_match('/^UC[A-Za-z0-9_-]{22}$/D', $channel_id)) {
+            $feed_url = 'https://www.youtube.com/feeds/videos.xml?channel_id=' . $channel_id;
+            $videos = self::media03_fetch($feed_url, 'youtube', 'www.youtube.com', $channel_id);
+            // YouTube occasionally migrates feed paths: only fixed first-party endpoints are tried.
+            if (!$videos) { $videos = self::media03_fetch('https://www.youtube.com/xml/feeds/videos.xml?channel_id=' . $channel_id, 'youtube', 'www.youtube.com', $channel_id); }
+            $items = array_merge($items, $videos);
+        }
+        if (($options['show_wp_updates'] ?? '0') === '1') { $items = array_merge($items, self::media03_wp_updates()); }
+        $seen = array(); $unique = array();
+        foreach ($items as $item) {
+            $key = (string)($item['url'] ?? '');
+            if ($key === '' || isset($seen[$key])) { continue; }
+            $seen[$key] = true;
+            $unique[] = $item;
+        }
+        usort($unique, function($a,$b) { return ((int)$b['date']) <=> ((int)$a['date']); });
+        $rows = '';
+        foreach (array_slice($unique, 0, 6) as $item) {
+            $date = !empty($item['date']) ? wp_date('M j, Y', (int)$item['date']) : '';
+            $rows .= '<li class="scec-media03-item"><span class="scec-media03-meta">' . esc_html($item['source'])
+                . ($date ? ' &middot; ' . esc_html($date) : '') . '</span><a href="' . esc_url($item['url'])
+                . '" target="_blank" rel="noopener noreferrer external">' . esc_html($item['title'])
+                . ' <span aria-hidden="true">↗</span></a></li>';
+        }
+        if ($rows === '') {
+            $body = '<p class="scec-media-muted">No public updates are available from the enabled sources right now. Visit the linked channels directly for their latest posts.</p>';
+        } else {
+            $body = '<ol class="scec-media03-list">' . $rows . '</ol>';
+        }
+        return '<section class="scec-media-secondary scec-media03" id="scec-media-latest" aria-labelledby="scec-media-latest-heading">'
+            . '<span class="scec-media-index">LATEST / PUBLIC CHANNELS</span><h3 id="scec-media-latest-heading">Latest from our channels</h3>'
+            . '<p>Recent public items from connected sources, linked to their original publishers. Updates may be delayed by caching or source availability.</p>'
+            . $body . '</section>';
+    }
+
     /** Media landing; backwards-compatible alias for the old [sc_press] shortcode. */
     public static function render_media($attrs = array()) {
         self::start_assets();
@@ -480,7 +655,8 @@ final class SC_Engagement_Bridge_882 {
         $linkedin = self::media_social_url($options['linkedin_url'] ?? '', 'linkedin');
         $social_cards = self::render_social_cards($options);
         $subscribe_url = $substack !== '' ? rtrim($substack, '/') . '/subscribe' : '';
-        $feed = $substack !== '' && $options['show_feed'] === '1' ? self::render_substack_feed($substack) : '';
+        $feed = $substack !== '' && $options['show_feed'] === '1' && ($options['enable_discovery'] ?? '0') !== '1' ? self::render_substack_feed($substack) : '';
+        $latest = self::media03_updates($options, $substack);
         $press = self::media_public_card('Press & News', 'Official releases, public statements, and institutional announcements.', array('press-releases', 'newsroom', 'institutional-updates', 'announcements'));
         $events = self::media_public_card('Events & Briefings', 'Public events, webinars, presentations, and briefings.', array('events', 'webinars', 'briefings'));
         $inquiries = self::media_public_card('Media Inquiries', 'Institutional and journalist inquiries.', array('press-contact', 'media-contact', 'contact', 'contact-us'));
@@ -490,7 +666,8 @@ final class SC_Engagement_Bridge_882 {
           <div class="scec-media-hero"><div class="scec-media-eyebrow">MEDIA &amp; COMMUNICATIONS</div>
             <h2 id="scec-media-heading">Media<span class="scec-media-red">.</span></h2>
             <p>Official news, research communications, newsletters, videos, and public briefings from Sustainable Catalyst.</p></div>
-          <nav class="scec-media-nav" aria-label="Media page sections"><a href="#scec-media-newsletter">Newsletter</a><a href="#scec-media-video">Video</a><a href="#scec-media-linkedin">LinkedIn</a><a href="#scec-media-socials">Socials</a><a href="#scec-media-news">Press &amp; News</a><a href="#scec-media-contact">Inquiries</a></nav>
+          <nav class="scec-media-nav" aria-label="Media page sections"><?php if ($latest) : ?><a href="#scec-media-latest">Latest</a><?php endif; ?><a href="#scec-media-newsletter">Newsletter</a><a href="#scec-media-video">Video</a><a href="#scec-media-linkedin">LinkedIn</a><a href="#scec-media-socials">Socials</a><a href="#scec-media-news">Press &amp; News</a><a href="#scec-media-contact">Inquiries</a></nav>
+          <?php echo $latest; // Public links and text escaped in MEDIA-03. ?>
           <div class="scec-media-main">
             <section class="scec-media-feature" id="scec-media-newsletter" aria-labelledby="scec-media-newsletter-title">
               <div class="scec-media-feature-head"><div><span class="scec-media-index">01 / NEWSLETTER</span><h3 id="scec-media-newsletter-title">Sustainable Catalyst on Substack</h3></div><span class="scec-media-channel">NEWSLETTER</span></div>
@@ -541,7 +718,7 @@ final class SC_Engagement_Bridge_882 {
         $url = self::url();
         ob_start(); ?>
         <section class="scec880" aria-labelledby="scec880-heading">
-          <div class="scec880-kicker">SUSTAINABLE CATALYST / INDEPENDENT OPERATING SURFACE <span>8.8.6</span></div>
+          <div class="scec880-kicker">SUSTAINABLE CATALYST / INDEPENDENT OPERATING SURFACE <span>8.8.7</span></div>
           <div class="scec880-intro">
             <div><h2 id="scec880-heading">Engagement <span>&amp;</span><br>Communications</h2>
             <p>Institutional relationships, support, advisory workflows, and accountable communication—organized within an independent application.</p></div>
