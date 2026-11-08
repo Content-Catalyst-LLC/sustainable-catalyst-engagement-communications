@@ -18,6 +18,7 @@ final class SC_Engagement_Bridge_882 {
         add_shortcode('sc_engagement_communications', array(__CLASS__, 'render'));
         add_shortcode('sc_engagement_launch', array(__CLASS__, 'render_launch'));
         add_shortcode('sc_engagement_public_links', array(__CLASS__, 'render_public_links'));
+        add_shortcode('sc_press', array(__CLASS__, 'render_press'));
     }
     public static function register_assets() {
         wp_register_style('sc-ec880-bridge', plugins_url('assets/bridge.css', __FILE__), array(), self::VERSION);
@@ -91,7 +92,7 @@ final class SC_Engagement_Bridge_882 {
             array('Contact', 'General inquiries and institutional correspondence', array('contact', 'contact-us')),
             array('Feedback', 'General feedback about the platform and its services', array('feedback')),
             array('Feature Suggestions', 'Propose new tools, capabilities and improvements', array('feature-suggestions')),
-            array('Channel', 'Updates and public communications', array('channel')),
+            array('Press', 'Official announcements, media releases, and media resources', array('press', 'channel')),
             array('Support', 'Technical questions and service assistance', array('support')),
         );
         $items = '';
@@ -101,7 +102,39 @@ final class SC_Engagement_Bridge_882 {
             $items .= '<a class="scec881-public-link" href="' . esc_url($link) . '"><strong>' . esc_html($item[0]) . '</strong><span>' . esc_html($item[1]) . '</span><span aria-hidden="true">↗</span></a>';
         }
         if ($items === '') { return ''; }
-        return '<nav class="scec881-public" aria-label="Existing Sustainable Catalyst public services"><div class="scec881-public-heading"><strong>Public communication channels</strong><p>These existing pages remain independent. The Engagement hub does not replace their forms or submission workflows.</p></div><div class="scec881-public-grid">' . $items . '</div></nav>';
+        return '<nav class="scec881-public" aria-label="Existing Sustainable Catalyst public services"><div class="scec881-public-heading"><strong>Public services</strong><p>Public pages remain independent of the Engagement &amp; Communications administration system. Existing forms and submission workflows are unchanged.</p></div><div class="scec881-public-grid">' . $items . '</div></nav>';
+    }
+
+    /** Public-facing Press landing page. Does not read private records or publish releases. */
+    public static function render_press($attrs = array()) {
+        self::start_assets();
+        $destinations = array(
+            array('Press Releases', 'Official statements and approved releases.', array('press-releases', 'newsroom')),
+            array('Institutional Updates', 'Institutional announcements, milestones, and public notices.', array('institutional-updates', 'announcements')),
+            array('Media Resources', 'Approved background information and media resources.', array('media-resources', 'press-kit')),
+            array('Press Inquiries', 'Contact Sustainable Catalyst regarding media or institutional communications.', array('press-contact', 'contact', 'contact-us')),
+        );
+        $cards = '';
+        foreach ($destinations as $destination) {
+            $url = self::resolve_public_page($destination[2]);
+            $heading = '<strong>' . esc_html($destination[0]) . '</strong>';
+            $description = '<span>' . esc_html($destination[1]) . '</span>';
+            if ($url) {
+                $cards .= '<a class="scec-press-card" href="' . esc_url($url) . '">' . $heading . $description . '<small>Explore section <span aria-hidden="true">↗</span></small></a>';
+            } else {
+                $cards .= '<div class="scec-press-card scec-press-card-pending">' . $heading . $description . '<small>Not yet published</small></div>';
+            }
+        }
+        return '<section class="scec-press" aria-labelledby="scec-press-title">'
+            . '<div class="scec-press-eyebrow">SUSTAINABLE CATALYST / INSTITUTIONAL COMMUNICATIONS</div>'
+            . '<div class="scec-press-intro"><p class="scec-press-label">PRESS &amp; MEDIA</p>'
+            . '<h2 id="scec-press-title">Press</h2>'
+            . '<p>Official announcements, institutional developments, media releases, and resources for journalists and public-interest partners.</p></div>'
+            . '<div class="scec-press-section"><h3>Newsroom &amp; media resources</h3>'
+            . '<p>Only publicly approved material is linked here. Private research, internal communications, subscriber records, and unpublished drafts remain outside this page.</p>'
+            . '<div class="scec-press-grid">' . $cards . '</div></div>'
+            . '<div class="scec-press-footnote"><strong>About this section</strong><p>Press is the public communications surface of Sustainable Catalyst. Publications remains the editorial article and blog section; Research retains responsibility for scientific research and its reviewed outputs.</p></div>'
+            . '</section>';
     }
     private static function url() { return self::sanitize_url((string)get_option(self::OPTION, '')); }
     public static function render_launch($attrs = array()) {
