@@ -1,0 +1,32 @@
+name: MEDIA-06 candidate verification
+on:
+  push:
+    branches:
+      - feature/media-06-operational-integration-20261108
+  pull_request:
+    paths:
+      - 'backend/app/media_operations_v1260.py'
+      - 'backend/tests/test_media_operations_v1260.py'
+      - 'backend/app/main.py'
+      - 'wordpress-bridge/sustainable-catalyst-engagement-communications/includes/media06-operations.php'
+      - 'wordpress-bridge/sustainable-catalyst-engagement-communications/sustainable-catalyst-engagement-communications.php'
+      - '.github/workflows/media06.yml'
+permissions:
+  contents: read
+jobs:
+  offline-security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install pinned backend test requirements
+        run: python -m pip install -r backend/requirements-dev.txt
+      - name: Run MEDIA-05 regression and MEDIA-06 acceptance
+        working-directory: backend
+        run: python -m pytest -q tests/test_media_bridge_v1250.py tests/test_media_operations_v1260.py
+      - name: PHP syntax checks
+        run: |
+          php -l wordpress-bridge/sustainable-catalyst-engagement-communications/includes/media06-operations.php
+          php -l wordpress-bridge/sustainable-catalyst-engagement-communications/sustainable-catalyst-engagement-communications.php
