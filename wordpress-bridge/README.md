@@ -1,3 +1,11 @@
+# MEDIA-02 — Public Media activation candidate v8.8.6
+
+The public WordPress hub is now **Media** at the intended `/media/` page, while the internal backend remains **Engagement & Communications**. This plugin build includes [sc_media], legacy [sc_press] compatibility, Substack, YouTube, LinkedIn and public social links. It also adds **Settings → Media & Communications → MEDIA-02 Launch readiness** and conservative, optional legacy redirects.
+
+**Release status:** source packaged and local QA passed; **not yet live-accepted or merged**. Use the ready-to-upload ZIP, review `sustainable-catalyst-engagement-communications/MEDIA-02-RELEASE.md`, and test from a logged-out browser. Legacy redirects are disabled by default. No emails or social posts are sent.
+
+---
+
 # WordPress bridge v8.8.0
 
 The WordPress plugin uses shortcodes to render a public landing/launch surface. The standalone v8.7.0 app remains separate. **No iframe**, login forwarding, cross-domain tokens, proxy, live API calls, customer data, or database writes. No automatic page creation or route replacement.
