@@ -1,0 +1,19 @@
+/* MEDIA-04 internal editorial controls — scoped to WordPress settings screen. */
+.scec-media04{max-width:1320px;color:#171717}
+.scec-media04-layout{display:grid;grid-template-columns:minmax(0,2fr) minmax(290px,1fr);gap:20px;margin-top:25px;align-items:start}
+.scec-media04-box{background:#fff;border:1px solid #d5d5d5;border-top:3px solid #ff0000;padding:24px;margin-bottom:20px}
+.scec-media04-box h2{margin:0 0 15px;font-size:22px}.scec-media04-box h3{margin:26px 0 12px}.scec-media04-box label{display:block;font-weight:600;margin:14px 0 7px}
+.scec-media04-box input[type=text],.scec-media04-box input[type=url],.scec-media04-box textarea{width:100%;max-width:100%;padding:9px;box-sizing:border-box}
+.scec-media04-box fieldset{border:1px solid #ddd;padding:12px 15px;margin:15px 0 20px}.scec-media04-box legend{font-weight:700}
+.scec-media04-box .scec-media04-choice{display:inline-flex;font-weight:400;gap:6px;align-items:center;margin:7px 16px 7px 0}
+.scec-media04-actions{display:flex;align-items:flex-start;flex-wrap:wrap;gap:12px;padding:14px 0}
+.scec-media04-actions form{display:flex;flex-direction:column;gap:9px;max-width:470px}
+.scec-media04-stage{padding:12px;border-left:4px solid #111;background:#f5f5f5}
+.scec-media04-channel{border-top:1px solid #ddd;padding:16px 0}.scec-media04-channel h4{font-size:17px;margin:3px 0 8px}.scec-media04-channel textarea{background:#fafafa}
+.scec-media04-channel form{max-width:520px;margin-top:12px;display:flex;gap:8px;align-items:flex-end}.scec-media04-channel form label{flex:1;margin:0}
+.scec-media04-packages{list-style:none;margin:0;padding:0}.scec-media04-packages li{padding:10px 0;border-bottom:1px solid #e4e4e4}
+.scec-media04-packages a{font-weight:650;text-decoration:none}.scec-media04-packages small{color:#666;display:block;margin-top:2px}
+.scec-media04-audit{margin-top:22px}.scec-media04-audit ol{max-height:230px;overflow-y:auto}
+.scec-media04-copy-feedback{margin-left:10px;font-size:12px;color:#147541}
+@media(max-width:900px){.scec-media04-layout{grid-template-columns:1fr}}
+@media(max-width:600px){.scec-media04-box{padding:16px}.scec-media04-channel form{flex-direction:column;align-items:stretch}.scec-media04-actions{display:block}.scec-media04-actions form{margin:8px 0}}

@@ -1,11 +1,11 @@
-SUSTAINABLE CATALYST — MEDIA & COMMUNICATIONS BRIDGE v8.8.6
+SUSTAINABLE CATALYST — MEDIA & COMMUNICATIONS BRIDGE v8.8.8
 ===========================================================
 
 WordPress installation
 ----------------------
 1. Back up your existing plugin and your WordPress site.
 2. Plugins > Add New > Upload Plugin. Upload the ZIP, and replace the current version.
-3. Activate/confirm "Sustainable Catalyst — Media & Communications Bridge" v8.8.6.
+3. Activate/confirm "Sustainable Catalyst — Media & Communications Bridge" v8.8.8.
 4. On the Media page, use [sc_media] in a Shortcode block. The old [sc_press]
    continues to render the same Media page until you update the shortcode.
 5. Visit Settings > Media & Communications and review the connected URLs:
@@ -35,8 +35,8 @@ What this does
 What this does not do
 ---------------------
 - No Substack subscriber import, sending, or newsletter creation.
-- No YouTube API sync or automatic newest-video retrieval.
-- No LinkedIn/social media API sync, automated posting, social profile data
+- No YouTube upload or authenticated API sync. MEDIA-03 can optionally read a public channel feed.
+- No LinkedIn/social media API writes, automated posting, social profile data
   collection, credential storage, or scraping.
 - No private Workspace/Research/Engagement data or private API access.
 - No plugin-controlled WordPress page creation, slug redirects, or menu edits.
@@ -103,3 +103,45 @@ IMPORTANT BOUNDARIES
 - Website owner should verify that PHP SimpleXML is available for public XML
   feeds. Without it, automatic external feed discovery fails closed.
 - Roll back by unchecking "Unified public updates", or reinstall v8.8.6.
+
+
+MEDIA-04 — CENTRALIZED EDITORIAL & MANUAL DISTRIBUTION (v8.8.8)
+===============================================================
+1. Back up the current v8.8.7 plugin and WordPress database. Install the v8.8.8
+   ZIP. It replaces the same plugin (do not install alongside it).
+2. Open WordPress > Settings > Media Distribution (or use the link from
+   Settings > Media & Communications). You must have manage_options permission.
+3. To create a package, provide title, summary, an already-PUBLISHED public
+   WordPress article/page permalink, and the target channels. Draft packages
+   are nonpublic and not accessible through REST or public post queries.
+4. Submit for review. A site administrator explicitly confirms source rights,
+   attribution, absence of embargo, and approves the reviewed version. Reviewer
+   user ID, timestamp and a content/source SHA-256 are stored in private metadata.
+   Self-review is currently permitted; this is not independent dual approval.
+5. After approval, generate a WordPress editorial DRAFT (not published) tagged
+   media-update. Open it in the regular editor and use WordPress's normal
+   publishing permissions and review process. MEDIA-03 can discover it only
+   AFTER it is publicly published and discovery is enabled.
+6. Use copy-ready text for each selected external channel; manually publish to
+   Substack/YouTube/LinkedIn/socials in those platforms. Optionally record the
+   public permalink from each platform. Records are operator-attested, NOT
+   automatically verified. Export JSON manifest for a future reviewed backend
+   handoff. No automatic sending, credentials, subscriber access or OAuth.
+7. Revise an already-submitted/approved package by creating a new package.
+   In-place edits after submission are blocked. If the source WordPress article
+   is changed after approval, downstream actions fail closed. Create and
+   review a new package representing the new source revision.
+8. Check the workflow as an administrator and as an anonymous visitor; confirm
+   that private distribution packages never appear on /media/. Test admin
+   access/nonce controls and that no external platform receives a request.
+
+ROLLBACK / CAUTIONS
+- Do NOT disable the plugin until you have exported/retained your reviewed
+  private distribution records or tested that restoration keeps their data.
+- Back up WordPress DB before reverting: private package posts/meta created in
+  v8.8.8 persist in the database even when the plugin is replaced with v8.8.7.
+- Reinstall the old v8.8.7 ZIP to disable the new authoring interface. This
+  release does not migrate the existing internal Engagement & Communications DB.
+- The seven historical Engagement & Communications production identity/privacy
+  acceptance gates remain outstanding. MEDIA-04 is a local WordPress editorial
+  handoff, NOT an activation of the private Contabo SCEC backend or external API.
