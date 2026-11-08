@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Sustainable Catalyst — Media & Communications Bridge
  * Description: Public Media hub for newsletters, video, LinkedIn, social channels and read-only Engagement & Communications bridge.
- * Version: 8.8.8
+ * Version: 8.8.9
  * Author: Content Catalyst LLC
  * Text Domain: sc-engagement-bridge
  */
@@ -10,7 +10,7 @@ if (!defined('ABSPATH')) { exit; }
 
 final class SC_Engagement_Bridge_882 {
     const OPTION = 'sc_ec880_app_url';
-    const VERSION = '8.8.8';
+    const VERSION = '8.8.9';
     const MEDIA_OPTION = 'sc_ec_media_settings';
     const REDIRECT_OPTION = 'sc_ec_media_legacy_redirects';
 
@@ -742,5 +742,7 @@ final class SC_Engagement_Bridge_882 {
     }
 }
 require_once __DIR__ . '/includes/media04-workflow.php';
+require_once __DIR__ . '/includes/media05-bridge.php';
 SC_Engagement_Bridge_882::boot();
 SC_Media04_Workflow::boot();
+SC_Media05_Bridge::boot();

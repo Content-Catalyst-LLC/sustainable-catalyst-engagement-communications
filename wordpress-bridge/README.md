@@ -1,3 +1,17 @@
+# MEDIA-05 — WordPress Media → Engagement & Communications Bridge
+
+The **Media** public page remains WordPress-owned ([sc_media]). The separate internal Engagement & Communications service gains a manually initiated, metadata-only integration preview (default-off). No public login federation, private record synchronization, or social sending is authorized.
+
+- New WordPress **Settings → Media Backend Bridge** screen checks configuration without exposing any service token.
+- Approved and unchanged MEDIA-04 packages can be reviewed by the tenant-authorized, signed, admin-only E&C preview route.
+- Source title/body, subscribers, contacts, API credentials, and unpublished research are never transferred.
+- There is no automated publication to Substack, YouTube, LinkedIn, or other channels.
+- Use the v8.8.9 ZIP and [full release/rollback instructions](sustainable-catalyst-engagement-communications/MEDIA-05-RELEASE.md). Do not enable the WordPress setting or backend staging flag until authorized test credentials, HTTPS origin, and exact tenant allowlists have been provisioned.
+
+See also [MEDIA-05 E&C backend handoff](../backend/MEDIA-05-BACKEND-HANDOFF.md).
+
+---
+
 # MEDIA-04 — Controlled Editorial Distribution (v8.8.8)
 
 A functional **private WordPress Media Distribution workspace** is now included. Under **Settings → Media Distribution**, administrators create private distribution packages from already-published WordPress articles/pages, submit them for review, approve with rights/embargo confirmation, generate a **WordPress draft** tagged `media-update`, copy channel-specific text, record operator-attested public social URLs and export the approved JSON handoff manifest. Approval is fingerprinted to the public source content; changes invalidate downstream actions.

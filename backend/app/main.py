@@ -257,3 +257,7 @@ app.include_router(calendar_router, dependencies=[Depends(require_service_token)
 
 from .campaigns_v1220 import router as campaigns_router
 app.include_router(campaigns_router, dependencies=[Depends(require_service_token)])
+
+# MEDIA-05 — private, nonpersistent WordPress metadata preview bridge (default-off).
+from .media_bridge_v1250 import router as media_bridge_router
+app.include_router(media_bridge_router, dependencies=[Depends(require_service_token)])
