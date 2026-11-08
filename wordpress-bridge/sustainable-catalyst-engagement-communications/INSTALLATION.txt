@@ -145,3 +145,20 @@ ROLLBACK / CAUTIONS
 - The seven historical Engagement & Communications production identity/privacy
   acceptance gates remain outstanding. MEDIA-04 is a local WordPress editorial
   handoff, NOT an activation of the private Contabo SCEC backend or external API.
+
+MEDIA-05 (v8.8.9) — PRIVATE ENGAGEMENT BACKEND BRIDGE
+----------------------------------------------------
+The public Media page remains [sc_media]; there is no new public shortcode.
+The private WordPress admin page is Settings → Media Backend Bridge.
+
+Install the v8.8.9 ZIP as an upgrade to v8.8.8 (back up before replacing).
+The bridge is disabled by default. To activate in staging, an authorized
+administrator must configure SCEC_MEDIA05_ENABLED, SCEC_MEDIA05_API_ORIGIN,
+SCEC_MEDIA05_ORGANIZATION_ID and SCEC_MEDIA05_SERVICE_BEARER in protected
+wp-config.php, and separately enable the matching tenant-bound staging API.
+Never enter credentials into the Media page or paste them into chat.
+
+Use an already approved, unchanged MEDIA-04 package to send a metadata-only
+review request. Check status first. A receipt means the backend validated a
+private PREVIEW; it does not mean any channel has published a message.
+Detailed requirements and rollback: MEDIA-05-RELEASE.md.
