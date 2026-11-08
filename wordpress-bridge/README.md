@@ -1,3 +1,12 @@
+# MEDIA-04 — Controlled Editorial Distribution (v8.8.8)
+
+A functional **private WordPress Media Distribution workspace** is now included. Under **Settings → Media Distribution**, administrators create private distribution packages from already-published WordPress articles/pages, submit them for review, approve with rights/embargo confirmation, generate a **WordPress draft** tagged `media-update`, copy channel-specific text, record operator-attested public social URLs and export the approved JSON handoff manifest. Approval is fingerprinted to the public source content; changes invalidate downstream actions.
+
+This **does not** send newsletters, publish to Substack, upload videos, post to LinkedIn/social networks, or activate the private Engagement & Communications backend. Self-review is logged but permitted; it is not two-person approval. WordPress's regular post publishing remains a separate manual action.
+
+Review `wordpress-bridge/sustainable-catalyst-engagement-communications/MEDIA-04-RELEASE.md` and `wordpress-bridge/MEDIA-04-TEST-REPORT.md` for acceptance and rollback. Plugin upgrade to v8.8.8 and actual site verification have **not** occurred through the repository change.
+
+---
 # MEDIA-03 — Unified Channel Discovery (WordPress v8.8.7)
 
 **Packaged source; local QA passed; production not yet accepted.** The `[sc_media]` page can show an optional, server-rendered and cached stream of public Substack RSS issues, YouTube Atom uploads (explicit 24-character UC channel ID required), and *published WordPress posts explicitly tagged* `media-update`. It links to source publishers; it does **not** post content to external channels, transmit subscribers, or access private Engagement & Communications data. The new MEDIA-03 feed requests remain disabled until the owner enables discovery in **Settings → Media & Communications**; the existing Substack recent-issues widget has its own independent switch.
