@@ -23,7 +23,7 @@ MEDIA-03 **aggregates links to already-public source material** on the Media pag
 
 - Auto discovery is **OFF by default**; a WordPress administrator must enable it.
 - Only configured Substack publication host and fixed YouTube public feed host are fetched; arbitrary feed URLs are not accepted.
-- No external requests on first visitor load while discovery is disabled. No client-side RSS fetch or tracking pixels.
+- No additional MEDIA-03 feed requests when unified discovery is disabled. The pre-existing Substack recent-issues RSS feature remains controlled separately by its own checkbox. No client-side RSS fetch or tracking pixels.
 - Public items shown only after successful source validation. Transient network errors do not expose private details to visitors.
 - PHP SimpleXML is required for auto parsing; the admin diagnostics report its availability.
 - Test the page while logged out, WordPress content privacy, source links, feed failures, mobile display, and cache refresh before marking live acceptance.
