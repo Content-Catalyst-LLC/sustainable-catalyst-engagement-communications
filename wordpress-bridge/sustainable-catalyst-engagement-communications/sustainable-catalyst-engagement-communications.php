@@ -106,6 +106,7 @@ final class SC_Engagement_Bridge_882 {
     }
     public static function field_media_redirect() {
         $enabled = get_option(self::REDIRECT_OPTION, '0');
+        echo '<input type="hidden" name="' . esc_attr(self::REDIRECT_OPTION) . '" value="0">';
         echo '<label><input type="checkbox" name="' . esc_attr(self::REDIRECT_OPTION) . '" value="1" ' . checked($enabled, '1', false) . '> Redirect exact public <code>/press/</code> and <code>/channel/</code> requests to <code>/media/</code> with HTTP 301</label>';
         echo '<p class="description">Off by default. Only activates if the Media page is published, publicly accessible and contains [sc_media] or [sc_press]. Never overrides a separate existing Press/Channel WordPress page. Back up first, and avoid duplicate redirects in your host or SEO plugin.</p>';
     }
