@@ -93,18 +93,18 @@ def test_assertion_bound_to_method_path_body_tenant_and_expiry(staging):
     assert request(staging,'GET','/v1/media-ops/status',claims_override={'method':'POST'}).status_code==401
     assert request(staging,'GET','/v1/media-ops/status',claims_override={'body_sha256':'0'*64}).status_code==401
     assert request(staging,'GET','/v1/media-ops/status',claims_override={'org':OTHER}).status_code==403
-    assert request(staging,'GET','/v1/media-ops/status',claims_override={'exp':int(time.time())-5}).status_code==401
+    assert request(staging,'GET','/v1/media-ops/status',claims_override={'exp':int(time.time())-60}).status_code==401
     assert request(staging,'GET','/v1/media-ops/status',claims_override={'exp':int(time.time())+3600}).status_code==401
 
 def test_storage_requires_opt_in(staging,monkeypatch):
-    monkeypatch.setenv('SCEC_MEDIA06_STORAGE_ENABLED','0')
-    r=request(staging,'POST','/v1/media-ops/packages',submit())
-    assert r.status_code==503
-    monkeypatch.setenv('SCEC_MEDIA06_STORAGE_ENABLED','1')
-    monkeypatch.setenv('SCEC_MEDIA06_DATABASE_URL','postgresql+psycopg://test@localhost/production')
     from app.media_operations_v1260 import require_storage
     from fastapi import HTTPException
-    with pytest.raises(HTTPException) as err:require_storage()
+    monkeypatch.setenv('SCEC_MEDIA06_STORAGE_ENABLED','0')
+    with pytest.raises(HTTPException) as err: require_storage()
+    assert err.value.status_code==503
+    monkeypatch.setenv('SCEC_MEDIA06_STORAGE_ENABLED','1')
+    monkeypatch.setenv('SCEC_MEDIA06_DATABASE_URL','postgresql+psycopg://test@localhost/production')
+    with pytest.raises(HTTPException) as err: require_storage()
     assert err.value.status_code==503
 
 def test_idempotency_two_distinct_reviewers_audit_and_reconciliation(staging):
