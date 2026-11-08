@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Sustainable Catalyst — Media & Communications Bridge
  * Description: Public Media hub for newsletters, video, LinkedIn, social channels and read-only Engagement & Communications bridge.
- * Version: 8.8.7
+ * Version: 8.8.8
  * Author: Content Catalyst LLC
  * Text Domain: sc-engagement-bridge
  */
@@ -10,7 +10,7 @@ if (!defined('ABSPATH')) { exit; }
 
 final class SC_Engagement_Bridge_882 {
     const OPTION = 'sc_ec880_app_url';
-    const VERSION = '8.8.7';
+    const VERSION = '8.8.8';
     const MEDIA_OPTION = 'sc_ec_media_settings';
     const REDIRECT_OPTION = 'sc_ec_media_legacy_redirects';
 
@@ -95,6 +95,7 @@ final class SC_Engagement_Bridge_882 {
         settings_fields('sc_ec880_settings'); do_settings_sections('sc_ec880'); submit_button('Save settings');
         echo '</form><p>Shortcodes: <code>[sc_engagement_communications]</code> <code>[sc_engagement_launch]</code>, <code>[sc_engagement_public_links]</code>, <code>[sc_press]</code> (compatibility), and <code>[sc_media]</code> (recommended).</p>';
         self::render_media_readiness_admin();
+        echo '<p><a class="button button-secondary" href="' . esc_url(admin_url('options-general.php?page=scec-media04')) . '">Open MEDIA-04 Distribution Workspace</a></p>';
         echo '</div>';
     }
     /** Conservative check; an existing source page is never hijacked by a redirect. */
@@ -718,7 +719,7 @@ final class SC_Engagement_Bridge_882 {
         $url = self::url();
         ob_start(); ?>
         <section class="scec880" aria-labelledby="scec880-heading">
-          <div class="scec880-kicker">SUSTAINABLE CATALYST / INDEPENDENT OPERATING SURFACE <span>8.8.7</span></div>
+          <div class="scec880-kicker">SUSTAINABLE CATALYST / INDEPENDENT OPERATING SURFACE <span>8.8.8</span></div>
           <div class="scec880-intro">
             <div><h2 id="scec880-heading">Engagement <span>&amp;</span><br>Communications</h2>
             <p>Institutional relationships, support, advisory workflows, and accountable communication—organized within an independent application.</p></div>
@@ -740,4 +741,6 @@ final class SC_Engagement_Bridge_882 {
         return ob_get_clean();
     }
 }
+require_once __DIR__ . '/includes/media04-workflow.php';
 SC_Engagement_Bridge_882::boot();
+SC_Media04_Workflow::boot();
