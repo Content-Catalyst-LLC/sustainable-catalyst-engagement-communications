@@ -202,9 +202,8 @@ final class SC_Engagement_Bridge_882 {
         if ($method !== 'GET' && $method !== 'HEAD') { return; }
         $slug = self::media_legacy_slug_for_request((string)($_SERVER['REQUEST_URI'] ?? ''), home_url('/'));
         if ($slug === '') { return; }
-        // MEDIA-08 reserves /press/ for the independent Press Room. Old redirect
-        // preferences must not redirect future Press routes to the Media hub.
-        if ($slug === 'press') { return; }
+        // Preserve the existing legacy redirect until an actual dedicated
+        // /press/ WordPress page exists. That page then takes precedence.
         if (get_page_by_path($slug, OBJECT, 'page')) { return; }
         $checks = self::media_readiness_checks();
         if (!$checks['media_public'] || !$checks['shortcode'] || !$checks['same_site_url']) { return; }
