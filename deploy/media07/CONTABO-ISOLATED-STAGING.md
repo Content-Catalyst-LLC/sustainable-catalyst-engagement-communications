@@ -1,5 +1,35 @@
 # MEDIA-07 — Contabo isolated listmonk staging operator handoff
 
+## Preferred deployment: guarded first-time installer
+
+The reviewed first-time operator script is [deploy-contabo-staging.sh](deploy-contabo-staging.sh). It checks available disk/RAM, occupied ports and preexisting MEDIA-07 containers/volumes; generates unique staging credentials in a protected file outside the Git checkout; enforces Compose's internal network and loopback-only admin proxy; deploys; tests listmonk, Mailpit, a synthetic invalid-recipient message and negative external egress; backs up and restores PostgreSQL in a disposable test DB; and writes a redacted acceptance receipt. **Do not run against an existing MEDIA-07 installation.**
+
+Run this from your **Mac terminal** with already-authorized Contabo SSH access:
+
+\`\`\`bash
+ssh catalystadmin@94.72.113.77 'bash -se' <<'CONTABO'
+set -euo pipefail
+target="$HOME/media0708-staging-candidate"
+if [ -e "$target" ]; then
+  echo "Candidate directory already exists; inspect before proceeding." >&2
+  exit 1
+fi
+git clone --single-branch \
+  --branch feature/media-08-press-room-and-media07-staging-20261108 \
+  https://github.com/Content-Catalyst-LLC/sustainable-catalyst-engagement-communications.git \
+  "$target"
+cd "$target"
+bash deploy/media07/deploy-contabo-staging.sh
+CONTABO
+\`\`\`
+
+The source repository is publicly readable, so this clone should not require GitHub credentials. Do not paste private SSH keys, env contents or raw Compose config (which may include passwords). On success the script prints the **private acceptance receipt path** under \`$HOME/media07-private/receipts/\`, and \`docker compose ps\` shows the four containers. The file is held only on the Contabo server, not uploaded to GitHub or this chat.
+
+**If this chat has no authenticated SSH terminal, this command MUST be run by the authorized operator on their machine; a committed script or GitHub Actions test is not proof of actual Contabo deployment.** Script aborts on low capacity, missing dependencies, existing volumes/ports, nonclean checkout or failed synthetic/backup acceptance. On failure it deliberately retains private volumes for inspection; it never automatically prunes or deletes other services.
+
+Use the rest of this runbook for manual review, recovery, and SSH-tunnel access. Do not independently run the manual startup sequence after the installer succeeds, and never set a real SMTP provider in staging.
+
+
 **Status:** Source and disposable CI staging candidate. **Not verified deployed on Contabo.** No actual SMTP provider, real subscribers, production migration, or external sends authorized.
 
 ## Preconditions (read-only)
