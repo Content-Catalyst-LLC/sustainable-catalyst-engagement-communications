@@ -46,6 +46,22 @@ The existing `SCEC_IDENTITY_SIGNING_KEY` must be supplied through the authorized
 5. Stage the new Python backend separately on host-loopback without altering existing MEDIA-05/06 services or public reverse proxy. Start with all flags disabled, confirm request denial, then enable **only** draft creation with authenticated canary identity. Test one synthetic campaign draft; confirm exact draft status in listmonk and **no message in Mailpit** caused by draft creation. Re-submit the same fixture once to exercise reconciliation, then inspect source and provider record carefully.
 6. Record source commit, backend process ID/port, audience list ID (non-sensitive), role review, receipt, synthetic campaign ID, negative sending tests, rollback plan and exact API status. Never mark real Studio UI integrated until authenticated WordPress-to-Engagement source/revision proof passes.
 
+## 9 November 2026 — Operator credential provisioning correction (SUPERADMIN NO-GO)
+
+The operator verified the correct PR #34 source checkout and reported that `provision-draft-credential.py` successfully created the private on-host JSON file after an initial rejected attempt. **The API identity entered at provisioning was assigned listmonk's Super Admin role. Do not activate `SCEC_MEDIA07_LISTMONK_DRAFT_ENABLED` or use this credential for the bridge.** The script checks filename ownership/permissions and token syntax, **not** the API user's role or its actual permissions. This is **credential-file creation only**, NOT accepted listmonk API integration.
+
+Listmonk v6.2 distinguishes `campaigns:manage` (create/update/delete) from `campaigns:send` (start/schedule/pause/resume/cancel). User roles live at **Admin → Users → User roles**; list-specific grants use **List roles**. Official sources: https://listmonk.app/docs/roles-and-permissions/ and https://github.com/knadh/listmonk/releases/tag/v6.2.0 .
+
+**Corrective operator sequence (not yet performed):**
+
+1. In listmonk UI, **revoke/delete the newly provisioned Super Admin API token**, or disable the unused high-privilege API user. **Do not remove the normal human administrator account.** Keep draft integration disabled.
+2. Create an exact-name active private **zero-subscriber** test list. Define a custom **user role** that grants **only `campaigns:get` and `campaigns:manage`**, with **`campaigns:send` absent**; exclude `campaigns:manage_all`, `campaigns:get_all`, `lists:get_all`, `lists:manage_all`, `tx:send`, all subscriber import/manage/query, admin/users/settings and public release privileges. `campaigns:manage` also permits updating/deleting campaigns for permitted lists; listmonk cannot express a narrower create-only role here.
+3. Define a **list role** with view/read access to **only** this synthetic empty list and assign both roles to a new API service account, e.g. `sc_media07_drafts`. Keep the human Super Admin login separate.
+4. Once the overprivileged API token is revoked, remove **only** the mistakenly provisioned `$HOME/media07-private/listmonk-draft-credential.json` via a reviewed interactive `rm -i` (never print the file); run `python3 $HOME/media07-03-candidate/deploy/media07/provision-draft-credential.py` again to write the **new restricted** account/token. Verify mode 0600 and ownership, without disclosing values.
+5. Independently inspect the assigned roles and exact list scope in listmonk before any connector activation. Preserve the existing staging Compose and WordPress status.
+
+**Fail-closed caveat:** The current Python adapter does not independently introspect user roles. An operator-created Super Admin API credential may pass its token file syntax checks. A least-privilege role review and proof of **no send** are therefore mandatory acceptance gates, not optional preferences. Do not record MEDIA-07.3 as deployed/accepted until completed.
+
 ## Current acceptance and remaining risks
 
 - [x] Mock-provider tests cover absent/incorrect bearer, wrong role, cross-organization request, disabled feature flags, nonempty/public list, safe write path, result draft validation, error redaction, duplicates, and no-send route contract.
