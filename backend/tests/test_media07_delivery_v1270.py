@@ -1,4 +1,4 @@
-"""MEDIA-07: offline integration contract. Never touches SMTP, listmonk, or user data."""
+"""MEDIA-07: Substack-first offline plan, optional premium provider is disabled."""
 import pytest
 from fastapi import HTTPException
 from pydantic import ValidationError
@@ -11,39 +11,43 @@ def example(**overrides):
         title="Research Bulletin", subject="Evidence and Policy",
         preheader="Sustainable Catalyst research news",
         approved_revision_sha256="a"*64,
-        channels=["self_hosted_email","substack_manual"],
+        channels=["substack_manual", "premium_provider_future"],
     )
     return NewsletterPlan(**(data | overrides))
 
-def test_status_denies_all_live_delivery():
+def test_primary_channel_is_substack_and_no_delivery():
     out = status(tenant=TENANT)
     assert out["release"] == "MEDIA-07"
+    assert out["primary_distribution"] == "substack_manual"
+    assert out["premium_delivery_adapter_enabled"] is False
     assert out["campaign_send_enabled"] is False
-    assert out["listmonk_api_access_enabled"] is False
     assert out["production_certified"] is False
 
-def test_offline_plan_is_deterministic_and_never_dispatches():
+def test_plan_deterministic_and_no_provider_calls():
     req=example()
-    one=plan(req,tenant=TENANT)
-    two=plan(req,tenant=TENANT)
+    one=plan(req, tenant=TENANT)
+    two=plan(req, tenant=TENANT)
     assert one["input_sha256"]==two["input_sha256"]
     assert one["recipient_selection_performed"] is False
-    assert one["listmonk_api_request_performed"] is False
-    assert [x["action"] for x in one["channels"]] == ["listmonk_draft_only","substack_manual_export"]
+    assert one["provider_api_request_performed"] is False
+    assert [x["action"] for x in one["channels"]] == [
+        "substack_compatible_export","future_provider_not_configured"
+    ]
     assert all(x["status"]=="not_executed" for x in one["channels"])
 
 @pytest.mark.parametrize("bad", [
-    {"channels":["self_hosted_email","self_hosted_email"]},
+    {"channels":["substack_manual","substack_manual"]},
     {"channels":[]},
     {"approved_revision_sha256":"0"},
     {"channels":["substack_automatic"]},
+    {"channels":["self_hosted_email"]},
     {"recipient_email":"someone@example.com"},
 ])
-def test_disallowed_inputs_fail_closed(bad):
+def test_unapproved_inputs_fail_closed(bad):
     with pytest.raises(ValidationError):
         example(**bad)
 
-def test_dispatch_is_blocked():
+def test_dispatch_stays_blocked():
     with pytest.raises(HTTPException) as exc:
         blocked(tenant=TENANT)
     assert exc.value.status_code==503
