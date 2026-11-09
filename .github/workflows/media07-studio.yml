@@ -52,7 +52,12 @@ jobs:
             grapesjs@0.23.6 grapesjs-mjml@1.0.8
           cp node_modules/grapesjs/dist/grapes.min.js "$dest/grapes.min.js"
           cp node_modules/grapesjs/dist/css/grapes.min.css "$dest/grapes.min.css"
-          cp node_modules/grapesjs-mjml/dist/grapesjs-mjml.min.js "$dest/grapesjs-mjml.min.js"
+          echo "MEDIA-07 MJML npm distribution assets:"
+          find node_modules/grapesjs-mjml/dist -maxdepth 2 -type f | sort
+          node -e "const p=require('./node_modules/grapesjs-mjml/package.json'); console.log(JSON.stringify({main:p.main,module:p.module,unpkg:p.unpkg,jsdelivr:p.jsdelivr}))"
+          mjml_file="$(node -p "require('./node_modules/grapesjs-mjml/package.json').main")"
+          test -f "node_modules/grapesjs-mjml/$mjml_file"
+          cp "node_modules/grapesjs-mjml/$mjml_file" "$dest/grapesjs-mjml.min.js"
           cp node_modules/grapesjs/LICENSE "$dest/grapesjs-LICENSE"
           cp node_modules/grapesjs-mjml/LICENSE "$dest/grapesjs-mjml-LICENSE"
           test -s "$dest/grapes.min.js"
