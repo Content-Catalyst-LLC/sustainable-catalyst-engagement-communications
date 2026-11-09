@@ -16,7 +16,10 @@ final class SC_Media08_Press_Room {
         'press-release' => 'Press release',
         'announcement' => 'Institutional announcement',
         'statement' => 'Official statement',
-        'research-update' => 'Research announcement',
+        'research-release' => 'Research release',
+        'institutional-update' => 'Institutional update',
+        'methodology-note' => 'Methodology note',
+        'data-release' => 'Data release',
         'event-notice' => 'Event notice',
     );
 
