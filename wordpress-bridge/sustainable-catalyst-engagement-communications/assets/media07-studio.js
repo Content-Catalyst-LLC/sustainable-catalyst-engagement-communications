@@ -197,7 +197,10 @@
     inFlight = true;
     $('scec07-save').disabled = true;
     var existingId = selectedId;
-    var before = project;
+    var before = JSON.stringify({
+      project: project, title: title, subject: subject,
+      preheader: $('scec07-preheader').value.trim()
+    });
     if (!quiet) { message('Saving private newsletter revision…'); }
     request('save', {
       id: String(selectedId), title: title, subject: subject,
@@ -207,7 +210,12 @@
       selectedId = data.id;
       revision = data.revision;
       // If the user changed the editor during the request, preserve unsaved state.
-      dirty = before !== JSON.stringify(editor.getProjectData());
+      dirty = before !== JSON.stringify({
+        project: JSON.stringify(editor.getProjectData()),
+        title: $('scec07-title').value.trim(),
+        subject: $('scec07-subject').value.trim(),
+        preheader: $('scec07-preheader').value.trim()
+      });
       $('scec07-revision').textContent = 'Saved r' + revision + ' · SHA-256 ' +
         data.sha256.slice(0, 12) + (dirty ? ' · unsaved changes' : '');
       updateSelect(data.issues);
