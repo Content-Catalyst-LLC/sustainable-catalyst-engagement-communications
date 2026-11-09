@@ -79,7 +79,7 @@ for name in ("db", "listmonk", "mailpit"):
     assert set(nets) == {"media07_private"}, name
 proxy = services["admin_proxy"]
 assert set(proxy["networks"]) == {"media07_private", "media07_admin"}
-assert sorted((p["published"],p.get("host_ip"),p["target"])
+assert sorted((str(p["published"]),p.get("host_ip"),p["target"])
               for p in proxy["ports"]) == [
                  ("18898","127.0.0.1",9000),
                  ("18899","127.0.0.1",8025)]
