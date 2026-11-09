@@ -79,3 +79,8 @@ Existing SCEC_MEDIA05_API_ORIGIN and SCEC_MEDIA05_ORGANIZATION_ID are reused. No
 - [ ] Operator change-control and production signoff.
 
 MEDIA-06 implements substantial staging functionality, but does NOT authorize production publishing or subscriber data transfer.
+
+## Migration recovery note (2026-11-08)
+Contabo first application stopped with `ERROR: syntax error at or near "$"` in the PostgreSQL audit trigger function. The repository's initial MEDIA06_CREATE.sql had a malformed single-dollar delimiter, fixed on this branch to `$media06$`, with a terminating PL/pgSQL `END;`. The migration ran inside `BEGIN` with ON_ERROR_STOP, so its aborted transaction should have rolled back all created tables; **verify the live state rather than assuming rollback**. The isolated container, persistent Docker volume, restricted env files and the app database role were provisioned before the failed migration. Do NOT repeat the one-shot initialization script or regenerate passwords. Check the container/role and zero MEDIA-06 tables, fetch the corrected branch, then apply only the migration and deferred least-privilege GRANT step. New CI job performs actual disposable PostgreSQL 16 migration and forbidden database-name tests before approving the recovery.
+
+Staging recovery is not a production cutover and does not enable MEDIA-06 or touch MEDIA-05.
