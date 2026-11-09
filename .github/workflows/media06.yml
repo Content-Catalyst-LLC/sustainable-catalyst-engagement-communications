@@ -1,0 +1,99 @@
+name: MEDIA-06 candidate verification
+on:
+  push:
+    branches:
+      - feature/media-06-operational-integration-20261108
+  pull_request:
+    paths:
+      - 'backend/app/media_operations_v1260.py'
+      - 'backend/tests/test_media_operations_v1260.py'
+      - 'backend/app/main.py'
+      - 'wordpress-bridge/sustainable-catalyst-engagement-communications/includes/media06-operations.php'
+      - 'wordpress-bridge/sustainable-catalyst-engagement-communications/sustainable-catalyst-engagement-communications.php'
+      - '.github/workflows/media06.yml'
+      - 'backend/migrations/MEDIA06_CREATE.sql'
+permissions:
+  contents: read
+jobs:
+  offline-security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install pinned backend test requirements
+        run: python -m pip install -r backend/requirements-dev.txt
+      - name: Run MEDIA-05 regression and MEDIA-06 acceptance
+        working-directory: backend
+        run: python -m pytest -q tests/test_media_bridge_v1250.py tests/test_media_operations_v1260.py
+      - name: PHP syntax checks
+        run: |
+          php -l wordpress-bridge/sustainable-catalyst-engagement-communications/includes/media06-operations.php
+          php -l wordpress-bridge/sustainable-catalyst-engagement-communications/sustainable-catalyst-engagement-communications.php
+
+  database-migration:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: scec_engagement_media06_ci
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: media06_ci_only
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d scec_engagement_media06_ci"
+          --health-interval 5s --health-timeout 5s --health-retries 20
+    env:
+      PGHOST: 127.0.0.1
+      PGPORT: 5432
+      PGDATABASE: scec_engagement_media06_ci
+      PGUSER: postgres
+      PGPASSWORD: media06_ci_only
+    steps:
+      - uses: actions/checkout@v4
+      - name: PostgreSQL client availability
+        run: |
+          if ! command -v psql >/dev/null; then
+            sudo apt-get update -qq
+            sudo apt-get install -y postgresql-client
+          fi
+      - name: Apply actual MEDIA-06 migration to disposable database
+        run: psql -X -v ON_ERROR_STOP=1 -f backend/migrations/MEDIA06_CREATE.sql
+      - name: Check three tables and immutable evidence triggers
+        run: |
+          psql -X -v ON_ERROR_STOP=1 <<'SQL'
+          DO $media06_ci$
+          DECLARE
+            count_tables integer;
+            count_triggers integer;
+          BEGIN
+            SELECT count(*) INTO count_tables
+            FROM information_schema.tables
+            WHERE table_schema='public'
+              AND table_name IN ('media06_packages','media06_reviews','media06_audit');
+            IF count_tables <> 3 THEN
+              RAISE EXCEPTION 'MEDIA-06 migration missing tables';
+            END IF;
+            SELECT count(*) INTO count_triggers
+            FROM pg_trigger t JOIN pg_class c ON c.oid=t.tgrelid
+            WHERE c.relname IN ('media06_reviews','media06_audit')
+              AND t.tgname IN ('media06_reviews_immutable','media06_audit_immutable')
+              AND NOT t.tgisinternal;
+            IF count_triggers <> 2 THEN
+              RAISE EXCEPTION 'MEDIA-06 audit immutability triggers missing';
+            END IF;
+          END; $media06_ci$;
+          SQL
+      - name: Confirm unsafe database name fails without schema changes
+        run: |
+          if PGDATABASE=postgres psql -X -v ON_ERROR_STOP=1 -f backend/migrations/MEDIA06_CREATE.sql >/dev/null 2>&1; then
+            echo 'Unsafe database guard failed'
+            exit 1
+          fi
+          if [ "$(PGDATABASE=postgres psql -X -Atqc "SELECT count(*) FROM information_schema.tables WHERE table_schema='public' AND table_name LIKE 'media06_%'")" != 0 ]; then
+            echo 'Unsafe database was changed'
+            exit 1
+          fi
