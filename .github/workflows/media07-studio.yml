@@ -1,0 +1,77 @@
+name: MEDIA-07 WordPress Newsletter Studio
+on:
+  push:
+    branches:
+      - feature/media-07-listmonk-delivery-foundation-20261108
+  pull_request:
+    paths:
+      - 'wordpress-bridge/sustainable-catalyst-engagement-communications/**'
+      - '.github/workflows/media07-studio.yml'
+permissions:
+  contents: read
+jobs:
+  studio-package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: PHP and JavaScript syntax checks
+        run: |
+          php -l wordpress-bridge/sustainable-catalyst-engagement-communications/includes/media07-studio.php
+          php -l wordpress-bridge/sustainable-catalyst-engagement-communications/sustainable-catalyst-engagement-communications.php
+          node --check wordpress-bridge/sustainable-catalyst-engagement-communications/assets/media07-studio.js
+          php wordpress-bridge/sustainable-catalyst-engagement-communications/tests/media07-validation.php
+      - name: Check no delivery or subscriber integration in visual editor
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          root=Path('wordpress-bridge/sustainable-catalyst-engagement-communications')
+          js=(root/'assets/media07-studio.js').read_text()
+          php=(root/'includes/media07-studio.php').read_text()
+          assert 'mjml-code-to-html' in js
+          assert 'Copy Substack edition' in php
+          assert "wp_ajax_scec07_save" in php and "check_ajax_referer" in php
+          assert "'public' => false" in php and "'show_in_rest' => false" in php
+          assert "wp_slash($canonical)" in php
+          assert 'wp_safe_remote_post' not in php and 'wp_remote_post' not in php
+          assert 'smtp' not in js.lower()
+          print('MEDIA-07 no-delivery editor contract: PASS')
+          PY
+      - name: Prepare vendored open-source browser libraries
+        run: |
+          set -euo pipefail
+          dest="$GITHUB_WORKSPACE/wordpress-bridge/sustainable-catalyst-engagement-communications/assets/vendor"
+          mkdir -p "$dest"
+          cd "$RUNNER_TEMP"
+          mkdir -p media07-deps
+          cd media07-deps
+          npm init -y >/dev/null
+          npm install --no-save --ignore-scripts --no-audit --no-fund \
+            grapesjs@0.23.6 grapesjs-mjml@1.0.8
+          cp node_modules/grapesjs/dist/grapes.min.js "$dest/grapes.min.js"
+          cp node_modules/grapesjs/dist/css/grapes.min.css "$dest/grapes.min.css"
+          cp node_modules/grapesjs-mjml/dist/grapesjs-mjml.min.js "$dest/grapesjs-mjml.min.js"
+          cp node_modules/grapesjs/LICENSE "$dest/grapesjs-LICENSE"
+          cp node_modules/grapesjs-mjml/LICENSE "$dest/grapesjs-mjml-LICENSE"
+          test -s "$dest/grapes.min.js"
+          test -s "$dest/grapesjs-mjml.min.js"
+          sha256sum "$dest"/*.js > "$GITHUB_WORKSPACE/media07-vendor-sha256.txt"
+      - name: Build installable WordPress plugin ZIP
+        run: |
+          set -euo pipefail
+          cd wordpress-bridge
+          zip -qr "$GITHUB_WORKSPACE/scec-newsletter-studio-8.9.1.zip" \
+            sustainable-catalyst-engagement-communications \
+            -x '*/tests/*'
+          unzip -t "$GITHUB_WORKSPACE/scec-newsletter-studio-8.9.1.zip" | tail -1
+          sha256sum "$GITHUB_WORKSPACE/scec-newsletter-studio-8.9.1.zip"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: scec-newsletter-studio-8.9.1
+          path: |
+            scec-newsletter-studio-8.9.1.zip
+            media07-vendor-sha256.txt
+          if-no-files-found: error
+          retention-days: 14
