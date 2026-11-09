@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Sustainable Catalyst — Media & Communications Bridge
  * Description: Public Media hub for newsletters, video, LinkedIn, social channels and read-only Engagement & Communications bridge.
- * Version: 8.9.1
+ * Version: 8.9.2
  * Author: Content Catalyst LLC
  * Text Domain: sc-engagement-bridge
  */
@@ -10,7 +10,7 @@ if (!defined('ABSPATH')) { exit; }
 
 final class SC_Engagement_Bridge_882 {
     const OPTION = 'sc_ec880_app_url';
-    const VERSION = '8.9.1';
+    const VERSION = '8.9.2';
     const MEDIA_OPTION = 'sc_ec_media_settings';
     const REDIRECT_OPTION = 'sc_ec_media_legacy_redirects';
 
@@ -23,7 +23,7 @@ final class SC_Engagement_Bridge_882 {
         add_shortcode('sc_engagement_launch', array(__CLASS__, 'render_launch'));
         add_shortcode('sc_engagement_public_links', array(__CLASS__, 'render_public_links'));
         add_shortcode('sc_press', array(__CLASS__, 'render_media')); // Existing pages remain functional.
-        add_shortcode('sc_media', array(__CLASS__, 'render_media'));
+        add_shortcode('sc_media', array(__CLASS__, 'render_media')); // Public Media unchanged.
     }
 
     public static function register_assets() {
@@ -93,7 +93,7 @@ final class SC_Engagement_Bridge_882 {
         if (!current_user_can('manage_options')) { return; }
         echo '<div class="wrap"><h1>Media &amp; Communications</h1><form method="post" action="options.php">';
         settings_fields('sc_ec880_settings'); do_settings_sections('sc_ec880'); submit_button('Save settings');
-        echo '</form><p>Shortcodes: <code>[sc_engagement_communications]</code> <code>[sc_engagement_launch]</code>, <code>[sc_engagement_public_links]</code>, <code>[sc_press]</code> (compatibility), and <code>[sc_media]</code> (recommended).</p>';
+        echo '</form><p>Shortcodes: <code>[sc_engagement_communications]</code>, <code>[sc_engagement_launch]</code>, <code>[sc_engagement_public_links]</code>, <code>[sc_press]</code> (legacy Media compatibility), <code>[sc_media]</code> (Media hub), and <code>[sc_press_room]</code> (dedicated Press Room).</p>'; 
         self::render_media_readiness_admin();
         echo '<p><a class="button button-secondary" href="' . esc_url(admin_url('options-general.php?page=scec-media04')) . '">Open MEDIA-04 Distribution Workspace</a></p>';
         echo '</div>';
@@ -115,7 +115,7 @@ final class SC_Engagement_Bridge_882 {
         $enabled = get_option(self::REDIRECT_OPTION, '0');
         echo '<input type="hidden" name="' . esc_attr(self::REDIRECT_OPTION) . '" value="0">';
         echo '<label><input type="checkbox" name="' . esc_attr(self::REDIRECT_OPTION) . '" value="1" ' . checked($enabled, '1', false) . '> Redirect exact public <code>/press/</code> and <code>/channel/</code> requests to <code>/media/</code> with HTTP 301</label>';
-        echo '<p class="description">Off by default. Only activates if the Media page is published, publicly accessible and contains [sc_media] or [sc_press]. Never overrides a separate existing Press/Channel WordPress page. Back up first, and avoid duplicate redirects in your host or SEO plugin.</p>';
+        echo '<p class="description">Off by default. Legacy option, not recommended with a dedicated Press Room. Never redirects an existing /press/ page. Disable this option before launching a new /press/ page and check host/SEO redirects separately.</p>'; 
     }
     /** WordPress installation can live at the root or a subdirectory. */
     private static function media_legacy_slug_for_request($request_uri, $home_url) {
@@ -202,6 +202,9 @@ final class SC_Engagement_Bridge_882 {
         if ($method !== 'GET' && $method !== 'HEAD') { return; }
         $slug = self::media_legacy_slug_for_request((string)($_SERVER['REQUEST_URI'] ?? ''), home_url('/'));
         if ($slug === '') { return; }
+        // MEDIA-08 reserves /press/ for the independent Press Room. Old redirect
+        // preferences must not redirect future Press routes to the Media hub.
+        if ($slug === 'press') { return; }
         if (get_page_by_path($slug, OBJECT, 'page')) { return; }
         $checks = self::media_readiness_checks();
         if (!$checks['media_public'] || !$checks['shortcode'] || !$checks['same_site_url']) { return; }
@@ -745,8 +748,10 @@ require_once __DIR__ . '/includes/media04-workflow.php';
 require_once __DIR__ . '/includes/media05-bridge.php';
 require_once __DIR__ . '/includes/media06-operations.php';
 require_once __DIR__ . '/includes/media07-studio.php';
+require_once __DIR__ . '/includes/media08-press-room.php';
 SC_Engagement_Bridge_882::boot();
 SC_Media04_Workflow::boot();
 SC_Media05_Bridge::boot();
 SC_Media06_Operations::boot();
 SC_Media07_Studio::boot();
+SC_Media08_Press_Room::boot();
