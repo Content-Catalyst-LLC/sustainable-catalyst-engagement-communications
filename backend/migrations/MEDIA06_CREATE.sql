@@ -7,7 +7,7 @@ BEGIN
     IF current_database() NOT LIKE 'scec\_engagement\_%' ESCAPE '\' THEN
         RAISE EXCEPTION 'MEDIA-06 refuses non-dedicated Engagement database';
     END IF;
-END $gate$;
+END; $gate$;
 
 CREATE TABLE media06_packages (
     id varchar(36) PRIMARY KEY,
@@ -57,10 +57,10 @@ CREATE TABLE media06_audit (
 CREATE INDEX ix_media06_audit_package ON media06_audit (organization_id, package_id, created_at);
 
 -- Harden operator-managed audit/reviewer evidence against mutation by the app role.
-CREATE FUNCTION media06_reject_evidence_mutation() RETURNS trigger LANGUAGE plpgsql AS $
+CREATE FUNCTION media06_reject_evidence_mutation() RETURNS trigger LANGUAGE plpgsql AS $media06$
 BEGIN
     RAISE EXCEPTION 'MEDIA-06 evidence is append-only';
-END $;
+END; $media06$;
 CREATE TRIGGER media06_audit_immutable BEFORE UPDATE OR DELETE ON media06_audit
     FOR EACH ROW EXECUTE FUNCTION media06_reject_evidence_mutation();
 CREATE TRIGGER media06_reviews_immutable BEFORE UPDATE OR DELETE ON media06_reviews
