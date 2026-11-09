@@ -265,3 +265,7 @@ app.include_router(media_bridge_router, dependencies=[Depends(require_service_to
 # MEDIA-06: separate, default-off signed editorial operations; no provider dispatch.
 from .media_operations_v1260 import router as media_ops_router
 app.include_router(media_ops_router)
+
+# MEDIA-07: offline newsletter distribution planning; listmonk and SMTP are separate and not invoked.
+from .media07_delivery_v1270 import router as media07_router
+app.include_router(media07_router, dependencies=[Depends(require_service_token)])
