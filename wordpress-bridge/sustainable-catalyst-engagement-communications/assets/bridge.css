@@ -34,3 +34,18 @@
 
 /* MEDIA-03: restrained feed directory, server-rendered cached metadata, no tracking pixels. */
 .scec-media03{border-bottom:1px solid #dedede;background:#fff}.scec-media03>p{max-width:750px}.scec-media03-list{list-style:none;padding:0;margin:18px 0 0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.scec-media03-item{display:flex;flex-direction:column;gap:9px;border:1px solid #ddd;padding:18px;min-width:0;background:#fff}.scec-media03-meta{font-size:10px;letter-spacing:.09em;text-transform:uppercase;font-weight:700;color:#5a5a5a}.scec-media03-item>a{font-size:16px;line-height:1.45;font-weight:650;text-decoration:none!important;color:#111!important}.scec-media03-item>a:hover,.scec-media03-item>a:focus-visible{text-decoration:underline!important;text-decoration-color:#f00!important;text-underline-offset:3px}.scec-media03-item>a span{color:#f00}.scec-media03-item:focus-within{outline:2px solid #f00;outline-offset:2px}@media(max-width:650px){.scec-media03-list{grid-template-columns:1fr}}
+
+
+/* MEDIA-08: institutional Press Room releases. Scope exclusively to shortcode. */
+.scec-press-archive {margin-top:0;border-top:1px solid #ddd}
+.scec-press-archive .scec-press-section > h2 {font-size:clamp(25px,3.4vw,37px);letter-spacing:-.035em;margin:0 0 26px;color:#111}
+.scec-press-release {border-top:1px solid #ddd;padding:24px 0 28px}
+.scec-press-release-meta {font-size:11px;letter-spacing:.08em;color:#a00000;font-weight:750;text-transform:uppercase;margin:0 0 10px}
+.scec-press-release h3 {font-size:clamp(20px,2.6vw,29px);line-height:1.22;margin:0 0 13px}
+.scec-press-release > p {max-width:740px;line-height:1.6;margin:0 0 15px}
+.scec-press-release details {max-width:860px}
+.scec-press-release summary {cursor:pointer;display:list-item;font-size:13px;font-weight:750;color:#111;padding:8px 0}
+.scec-press-release summary:focus-visible {outline:3px solid #f00;outline-offset:4px}
+.scec-press-release-body {line-height:1.75;overflow-wrap:anywhere;padding:16px 0}
+.scec-press-release-body a,.scec-press-release details a {color:#b60000;text-decoration:underline}
+.scec-press-release-body img {max-width:100%;height:auto}
