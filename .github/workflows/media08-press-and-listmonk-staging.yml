@@ -15,6 +15,26 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Validate Contabo installer shell syntax and nonproduction gates
+        run: |
+          bash -n deploy/media07/deploy-contabo-staging.sh
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('deploy/media07/deploy-contabo-staging.sh').read_text()
+          for phrase in (
+              'docker info', 'docker compose', 'df -Pk /', 'MemAvailable',
+              'SCEC_MEDIA08_PUBLIC_RELEASE', # not in deployment script: no release switch may be touched
+          ):
+              if phrase == 'SCEC_MEDIA08_PUBLIC_RELEASE':
+                  assert phrase not in p
+              else:
+                  assert phrase in p, phrase
+          assert 'docker volume rm ' not in p
+          assert 'docker system prune' not in p
+          assert 'MEDIA07_DB_PASSWORD' in p and 'private_egress_block' in p
+          assert 'media07_restore_smoke' in p
+          print('Contabo installer syntax and safety-contract checks PASS')
+          PY
       - name: Verify PHP syntax and private editorial gate
         run: |
           php -l wordpress-bridge/sustainable-catalyst-engagement-communications/includes/media08-press-room.php
