@@ -1,0 +1,10 @@
+# MEDIA-07 staging-only loopback reverse proxy; never a public HTTPS route.
+# The Docker host binds these listener ports to 127.0.0.1 only.
+:9000 {
+  reverse_proxy listmonk:9000
+  header -Server
+}
+:8025 {
+  reverse_proxy mailpit:8025
+  header -Server
+}
