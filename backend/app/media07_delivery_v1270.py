@@ -1,12 +1,10 @@
-"""MEDIA-07 newsletter distribution foundation.
+"""MEDIA-07 newsletter distribution planning contract.
 
-Offline, tenant-scoped planning only. No listmonk API requests, SMTP, subscriber
-ingestion, scheduling, publication, or external delivery from Sustainable Catalyst.
-The standalone listmonk staging stack is deployed/configured separately.
+Substack manual publishing is the initial delivery route. The premium-provider
+adapter is a future, disabled integration point. No network calls or subscribers.
 """
 import hashlib
 import json
-import os
 import re
 from typing import Literal
 from fastapi import APIRouter, Depends, HTTPException
@@ -23,7 +21,7 @@ class NewsletterPlan(BaseModel):
     subject: str = Field(min_length=1, max_length=200)
     preheader: str = Field(default="", max_length=180)
     approved_revision_sha256: str = Field(min_length=64, max_length=64)
-    channels: list[Literal["self_hosted_email", "substack_manual"]] = Field(min_length=1, max_length=2)
+    channels: list[Literal["substack_manual", "premium_provider_future"]] = Field(min_length=1, max_length=2)
 
     @field_validator("approved_revision_sha256")
     @classmethod
@@ -42,24 +40,21 @@ class NewsletterPlan(BaseModel):
 @router.get("/status")
 def status(tenant=Depends(_scope)):
     return seal({
-        "mode": "offline-newsletter-delivery-foundation",
-        "primary_delivery": "self_hosted_listmonk",
-        "optional_channel": "manual_substack_export",
+        "mode": "offline-newsletter-planning",
+        "primary_distribution": "substack_manual",
+        "optional_future_channel": "premium_provider",
         "listmonk_deployed_verified": False,
-        "listmonk_api_access_enabled": False,
+        "premium_delivery_adapter_enabled": False,
         "editor_integrated": False,
-        "smtp_connected": False,
         "subscriber_import_enabled": False,
         "campaign_send_enabled": False,
     }, str(tenant), "MEDIA-07")
 
 @router.post("/plan")
 def plan(payload: NewsletterPlan, tenant=Depends(_scope)):
-    # Preview the proposed destinations without contacting any service or
-    # accepting subscriber data, raw HTML, secrets, or recipient addresses.
     raw = json.dumps(payload.model_dump(), sort_keys=True, separators=(",", ":"))
     return seal({
-        "mode": "offline-delivery-plan",
+        "mode": "offline-distribution-plan",
         "title": payload.title,
         "subject": payload.subject,
         "preheader": payload.preheader,
@@ -68,12 +63,12 @@ def plan(payload: NewsletterPlan, tenant=Depends(_scope)):
         "channels": [
             {
                 "channel": channel,
-                "action": "listmonk_draft_only" if channel == "self_hosted_email" else "substack_manual_export",
+                "action": "substack_compatible_export" if channel == "substack_manual" else "future_provider_not_configured",
                 "status": "not_executed",
             } for channel in payload.channels
         ],
         "recipient_selection_performed": False,
-        "listmonk_api_request_performed": False,
+        "provider_api_request_performed": False,
         "email_rendering_performed": False,
     }, str(tenant), "MEDIA-07")
 
