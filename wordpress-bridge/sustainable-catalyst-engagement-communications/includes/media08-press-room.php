@@ -78,7 +78,10 @@ final class SC_Media08_Press_Room {
             !$author_id || !$reviewer_id || (int)$author_id === (int)$reviewer_id) {
             return false;
         }
-        return !$embargo || strtotime((string)$embargo) <= (int)$now_utc;
+        if (!$embargo) { return true; }
+        $date = DateTimeImmutable::createFromFormat('!Y-m-d\\TH:i', (string)$embargo, new DateTimeZone('UTC'));
+        return $date && $date->format('Y-m-d\\TH:i') === (string)$embargo &&
+            $date->getTimestamp() <= (int)$now_utc;
     }
 
     private static function current_sha($p) {
@@ -125,7 +128,7 @@ final class SC_Media08_Press_Room {
         if ($title === '' || $summary === '' || trim(wp_strip_all_tags($body)) === '' ||
             !isset(self::KINDS[$kind]) || strlen($title)>180 || strlen($summary)>900 ||
             strlen($body)>75000 || strlen($source_url)>600 ||
-            ($source_url && !wp_http_validate_url($source_url)) ||
+            ($source_url && (strpos($source_url, 'https://') !== 0 || !wp_http_validate_url($source_url))) ||
             ($embargo && !preg_match('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/D', $embargo))) {
             self::back('invalid',$id);
         }
@@ -210,12 +213,17 @@ final class SC_Media08_Press_Room {
     private static function public_item($p) {
         if (!self::enabled() || self::meta($p->ID,'state')!=='released' ||
             !hash_equals((string)self::meta($p->ID,'released_sha'),self::current_sha($p)) ||
+            !hash_equals((string)self::meta($p->ID,'approved_sha'),self::current_sha($p)) ||
             (int)self::meta($p->ID,'submitted_by') === (int)self::meta($p->ID,'reviewer_id') ||
             !self::meta($p->ID,'reviewer_id')) {
             return '';
         }
         $embargo=self::meta($p->ID,'embargo_until');
-        if ($embargo && strtotime((string)$embargo)>time()) { return ''; }
+        if ($embargo) {
+            $date=DateTimeImmutable::createFromFormat('!Y-m-d\\TH:i',(string)$embargo,new DateTimeZone('UTC'));
+            if (!$date || $date->format('Y-m-d\\TH:i') !== (string)$embargo ||
+                $date->getTimestamp()>time()) { return ''; }
+        }
         $kind=(string)self::meta($p->ID,'kind');
         $source=(string)self::meta($p->ID,'source_url');
         $html='<article class="scec-press-release" id="press-release-'.(int)$p->ID.'">';
