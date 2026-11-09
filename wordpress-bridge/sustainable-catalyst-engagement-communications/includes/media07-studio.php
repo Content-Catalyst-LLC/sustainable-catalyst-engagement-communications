@@ -67,9 +67,9 @@ final class SC_Media07_Studio {
         wp_enqueue_script('scec07-mjml', $mjml_js,
             array('scec07-grapesjs'), '1.0.8', true);
         wp_enqueue_style('scec07-ui', $base . 'assets/media07-studio.css',
-            array('scec07-grapesjs'), '8.9.1');
+            array('scec07-grapesjs'), '8.9.2');
         wp_enqueue_script('scec07-ui', $base . 'assets/media07-studio.js',
-            array('scec07-mjml'), '8.9.1', true);
+            array('scec07-mjml'), '8.9.2', true);
         wp_enqueue_media();
         wp_add_inline_script('scec07-ui', 'window.SCEC07_BOOT = ' .
             wp_json_encode(array(
@@ -239,6 +239,7 @@ final class SC_Media07_Studio {
               <hr>
               <button type="button" class="button button-primary" id="scec07-save">Save private revision</button>
               <button type="button" class="button" id="scec07-media">Insert WordPress image</button>
+              <a class="button" href="<?php echo esc_url(admin_url('options-general.php?page=scec-media08')); ?>">Open Press Room drafts</a>
               <div class="scec07-revision" id="scec07-revision" aria-live="polite">Unsaved draft</div>
               <hr>
               <label>Preview</label>
