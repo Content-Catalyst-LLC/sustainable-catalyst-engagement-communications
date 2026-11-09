@@ -123,7 +123,7 @@ def _client():
 
 def _api_json(resp):
     # No provider error bodies or credentials are ever echoed to clients.
-    if resp.status_code != 200:
+    if resp.status_code not in (200, 201):
         raise HTTPException(502, "listmonk staging API rejected request")
     if len(resp.content) > 512000:
         raise HTTPException(502, "listmonk staging response too large")
@@ -156,7 +156,7 @@ def _fingerprint(tenant, req):
     return hashlib.sha256(json.dumps(canonical, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
 
 
-def _existing_draft(client, name):
+def _existing_draft(client, name, body):
     data = _api_json(client.get("/api/campaigns", params={"query": name, "per_page": "all"}))
     if not isinstance(data, dict) or not isinstance(data.get("results"), list):
         raise HTTPException(502, "listmonk campaign search unavailable")
@@ -168,6 +168,16 @@ def _existing_draft(client, name):
     cid = matches[0].get("id")
     if type(cid) is not int or cid <= 0:
         raise HTTPException(502, "Invalid listmonk campaign identifier")
+    details = _api_json(client.get("/api/campaigns/" + str(cid)))
+    if not isinstance(details, dict) or details.get("status") != "draft" or details.get("name") != name:
+        raise HTTPException(409, "Existing campaign changed since creation")
+    if (details.get("subject") != body["subject"] or
+            details.get("body") != body["body"] or
+            details.get("altbody") != body["altbody"] or
+            details.get("content_type") != "html" or
+            details.get("messenger") != "email" or
+            sorted(x.get("id") for x in details.get("lists", []) if isinstance(x, dict)) != body["lists"]):
+        raise HTTPException(409, "Existing draft differs from the submitted revision")
     return cid
 
 
@@ -195,14 +205,6 @@ def create_draft(payload: DraftCandidate, tenant=Depends(_scope)):
     try:
         with _client() as client:
             _verify_empty_private_list(client, list_id)
-            existing = _existing_draft(client, name)
-            if existing is not None:
-                return {
-                    "release": "MEDIA-07.3", "organization_id": str(tenant),
-                    "campaign_id": existing, "campaign_status": "draft",
-                    "draft_reused": True, "fingerprint": digest,
-                    "synthetic_only": True, "sent": False,
-                }
             body = {
                 "name": name, "subject": "STAGING ONLY — " + payload.subject,
                 "type": "regular", "content_type": "html",
@@ -210,6 +212,14 @@ def create_draft(payload: DraftCandidate, tenant=Depends(_scope)):
                 "altbody": payload.altbody, "lists": [list_id],
                 "tags": ["scec-media07-staging", "synthetic-empty-list"],
             }
+            existing = _existing_draft(client, name, body)
+            if existing is not None:
+                return {
+                    "release": "MEDIA-07.3", "organization_id": str(tenant),
+                    "campaign_id": existing, "campaign_status": "draft",
+                    "draft_reused": True, "fingerprint": digest,
+                    "synthetic_only": True, "sent": False,
+                }
             # Never request /test, /status, /archive or /send; POST creates a DRAFT.
             campaign = _api_json(client.post("/api/campaigns", json=body))
             if not isinstance(campaign, dict) or campaign.get("status") != "draft" or campaign.get("name") != name:
