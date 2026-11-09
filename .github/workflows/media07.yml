@@ -7,7 +7,9 @@ on:
     paths:
       - 'deploy/media07/**'
       - 'backend/app/media07_delivery_v1270.py'
+      - 'backend/app/media07_listmonk_draft_v1280.py'
       - 'backend/tests/test_media07_delivery_v1270.py'
+      - 'backend/tests/test_media07_listmonk_draft_v1280.py'
       - 'backend/app/main.py'
       - '.github/workflows/media07.yml'
 permissions:
@@ -25,7 +27,7 @@ jobs:
         run: python -m pip install -r backend/requirements-dev.txt
       - name: MEDIA-07 no-dispatch tests and MEDIA-06 regression
         working-directory: backend
-        run: python -m pytest -q tests/test_media07_delivery_v1270.py tests/test_media_operations_v1260.py
+        run: python -m pytest -q tests/test_media07_delivery_v1270.py tests/test_media07_listmonk_draft_v1280.py tests/test_media_operations_v1260.py
       - name: Check isolated Compose configuration
         env:
           MEDIA07_DB_PASSWORD: ci_not_a_secret
