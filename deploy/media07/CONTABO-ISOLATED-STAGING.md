@@ -6,7 +6,7 @@ The reviewed first-time operator script is [deploy-contabo-staging.sh](deploy-co
 
 Run this from your **Mac terminal** with already-authorized Contabo SSH access:
 
-\`\`\`bash
+```bash
 ssh catalystadmin@94.72.113.77 'bash -se' <<'CONTABO'
 set -euo pipefail
 target="$HOME/media0708-staging-candidate"
@@ -21,9 +21,9 @@ git clone --single-branch \
 cd "$target"
 bash deploy/media07/deploy-contabo-staging.sh
 CONTABO
-\`\`\`
+```
 
-The source repository is publicly readable, so this clone should not require GitHub credentials. Do not paste private SSH keys, env contents or raw Compose config (which may include passwords). On success the script prints the **private acceptance receipt path** under \`$HOME/media07-private/receipts/\`, and \`docker compose ps\` shows the four containers. The file is held only on the Contabo server, not uploaded to GitHub or this chat.
+The source repository is publicly readable, so this clone should not require GitHub credentials. Do not paste private SSH keys, env contents or raw Compose config (which may include passwords). On success the script prints the **private acceptance receipt path** under `$HOME/media07-private/receipts/`, and `docker compose ps` shows the four containers. The file is held only on the Contabo server, not uploaded to GitHub or this chat.
 
 **If this chat has no authenticated SSH terminal, this command MUST be run by the authorized operator on their machine; a committed script or GitHub Actions test is not proof of actual Contabo deployment.** Script aborts on low capacity, missing dependencies, existing volumes/ports, nonclean checkout or failed synthetic/backup acceptance. On failure it deliberately retains private volumes for inspection; it never automatically prunes or deletes other services.
 
