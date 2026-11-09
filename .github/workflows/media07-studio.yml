@@ -23,6 +23,8 @@ jobs:
           php -l wordpress-bridge/sustainable-catalyst-engagement-communications/sustainable-catalyst-engagement-communications.php
           node --check wordpress-bridge/sustainable-catalyst-engagement-communications/assets/media07-studio.js
           php wordpress-bridge/sustainable-catalyst-engagement-communications/tests/media07-validation.php
+          php -l wordpress-bridge/sustainable-catalyst-engagement-communications/includes/media08-press-room.php
+          php wordpress-bridge/sustainable-catalyst-engagement-communications/tests/media08-press-validation.php
       - name: Check no delivery or subscriber integration in visual editor
         run: |
           python - <<'PY'
@@ -67,16 +69,16 @@ jobs:
         run: |
           set -euo pipefail
           cd wordpress-bridge
-          zip -qr "$GITHUB_WORKSPACE/scec-newsletter-studio-8.9.1.zip" \
+          zip -qr "$GITHUB_WORKSPACE/scec-media-and-newsletter-studio-8.9.2.zip" \
             sustainable-catalyst-engagement-communications \
             -x '*/tests/*'
-          unzip -t "$GITHUB_WORKSPACE/scec-newsletter-studio-8.9.1.zip" | tail -1
-          sha256sum "$GITHUB_WORKSPACE/scec-newsletter-studio-8.9.1.zip"
+          unzip -t "$GITHUB_WORKSPACE/scec-media-and-newsletter-studio-8.9.2.zip" | tail -1
+          sha256sum "$GITHUB_WORKSPACE/scec-media-and-newsletter-studio-8.9.2.zip"
       - uses: actions/upload-artifact@v4
         with:
-          name: scec-newsletter-studio-8.9.1
+          name: scec-media-and-newsletter-studio-8.9.2
           path: |
-            scec-newsletter-studio-8.9.1.zip
+            scec-media-and-newsletter-studio-8.9.2.zip
             media07-vendor-sha256.txt
           if-no-files-found: error
           retention-days: 14

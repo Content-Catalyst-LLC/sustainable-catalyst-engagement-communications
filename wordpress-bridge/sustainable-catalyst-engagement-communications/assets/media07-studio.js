@@ -126,6 +126,13 @@
        '<mj-section background-color="#f5f5f5" padding="12px 30px"><mj-column>' +
        '<mj-text font-size="12px" color="#666666">Source: Author, year. ' +
        '<a href="https://sustainablecatalyst.com/">Read the original publication</a>.</mj-text>' +
+       '</mj-column></mj-section>'],
+      ['sc-press-brief', 'SC · Press Room announcement',
+       '<mj-section background-color="#ffffff" padding="22px 30px"><mj-column>' +
+       '<mj-text color="#e00000" font-size="11px" font-weight="700">OFFICIAL ANNOUNCEMENT</mj-text>' +
+       '<mj-text font-size="23px" font-weight="700">Press release headline</mj-text>' +
+       '<mj-text>A brief, verified summary of an approved institutional announcement.</mj-text>' +
+       '<mj-button href="https://sustainablecatalyst.com/press/" align="left" padding="0">Read the official release</mj-button>' +
        '</mj-column></mj-section>']
     ];
     blocks.forEach(function (block) {

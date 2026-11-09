@@ -39,12 +39,74 @@ jobs:
           from pathlib import Path
           cfg=json.loads(Path('/tmp/media07-compose-validated.json').read_text())
           services=cfg['services']
-          assert set(services)=={'db','listmonk','mailpit'}
-          assert 'ports' not in services['db']
-          assert 'ports' not in services['mailpit'] or all(p['host_ip']=='127.0.0.1' for p in services['mailpit']['ports'])
+          assert set(services)=={'db','listmonk','mailpit','admin_proxy'}
+          assert cfg['networks']['media07_private']['internal'] is True
+          assert all('ports' not in services[x] for x in ('db','listmonk','mailpit'))
+          assert len(services['admin_proxy']['ports']) == 2
           for service in services.values():
               assert all(p.get('host_ip')=='127.0.0.1' for p in service.get('ports',[]))
           assert not any('smtp' in key.lower() for key in services['listmonk'].get('environment',{})
                          if 'provider' in key.lower())
           print('MEDIA-07 LOCAL-ONLY COMPOSE: PASS')
           PY
+
+
+  isolated-staging-smoke:
+    runs-on: ubuntu-latest
+    env:
+      MEDIA07_DB_PASSWORD: ephemeral_ci_db_only
+      MEDIA07_ADMIN_USER: ephemeral_ci_admin
+      MEDIA07_ADMIN_PASSWORD: ephemeral_ci_admin_only
+    steps:
+      - uses: actions/checkout@v4
+      - name: Launch local-only disposable listmonk and Mailpit
+        run: |
+          set -euo pipefail
+          docker compose -f deploy/media07/compose.staging.yml up -d
+          docker compose -f deploy/media07/compose.staging.yml ps
+      - name: Exercise local HTTP services
+        run: |
+          set -euo pipefail
+          ok=0
+          for i in $(seq 1 45); do
+            code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 4 http://127.0.0.1:18898/ || true)
+            if [[ "$code" == 200 || "$code" == 302 || "$code" == 303 || "$code" == 401 ]]; then
+              ok=1; break
+            fi
+            sleep 3
+          done
+          if [[ "$ok" != 1 ]]; then
+            echo "listmonk HTTP unavailable (no external send attempted)"
+            docker compose -f deploy/media07/compose.staging.yml ps
+            exit 1
+          fi
+          curl -fsS --retry 10 --retry-delay 2 http://127.0.0.1:18899/api/v1/messages >/tmp/media07-emptymail.json
+          echo "Isolated listmonk and Mailpit HTTP checks: PASS"
+      - name: SMTP capture only with synthetic invalid recipient
+        run: |
+          set -euo pipefail
+          docker run --rm -i --network sc-media07-staging_media07_private python:3.12-alpine python - <<'PY'
+          from email.message import EmailMessage
+          from smtplib import SMTP
+          msg=EmailMessage()
+          msg['From']='fixture@sender.invalid'
+          msg['To']='fixture@recipient.invalid'
+          msg['Subject']='MEDIA07 isolated synthetic capture'
+          msg.set_content('Captured locally; never an external send.')
+          with SMTP('mailpit',1025,timeout=15) as smtp:
+              smtp.send_message(msg)
+          print('Message captured by private test transport.')
+          PY
+          curl -fsS http://127.0.0.1:18899/api/v1/messages >/tmp/media07-mail.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          inbox=json.loads(Path('/tmp/media07-mail.json').read_text())
+          assert inbox['total']>0
+          assert any('MEDIA07 isolated synthetic capture' in item.get('Subject','')
+                     for item in inbox.get('messages', []))
+          print('Mailpit synthetic capture PASS; no external recipient.')
+          PY
+      - name: Dispose CI-only staging volumes
+        if: always()
+        run: docker compose -f deploy/media07/compose.staging.yml down -v --remove-orphans

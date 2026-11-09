@@ -39,8 +39,7 @@ services:
       LISTMONK_ADMIN_USER: ${MEDIA07_ADMIN_USER:?Set MEDIA07_ADMIN_USER in a private env file}
       LISTMONK_ADMIN_PASSWORD: ${MEDIA07_ADMIN_PASSWORD:?Set MEDIA07_ADMIN_PASSWORD in a private env file}
       TZ: Etc/UTC
-    ports:
-      - "127.0.0.1:18898:9000"
+    # No host exposure: the admin_proxy is the only loopback listener.
     volumes:
       - media07_uploads:/listmonk/uploads
     networks: [media07_private]
@@ -53,16 +52,34 @@ services:
     environment:
       MP_MAX_MESSAGES: "1000"
       MP_DATABASE: /data/mailpit.db
-    ports:
-      - "127.0.0.1:18899:8025"
+    # No host exposure: private SMTP/HTTP services stay on the internal bridge.
     volumes:
       - media07_mailpit_data:/data
     networks: [media07_private]
     security_opt: [no-new-privileges:true]
 
+  admin_proxy:
+    # Only this proxy has an external network interface. Upstream services
+    # are isolated and have no direct route outside the internal bridge.
+    image: caddy:2.10.2-alpine
+    restart: unless-stopped
+    depends_on:
+      - listmonk
+      - mailpit
+    networks: [media07_private, media07_admin]
+    ports:
+      - "127.0.0.1:18898:9000"
+      - "127.0.0.1:18899:8025"
+    volumes:
+      - ./Caddyfile.staging:/etc/caddy/Caddyfile:ro
+    security_opt: [no-new-privileges:true]
+
 networks:
   media07_private:
     driver: bridge
+    internal: true # listmonk, PostgreSQL and Mailpit have zero external egress
+  media07_admin:
+    driver: bridge # only the fixed-purpose reverse proxy joins this network
 
 volumes:
   media07_pg_data:
