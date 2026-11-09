@@ -49,16 +49,22 @@ final class SC_Media07_Studio {
 
     public static function assets($hook) {
         if ($hook !== 'settings_page_' . self::PAGE || !current_user_can('manage_options')) { return; }
-        $base = plugin_dir_url(dirname(__FILE__) . '/sustainable-catalyst-engagement-communications.php');
-        // Pinned admin-only vendor scripts. Production release must vendor and pin SRI before approval.
-        wp_enqueue_style('scec07-grapesjs',
-            'https://cdn.jsdelivr.net/npm/grapesjs@0.23.6/dist/css/grapes.min.css',
-            array(), '0.23.6');
-        wp_enqueue_script('scec07-grapesjs',
-            'https://cdn.jsdelivr.net/npm/grapesjs@0.23.6/dist/grapes.min.js',
-            array(), '0.23.6', true);
-        wp_enqueue_script('scec07-mjml',
-            'https://cdn.jsdelivr.net/npm/grapesjs-mjml@1.0.8/dist/grapesjs-mjml.min.js',
+        $base = plugin_dir_url(dirname(__DIR__) . '/sustainable-catalyst-engagement-communications.php');
+        // Production candidate assets are self-hosted by the CI release ZIP.
+        // Source checkouts without vendor assets can use pinned CDN for local staging.
+        $vendor_dir = dirname(__DIR__) . '/assets/vendor/';
+        $local = is_file($vendor_dir . 'grapes.min.js') &&
+            is_file($vendor_dir . 'grapes.min.css') &&
+            is_file($vendor_dir . 'grapesjs-mjml.min.js');
+        $grapes_css = $local ? $base . 'assets/vendor/grapes.min.css'
+            : 'https://cdn.jsdelivr.net/npm/grapesjs@0.23.6/dist/css/grapes.min.css';
+        $grapes_js = $local ? $base . 'assets/vendor/grapes.min.js'
+            : 'https://cdn.jsdelivr.net/npm/grapesjs@0.23.6/dist/grapes.min.js';
+        $mjml_js = $local ? $base . 'assets/vendor/grapesjs-mjml.min.js'
+            : 'https://cdn.jsdelivr.net/npm/grapesjs-mjml@1.0.8/dist/grapesjs-mjml.min.js';
+        wp_enqueue_style('scec07-grapesjs', $grapes_css, array(), '0.23.6');
+        wp_enqueue_script('scec07-grapesjs', $grapes_js, array(), '0.23.6', true);
+        wp_enqueue_script('scec07-mjml', $mjml_js,
             array('scec07-grapesjs'), '1.0.8', true);
         wp_enqueue_style('scec07-ui', $base . 'assets/media07-studio.css',
             array('scec07-grapesjs'), '8.9.1');
@@ -164,7 +170,7 @@ final class SC_Media07_Studio {
         $canonical = wp_json_encode($project, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
         $sha = hash('sha256', $canonical . "\n" . $subject . "\n" . $preheader);
         $next = $latest_rev + 1;
-        update_post_meta($id, self::META . 'project', $canonical);
+        update_post_meta($id, self::META . 'project', wp_slash($canonical));
         update_post_meta($id, self::META . 'subject', $subject);
         update_post_meta($id, self::META . 'preheader', $preheader);
         update_post_meta($id, self::META . 'revision', $next);
