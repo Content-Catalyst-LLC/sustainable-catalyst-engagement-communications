@@ -63,6 +63,7 @@ services:
 networks:
   media07_private:
     driver: bridge
+    internal: true # Staging containers cannot initiate external SMTP or HTTP connections
 
 volumes:
   media07_pg_data:
