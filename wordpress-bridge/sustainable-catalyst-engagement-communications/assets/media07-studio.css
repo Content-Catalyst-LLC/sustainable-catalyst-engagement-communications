@@ -1,0 +1,53 @@
+/* Sustainable Catalyst / MEDIA-07 Newsletter Studio — admin only. */
+.scec07-wrap {margin:0 20px 24px 0;color:#141414;font-family:Inter,Arial,Helvetica,sans-serif}
+.scec07-heading {background:#101010;color:#fff;display:flex;gap:20px;align-items:end;justify-content:space-between;padding:25px 28px;border-bottom:5px solid #ed0000}
+.scec07-heading h1 {font-size:38px;line-height:1.1;letter-spacing:-1.2px;font-weight:750;color:#fff;margin:7px 0 12px}
+.scec07-kicker {font-size:11px;letter-spacing:1.8px;color:#bcbcbc;font-weight:650}
+.scec07-heading p {color:#d8d8d8;margin:0;max-width:690px;font-size:14px}
+.scec07-red {color:#ff0000}
+.scec07-state {font-weight:750;font-size:11px;letter-spacing:.85px;color:#e2e2e2;white-space:nowrap;padding-bottom:6px}
+.scec07-state span {color:#f00;padding:0 5px}
+.scec07-app {display:grid;grid-template-columns:268px minmax(0,1fr);border:1px solid #d4d4d4;border-top:0;background:#fff;min-height:770px}
+.scec07-sidebar {background:#fafafa;border-right:1px solid #dedede;padding:20px;display:flex;flex-direction:column;align-items:stretch;gap:9px}
+.scec07-sidebar label {font-size:12px;color:#383838;font-weight:700;letter-spacing:.1px;margin-top:7px}
+.scec07-sidebar input,.scec07-sidebar textarea,.scec07-sidebar select {width:100%;max-width:100%;border-radius:3px;border-color:#cfcfcf;box-shadow:none;font-size:13px}
+.scec07-sidebar textarea {min-height:64px;resize:vertical}
+.scec07-sidebar hr {border:0;border-top:1px solid #ddd;width:100%;margin:9px 0}
+.scec07-sidebar .button {margin:0;text-align:center;min-height:34px;border-radius:2px;white-space:normal}
+.scec07-sidebar .button-primary {background:#df0000;border-color:#df0000;color:white;font-weight:700}
+.scec07-sidebar .button-primary:hover,.scec07-sidebar .button-primary:focus {background:#b40000;border-color:#b40000}
+.scec07-actions {display:flex;flex-wrap:wrap;gap:6px}
+.scec07-actions .button {flex:1;min-width:75px}
+.scec07-revision {font-size:12px;color:#474747;line-height:1.5;overflow-wrap:anywhere;min-height:20px}
+.scec07-note {color:#555;font-size:12px;line-height:1.6;margin:8px 0}
+.scec07-main {display:flex;flex-direction:column;min-width:0;background:#f1f1f1;position:relative}
+.scec07-mainbar {background:#f8f8f8;padding:13px 17px;border-bottom:1px solid #ddd;display:flex;justify-content:space-between;gap:16px;font-size:11px;letter-spacing:.9px;font-weight:700;color:#525252}
+#scec07-editor {min-height:680px;overflow:hidden}
+#scec07-editor .gjs-one-bg {background:#171717}
+#scec07-editor .gjs-two-color {color:#efefef}
+#scec07-editor .gjs-three-bg {background:#d00}
+#scec07-editor .gjs-four-color,#scec07-editor .gjs-four-color-h:hover {color:#ff4040}
+#scec07-editor .gjs-block-category .gjs-title {font-size:12px}
+#scec07-editor .gjs-block {min-width:75px;width:43%;min-height:58px}
+#scec07-editor .gjs-cv-canvas {background:#ededed}
+.scec07-feedback {background:#fff;border-top:1px solid #ddd;margin:0;padding:12px 15px;min-height:22px;color:#333;font-size:13px}
+.scec07-feedback.is-error {color:#a00000;background:#fff0f0}
+.scec07-modal {position:fixed;z-index:100050;inset:0;background:rgba(0,0,0,.78);display:grid;place-items:center;padding:25px}
+.scec07-modal-panel {height:min(92vh,1080px);width:min(92vw,1050px);display:flex;flex-direction:column;background:white;border-top:5px solid #ee0000;box-shadow:0 18px 50px rgba(0,0,0,.4)}
+.scec07-modal-header {display:flex;justify-content:space-between;align-items:center;gap:15px;padding:14px 22px;border-bottom:1px solid #ddd}
+.scec07-modal-panel iframe {flex:1;width:100%;border:0;background:white}
+@media(max-width:1050px) {
+ .scec07-heading {align-items:start;flex-direction:column}
+ .scec07-app {grid-template-columns:240px minmax(0,1fr)}
+ .scec07-mainbar span:last-child {display:none}
+}
+@media(max-width:782px) {
+ .scec07-wrap {margin:0 10px 20px}
+ .scec07-app {display:flex;flex-direction:column}
+ .scec07-sidebar {border-right:0;border-bottom:1px solid #ccc}
+ .scec07-heading h1 {font-size:30px}
+ .scec07-mainbar {padding:12px}
+ .scec07-modal {padding:8px}
+ .scec07-modal-panel {width:100%;height:94vh}
+}
+@media(prefers-reduced-motion:reduce) { .scec07-wrap * {scroll-behavior:auto;transition:none!important} }
