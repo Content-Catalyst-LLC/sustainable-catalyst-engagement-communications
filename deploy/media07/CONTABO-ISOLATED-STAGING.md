@@ -40,7 +40,7 @@ docker compose --env-file "$HOME/media07-private/staging.env" \
   -f deploy/media07/compose.staging.yml config --format json > /tmp/media07-compose-review.json
 ```
 
-Inspect the **nonsecret** host bindings and networks without sharing the full environment values. Required: PostgreSQL **no host bind**, listmonk UI **127.0.0.1:18898 only**, Mailpit UI **127.0.0.1:18899 only**, no SMTP port published, network `internal: true`. Do not add an external SMTP URL or mail provider.
+Inspect the **nonsecret** host bindings and networks without sharing the full environment values. Required: PostgreSQL, listmonk, and Mailpit **no direct host bind**, one fixed-purpose `admin_proxy` published at **127.0.0.1:18898** and **127.0.0.1:18899**, no SMTP port published. Private network `internal: true` has no external egress; proxy alone joins a separate admin bridge. Do not add an external SMTP URL or mail provider.
 
 ## Authorized isolated staging launch (not run by this handoff)
 
@@ -55,7 +55,7 @@ curl --max-time 5 -I http://127.0.0.1:18899/
 
 For browser inspection from an authorized Mac, use an **SSH tunnel** `ssh -N -L 18898:127.0.0.1:18898 -L 18899:127.0.0.1:18899 catalystadmin@94.72.113.77`, then access localhost ports. Do not route these through public Caddy or WordPress.
 
-Only create synthetic `@invalid` addresses; configure Mailpit container as the only testing SMTP target (`mailpit:1025`). With `internal: true`, the staging network must not have external egress. Validate via a test email captured **only** by Mailpit, no real recipients. Test restart, PostgreSQL backup/restore to a disposable DB and no externally published ports.
+Only create synthetic `@invalid` addresses; configure Mailpit container as the only testing SMTP target (`mailpit:1025`). With `internal: true`, the three private services must have no external egress. The loopback-only Caddy proxy is the sole dual-network container, with fixed reverse-proxy upstreams. Validate via a test email captured **only** by Mailpit, no real recipients. Test restart, PostgreSQL backup/restore to a disposable DB and no externally published ports.
 
 ## Safe stop and recovery
 
