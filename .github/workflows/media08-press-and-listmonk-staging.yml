@@ -1,0 +1,126 @@
+name: MEDIA-08 Press Room and isolated MEDIA-07 staging
+on:
+  push:
+    branches:
+      - feature/media-08-press-room-and-media07-staging-20261108
+  pull_request:
+    paths:
+      - 'wordpress-bridge/sustainable-catalyst-engagement-communications/**'
+      - 'deploy/media07/**'
+      - '.github/workflows/media08-press-and-listmonk-staging.yml'
+permissions:
+  contents: read
+jobs:
+  press-source-safety:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify PHP syntax and private editorial gate
+        run: |
+          php -l wordpress-bridge/sustainable-catalyst-engagement-communications/includes/media08-press-room.php
+          php -l wordpress-bridge/sustainable-catalyst-engagement-communications/sustainable-catalyst-engagement-communications.php
+          php wordpress-bridge/sustainable-catalyst-engagement-communications/tests/media08-press-validation.php
+          php wordpress-bridge/sustainable-catalyst-engagement-communications/tests/media07-validation.php
+          node --check wordpress-bridge/sustainable-catalyst-engagement-communications/assets/media07-studio.js
+      - name: Preserve legacy public Media and no-mail boundaries
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          root=Path('wordpress-bridge/sustainable-catalyst-engagement-communications')
+          bridge=(root/'sustainable-catalyst-engagement-communications.php').read_text()
+          press=(root/'includes/media08-press-room.php').read_text()
+          editor=(root/'includes/media07-studio.php').read_text()
+          assert "add_shortcode('sc_press', array(__CLASS__, 'render_media'))" in bridge
+          assert "add_shortcode('sc_media', array(__CLASS__, 'render_media'))" in bridge
+          assert "add_shortcode('sc_press_room', array(__CLASS__, 'render'))" in press
+          assert "get_page_by_path($slug, OBJECT, 'page')" in bridge
+          assert "'public' => false" in press
+          assert "'show_in_rest' => false" in press
+          assert "SCEC_MEDIA08_PUBLIC_RELEASE" in press
+          assert "get_current_user_id()" in press and "independent_review_required" in press
+          assert "hash_equals" in press and "press_page_missing" in press
+          assert "wp_safe_remote_post" not in press and "wp_remote_post" not in press
+          assert "wp_mail(" not in press and "wp_mail(" not in editor
+          print("Press shortcode routing and release-safety contract: PASS")
+          PY
+
+  isolated-listmonk-capture:
+    runs-on: ubuntu-latest
+    env:
+      MEDIA07_DB_PASSWORD: only_for_ephemeral_ci
+      MEDIA07_ADMIN_USER: media07_ci_admin
+      MEDIA07_ADMIN_PASSWORD: only_for_ephemeral_ci_admin
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify Compose is private and has no outbound delivery
+        run: |
+          set -euo pipefail
+          docker compose -f deploy/media07/compose.staging.yml config --quiet
+          docker compose -f deploy/media07/compose.staging.yml config --format json > /tmp/media07-validated.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          cfg=json.loads(Path('/tmp/media07-validated.json').read_text())
+          services=cfg['services']
+          assert set(services)=={'db','listmonk','mailpit'}
+          assert cfg['networks']['media07_private']['internal'] is True
+          assert 'ports' not in services['db']
+          assert all(port.get('host_ip')=='127.0.0.1'
+                     for service in services.values()
+                     for port in service.get('ports',[]))
+          assert all(p['target']!=1025 for p in services['mailpit'].get('ports',[]))
+          print('MEDIA-07 network isolation: PASS')
+          PY
+      - name: Start isolated services (synthetic CI only)
+        run: |
+          set -euo pipefail
+          docker compose -f deploy/media07/compose.staging.yml pull
+          docker compose -f deploy/media07/compose.staging.yml up -d
+          docker compose -f deploy/media07/compose.staging.yml ps
+      - name: Check listmonk and Mailpit local health
+        run: |
+          set -euo pipefail
+          ok=0
+          for i in $(seq 1 40); do
+            code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 4 http://127.0.0.1:18898/ || true)
+            if [[ "$code" == 200 || "$code" == 302 || "$code" == 303 || "$code" == 401 ]]; then
+              ok=1
+              break
+            fi
+            sleep 3
+          done
+          if [ "$ok" != 1 ]; then
+            echo 'listmonk local HTTP readiness failed'
+            docker compose -f deploy/media07/compose.staging.yml ps
+            exit 1
+          fi
+          curl -fsS --retry 10 --retry-delay 2 http://127.0.0.1:18899/api/v1/messages >/tmp/media07-empty-inbox.json
+          echo "listmonk local readiness and Mailpit API: PASS"
+      - name: Capture synthetic SMTP message without any external delivery
+        run: |
+          set -euo pipefail
+          docker pull python:3.12-alpine
+          docker run -i --rm --network sc-media07-staging_media07_private python:3.12-alpine python - <<'PY'
+          import smtplib
+          from email.message import EmailMessage
+          msg=EmailMessage()
+          msg['From']='fixture@sender.invalid'
+          msg['To']='fixture@recipient.invalid'
+          msg['Subject']='Synthetic MEDIA-07 capture-only test'
+          msg.set_content('This message is not to be delivered outside isolated CI.')
+          with smtplib.SMTP('mailpit',1025,timeout=10) as server:
+              server.send_message(msg)
+          print('Synthetic email submitted to private Mailpit SMTP only.')
+          PY
+          curl -fsS http://127.0.0.1:18899/api/v1/messages > /tmp/media07-inbox.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          data=json.loads(Path('/tmp/media07-inbox.json').read_text())
+          assert data.get('total',0) >= 1, 'No synthetic message captured'
+          assert any('Synthetic MEDIA-07' in m.get('Subject','') for m in data.get('messages',[]))
+          print('Mailpit captured synthetic message: PASS')
+          PY
+      - name: Clean up disposable containers and volumes
+        if: always()
+        run: docker compose -f deploy/media07/compose.staging.yml down -v --remove-orphans
