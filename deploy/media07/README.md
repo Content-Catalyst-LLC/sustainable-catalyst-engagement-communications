@@ -46,3 +46,9 @@ Substack sending remains an independent manual action outside the Sustainable Ca
 
 ## Licensing
 GrapesJS/MJML plugin: BSD-3-Clause. Optional listmonk: AGPLv3, requires license review if adopted later. Any paid provider requires a separate terms, privacy and cost review.
+
+## Isolated staging network amendment (2026-11-08)
+
+The first disposable Docker run showed that a **fully internal** Compose network prevented host-loopback port mapping. Corrected architecture adds a Caddy `admin_proxy` attached to both an internal service bridge and an ordinary admin bridge. **Only `admin_proxy` publishes ports** on `127.0.0.1:18898` (listmonk) and `127.0.0.1:18899` (Mailpit). Listmonk, PostgreSQL and Mailpit remain attached **only** to the internal Docker network with no external egress; Mailpit SMTP 1025 and PostgreSQL 5432 are not host-published. Caddyfile.staging uses fixed upstream targets and is not an arbitrary forward proxy.
+
+This adjustment is source-only. Re-run disposable CI and inspect host port mappings and synthetic capture before any Contabo staging deployment. Do not configure real SMTP or import subscribers.
