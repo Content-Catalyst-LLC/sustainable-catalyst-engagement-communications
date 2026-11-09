@@ -39,10 +39,10 @@ jobs:
           from pathlib import Path
           cfg=json.loads(Path('/tmp/media07-compose-validated.json').read_text())
           services=cfg['services']
-          assert set(services)=={'db','listmonk','mailpit'}
+          assert set(services)=={'db','listmonk','mailpit','admin_proxy'}
           assert cfg['networks']['media07_private']['internal'] is True
-          assert 'ports' not in services['db']
-          assert 'ports' not in services['mailpit'] or all(p['host_ip']=='127.0.0.1' for p in services['mailpit']['ports'])
+          assert all('ports' not in services[x] for x in ('db','listmonk','mailpit'))
+          assert len(services['admin_proxy']['ports']) == 2
           for service in services.values():
               assert all(p.get('host_ip')=='127.0.0.1' for p in service.get('ports',[]))
           assert not any('smtp' in key.lower() for key in services['listmonk'].get('environment',{})
