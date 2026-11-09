@@ -77,6 +77,15 @@ def fake_provider(monkeypatch, *, subscribers=0, list_type="private", preexistin
         if req.method == "GET" and req.url.path == "/api/campaigns":
             result = [] if preexisting is None else [preexisting]
             return httpx.Response(200, json={"data": {"results": result, "total": len(result)}})
+        if req.method == "GET" and req.url.path == "/api/campaigns/15":
+            assert preexisting is not None
+            return httpx.Response(200, json={"data": preexisting | {
+                "subject": preexisting.get("subject", "STAGING ONLY — Synthetic evidence bulletin"),
+                "body": preexisting.get("body", HTML),
+                "altbody": preexisting.get("altbody", "Synthetic test newsletter. Not to be delivered."),
+                "content_type": "html", "messenger": "email",
+                "lists": preexisting.get("lists", [{"id": 7}]),
+            }})
         if req.method == "POST" and req.url.path == "/api/campaigns":
             body = json.loads(req.content)
             assert body["lists"] == [7]
@@ -143,6 +152,7 @@ def test_known_draft_is_reused_not_posted(env, monkeypatch):
     assert out.status_code == 201
     assert out.json()["draft_reused"] is True and out.json()["campaign_id"] == 15
     assert not any(method == "POST" for method, _, _ in actions)
+    assert [p for method, p, _ in actions] == ["/api/lists/7", "/api/campaigns", "/api/campaigns/15"]
 
 
 @pytest.mark.parametrize("changes", [
@@ -218,3 +228,14 @@ def test_released_or_running_existing_campaign_is_not_reused(env, monkeypatch):
 def test_upstream_create_must_report_draft(env, monkeypatch):
     fake_provider(monkeypatch, result_status="running")
     assert env.post(BASE + "/drafts", json=payload(), headers=headers()).status_code == 502
+
+def test_existing_draft_with_changed_body_is_not_reused(env, monkeypatch):
+    from app.media07_listmonk_draft_v1280 import DraftCandidate, _fingerprint
+    digest = _fingerprint(ORG, DraftCandidate(**payload()))
+    actions = fake_provider(monkeypatch, preexisting={
+        "id": 15, "status": "draft", "name": "SCEC MEDIA07 STAGING " + digest,
+        "body": "<html><body>Unexpected modification</body></html>",
+    })
+    assert env.post(BASE + "/drafts", json=payload(), headers=headers()).status_code == 409
+    assert not any(m == "POST" for m, _, _ in actions)
+
