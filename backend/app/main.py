@@ -269,3 +269,8 @@ app.include_router(media_ops_router)
 # MEDIA-07: offline newsletter distribution planning; listmonk and SMTP are separate and not invoked.
 from .media07_delivery_v1270 import router as media07_router
 app.include_router(media07_router, dependencies=[Depends(require_service_token)])
+
+# MEDIA-07.3: separate default-off, bound-tenant synthetic listmonk DRAFT-only adapter.
+# No send, schedule, recipients, public route or WordPress runtime configuration.
+from .media07_listmonk_draft_v1280 import router as media07_draft_router
+app.include_router(media07_draft_router, dependencies=[Depends(require_service_token)])
