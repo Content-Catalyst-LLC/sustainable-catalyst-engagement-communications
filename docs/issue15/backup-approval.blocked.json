@@ -1,0 +1,12 @@
+{
+  "operation": "SCEC_BACKUP_ONLY",
+  "hostname": "vmi3544820",
+  "plan_sha256": "UNAPPROVED",
+  "expires_utc": "2000-01-01T00:00:00+00:00",
+  "owner_approval_record": null,
+  "independent_verifier": null,
+  "scope_complete": false,
+  "consistency_checkpoint": null,
+  "custody_verified": false,
+  "destination_approved": false
+}

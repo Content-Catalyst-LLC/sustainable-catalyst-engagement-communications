@@ -1,0 +1,8 @@
+{
+  "scope": "read-only access and existing report verification",
+  "sudo_readonly_script_available": false,
+  "sudo_status": "noninteractive authorized elevation unavailable; no password prompt attempted",
+  "existing_report_sha256": "a7c46d904a0a9699e6f88a48519045b7a43cf8c4739b3767126c5a22ad9c1ef3",
+  "current_user_cron_status": 0,
+  "scec_timers": ""
+}

@@ -1,0 +1,13 @@
+{
+  "scope": "current audit-account cron metadata only; raw commands excluded",
+  "returncode": 0,
+  "entries": [
+    {
+      "line": 25,
+      "sha256": "473d815fd0cb06b70702ce927a4aeb6cecb657ded5b480f6d9313a4ca45eb5a1",
+      "literal_scec_reference": false,
+      "classification": "scope review required; no literal match is not proof of no indirect write"
+    }
+  ],
+  "crontab_sha256": "d91e34d1b215bc2f674dd69284d7e11f1f99796abd6c227b63fd205dfd9a8583"
+}

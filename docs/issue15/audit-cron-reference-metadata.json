@@ -1,0 +1,25 @@
+{
+  "scope": "current-user cron referenced executable/script metadata; no command bodies or credentials",
+  "references": [
+    {
+      "path": "/usr/bin/flock",
+      "bytes": 23024,
+      "sha256": "e619344dc3eec4023498465679262f9ca27d1e8cef9cfc4c1ae72b428577b806"
+    },
+    {
+      "path": "/tmp/sc-wordpress-cron-launch.lock",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "literal_scec_reference": false,
+      "possible_database_or_external_execution": false
+    },
+    {
+      "path": "/opt/sustainable-catalyst/cron/run-wordpress-cron.sh",
+      "bytes": 917,
+      "sha256": "232d04eba456a867fb259b3bd1bbe1096b2b158cbfd9d0e67d651d4ab70bc812",
+      "literal_scec_reference": false,
+      "possible_database_or_external_execution": true
+    }
+  ],
+  "conclusion": "Read-only candidate classification only; no scheduled command executed. Root and external schedules remain unverified."
+}

@@ -1,0 +1,91 @@
+{
+  "authority": "Existing authorized administrator reconciliation report; reused, not rerun",
+  "configuration": [
+    {
+      "path": "/etc/sustainable-catalyst/engagement/v800.env",
+      "sha256": "3ca24e7bebaf2eb24f90bfc94d79ed4c66f98231db9ee744aa6aa8efd72c35f2",
+      "targets": []
+    },
+    {
+      "path": "/etc/sustainable-catalyst/engagement/v860.env",
+      "sha256": "0e32a4bb608d0866f93c98eb8951675ec930dbd223e5e93ae2c715d46d80a21d",
+      "targets": []
+    }
+  ],
+  "candidate_scheduled_files": [
+    {
+      "path": "/etc/systemd/system/scec-v810.service",
+      "sha256": "e188ca8b25e2e32cc23e5d333eda4eb728dd79e8249068ef12cfc865f03953eb",
+      "matching_line_numbers": [
+        10,
+        15
+      ],
+      "command_text_excluded": true
+    },
+    {
+      "path": "/etc/systemd/system/scec-v830.service",
+      "sha256": "68c8b7f07ff0efb6d0bf1c5ada13f1c071b00361755e4a5a524e3a3af9e79b44",
+      "matching_line_numbers": [
+        8,
+        11,
+        12
+      ],
+      "command_text_excluded": true
+    },
+    {
+      "path": "/etc/systemd/system/scec-v850.service",
+      "sha256": "0a9d6aeaa84671a7d03431f7473a83e641fb547a159cfadbaf96c6b9e9edf0de",
+      "matching_line_numbers": [
+        8,
+        11,
+        12
+      ],
+      "command_text_excluded": true
+    },
+    {
+      "path": "/etc/systemd/system/scec-v860.service",
+      "sha256": "18c3d787b068eb95fce3cfe34ab1c4ec12b54af721bf00f4228d7359f2b6e9e6",
+      "matching_line_numbers": [
+        8,
+        12,
+        13
+      ],
+      "command_text_excluded": true
+    },
+    {
+      "path": "/etc/systemd/system/scec-v820.service",
+      "sha256": "11e840ea027c6aa24f08b184fc51c1bb11dc83a51368783b59ed51a38928c230",
+      "matching_line_numbers": [
+        10,
+        15
+      ],
+      "command_text_excluded": true
+    },
+    {
+      "path": "/etc/systemd/system/scec-v800.service",
+      "sha256": "94376993edcccc2d17175aba505532d9ecdbaf1d1a6604143ca1ab6704c4579c",
+      "matching_line_numbers": [
+        10,
+        15
+      ],
+      "command_text_excluded": true
+    },
+    {
+      "path": "/etc/systemd/system/scec-v840.service",
+      "sha256": "0ab5da767b501907f55281091426b4b384c2ff03f9012c2e9f0e27016ccc42a3",
+      "matching_line_numbers": [
+        8,
+        11,
+        12
+      ],
+      "command_text_excluded": true
+    }
+  ],
+  "metadata_gaps": [
+    "configuration sizes/modes and explicit storage settings",
+    "root/indirect schedules, database-native jobs/triggers/subscriptions",
+    "TLS narrow recovery responsibility",
+    "external/manual writer attestation and historical DB classification"
+  ],
+  "scope_complete": false
+}

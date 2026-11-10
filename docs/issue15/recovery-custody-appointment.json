@@ -1,0 +1,14 @@
+{
+  "date": "2026-10-28",
+  "authority": "Explicit owner instruction in this chat",
+  "primary_recovery_key_custodian": "Business owner \u2014 CONFIRMED",
+  "secure_storage": "NOT_VERIFIED",
+  "independent_recovery_verifier": "NOT_APPOINTED",
+  "alternate_recovery_key_custodian": "NOT_APPOINTED",
+  "backup_operator": "PENDING_FORMAL_ACCEPTANCE",
+  "gpg_recovery_key": "NOT_GENERATED; CREATION_NOT_AUTHORIZED",
+  "off_host_destination": "NOT_APPROVED",
+  "retention_and_recovery_targets": "PENDING_FINAL_APPROVAL",
+  "decision": "NO_GO",
+  "production_changes_authorized": false
+}

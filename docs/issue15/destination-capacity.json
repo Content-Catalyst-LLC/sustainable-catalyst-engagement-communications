@@ -1,0 +1,13 @@
+{
+  "date": "2026-10-28",
+  "method": "read-only df -k; no volume-content inspection",
+  "available_kib": {
+    "Mac_internal": 31030644,
+    "Courses HD": 1940330328,
+    "Mothership": 4615362752
+  },
+  "diskutil_info": "failed: DiskManagement framework unavailable",
+  "encryption_physical_location_custody": "UNVERIFIED",
+  "capacity_rule": "34*B <= 0.8*F; larger workspace/growth increases requirement",
+  "production_mutations": false
+}

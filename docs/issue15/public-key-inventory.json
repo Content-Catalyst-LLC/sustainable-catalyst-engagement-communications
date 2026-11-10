@@ -1,0 +1,17 @@
+{
+  "scope": "public-key metadata only; no key creation/private key access/backup transfer",
+  "user_home_keyring": {
+    "directory_exists": false
+  },
+  "public_key_files": [],
+  "root_public_keyring_inspection": "not attempted without administrator access",
+  "explicitly_authorized_scec_recovery_keys": [],
+  "authorization_conclusion": "PENDING; no selection or authorization inferred from presence",
+  "existing_tools": {
+    "gpg": "/usr/bin/gpg",
+    "age": null,
+    "rclone": null,
+    "restic": null,
+    "borg": null
+  }
+}
