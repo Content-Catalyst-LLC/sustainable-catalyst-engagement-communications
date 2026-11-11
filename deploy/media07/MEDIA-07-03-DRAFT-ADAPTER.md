@@ -73,3 +73,38 @@ Listmonk v6.2 distinguishes `campaigns:manage` (create/update/delete) from `camp
 - [ ] No production subscriber list, opt-in, suppression/unsubscribe, SMTP, public routing or publication.
 
 **Operator go/no-go:** A private local listmonk installation is not the same as a deployed authenticated draft connector. If any credential, list permission, per-organization isolation or backup gate is uncertain, leave `SCEC_MEDIA07_LISTMONK_DRAFT_ENABLED=0` and do not create the campaign.
+
+
+## 11 November 2026 — Signed Newsletter Studio handoff candidate, v8.9.3
+
+This supersedes the outdated credential status above. The operator interactively removed the mistaken local credential file and successfully reprovisioned a 0600 private file for sc_media07_drafts. Custom MEDIA07 Draft Connector and MEDIA07 Staging List Access role assignments were reported, but exact API privileges, the private zero-subscriber list, and proof of denied send **still require live verification**.
+
+### Source build added to draft PR #34
+- WordPress Newsletter Studio v8.9.3 has a manual **Create private listmonk staging draft** button. Disabled unless all separate WordPress bridge configuration constants are present.
+- Only an exact saved private Studio revision can be transferred; both title and subject must begin with [SYNTHETIC], and the administrator must explicitly attest that the contents are synthetic. The PHP AJAX handler validates the CSRF nonce, saved canonical project/subject/preheader SHA, and revision number. It computes the actual rendered HTML hash.
+- WordPress PHP sends the exact JSON bytes over configured HTTPS to an independently gated Python bridge using HMAC-SHA256(timestamp + newline + body), without exposing the bridge key, backend URL, listmonk token, or service identity key to browser JavaScript. It only accepts an explicit unsent draft response and saves a private revision-bound receipt.
+- New Python module backend/app/media07_studio_bridge_v1290.py authenticates the timestamp and HMAC **before** parsing the body, has a two-minute validity window, checks staging/tenant/danger/synthetic gates, and calls the existing draft-only listmonk adapter.
+- No send, schedule, test send, subscriber import, list selection, provider URL selection, or automatic syndication was introduced.
+
+### Secure configuration — values must not be committed or shared
+WordPress wp-config.php constants:
+- SCEC_MEDIA07_STUDIO_BRIDGE_ENABLED (boolean; disabled until authorized)
+- SCEC_MEDIA07_STUDIO_BRIDGE_URL (exact approved HTTPS URL ending /v1/newsletter-studio/bridge/drafts; no query, redirect or nonstandard port)
+- SCEC_MEDIA07_STUDIO_BRIDGE_SHARED_KEY (separate randomly generated key, minimum 32 characters; never the listmonk token or identity signing key)
+- SCEC_MEDIA07_STUDIO_ORGANIZATION_ID (exact allowed staging UUID)
+
+Additional isolated Python canary env vars:
+- SCEC_MEDIA07_STUDIO_BRIDGE_ENABLED=1 (default off)
+- SCEC_MEDIA07_STUDIO_BRIDGE_SHARED_KEY (same separate key as protected WordPress config)
+- Existing SCEC_ENV=staging, SCEC_IDENTITY_MODE=bound, SCEC_MEDIA07_STAGING_ENABLED=1, SCEC_MEDIA07_LISTMONK_DRAFT_ENABLED=1, SCEC_ALLOWED_ORGANIZATION_IDS, SCEC_MEDIA07_DRAFT_ORGANIZATION_ID, SCEC_MEDIA07_EMPTY_LIST_ID, SCEC_MEDIA07_LISTMONK_CREDENTIAL_FILE and a distinct SCEC_IDENTITY_SIGNING_KEY remain mandatory.
+
+**Connectivity gate:** Bluehost cannot reach Contabo localhost 127.0.0.1 without an approved service connection. Do not expose the general backend or listmonk publicly. Any future HTTPS private bridge must have an approved ingress access policy and verified TLS. Production flags, DNS, reverse proxy, SMTP, subscribers and existing listmonk Compose are unchanged.
+
+### Canary acceptance, NOT yet executed
+1. Verify the exact private active zero-subscriber list; prove the restricted sc_media07_drafts API role cannot send, schedule, alter status, or manage recipients. Revoke old Super Admin token if not already revoked.
+2. Start a distinct single-worker Python staging canary on an approved local bind with all feature flags disabled first. Keep existing MEDIA-05/06 and production untouched; verify host-local listmonk connection.
+3. Exercise signature, timestamp, wrong-tenant, non-synthetic, unsafe HTML, stale revision and disabled-route negative tests. Check WordPress nonce and cross-user isolation.
+4. Only after a separately approved private HTTPS ingress is ready, enable bridge flags for a synthetic saved Studio revision and click the manual draft action. Verify one listmonk draft, zero subscribers, repeat-click reconciliation, and **zero additional Mailpit messages**.
+5. Record revision, SHA, source commit, list ID, campaign ID, receipt, negative tests, rollback and bridge-disabled postcondition.
+
+**Known limitations:** This does not independently prove browser-compiled HTML corresponds to the exact saved MJML or that an independent human approved the draft. HMAC requests can be replayed inside 120 seconds; listmonk search-then-create reconciliation is not atomic across workers/hosts, so use exactly one canary writer. Production requires durable idempotency, signed editorial approval, trusted render proof, actual role verification, and privacy/consent controls. Source-only build is not deployed or accepted.
