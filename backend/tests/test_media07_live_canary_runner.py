@@ -107,3 +107,23 @@ def test_default_preflight_has_no_campaign_post(tmp_path, monkeypatch, capsys):
         ("GET", "/api/lists"), ("GET", "/api/lists/4"),
         ("GET", "/api/v1/messages"), ("GET", "/api/campaigns"),
     ]
+
+
+def test_authentic_inprocess_routes_deny_all_delivery_operations(monkeypatch, tmp_path):
+    """Before a live POST, prove all public-sounding delivery routes return 503.
+
+    The FastAPI app runs in-process; no HTTP provider call is made.
+    """
+    from app.newsletter_alerts_v1130 import DANGER_FLAGS, EXTRA_DANGER_FLAGS
+    for name in (*DANGER_FLAGS, *EXTRA_DANGER_FLAGS):
+        monkeypatch.setenv(name, "0")
+    for name in ("SCEC_MEDIA07_STAGING_ENABLED", "SCEC_MEDIA07_LISTMONK_DRAFT_ENABLED",
+                 "SCEC_MEDIA07_STUDIO_BRIDGE_ENABLED"):
+        monkeypatch.delenv(name, raising=False)
+    monkeypatch.setenv("SCEC_ENV", "staging")
+    monkeypatch.setenv("SCEC_IDENTITY_MODE", "bound")
+    creds = tmp_path / "auth.json"
+    creds.write_text('{"username":"sc_media07_drafts","token":"fake-synthetic-credential-123456789"}')
+    creds.chmod(0o600)
+    config = canary.enter_local_test_environment(4, creds)
+    canary.assert_delivery_endpoints_blocked(config)
