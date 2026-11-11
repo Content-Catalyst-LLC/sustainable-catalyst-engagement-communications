@@ -31,13 +31,13 @@ From an authorized SSH terminal on the **Contabo host**:
 
     set -euo pipefail
     cd "$HOME/media07-03-candidate"
-    git status --short
-    # STOP if the checkout contains unexplained edits.
+    test "$(git branch --show-current)" = "feature/media-07-03-listmonk-draft-adapter-20261109"
+    test -z "$(git status --porcelain)"  # Stop on any uncommitted changes.
     git fetch origin feature/media-07-03-listmonk-draft-adapter-20261109
     git merge --ff-only origin/feature/media-07-03-listmonk-draft-adapter-20261109
     git rev-parse --short HEAD
-    python3 -m venv .venv-media07-canary
-    . .venv-media07-canary/bin/activate
+    python3 -m venv "$HOME/media07-private/venv-canary"
+    . "$HOME/media07-private/venv-canary/bin/activate"
     python -m pip install -r backend/requirements-dev.txt
     python deploy/media07/accept-live-draft-canary.py
 
@@ -50,7 +50,7 @@ If dependencies are already available in a suitable isolated Python environment,
 Only if Gates A and B are both satisfied, on the same Contabo terminal:
 
     cd "$HOME/media07-03-candidate"
-    . .venv-media07-canary/bin/activate
+    . "$HOME/media07-private/venv-canary/bin/activate"
     python deploy/media07/accept-live-draft-canary.py \
       --execute \
       --roles-reviewed \
