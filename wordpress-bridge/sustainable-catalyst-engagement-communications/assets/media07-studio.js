@@ -259,6 +259,10 @@
       $('scec07-preheader').value = data.preheader;
       $('scec07-revision').textContent = 'Saved r' + revision + ' · SHA-256 ' +
         data.sha256.slice(0, 12);
+      if (data.staging_receipt && data.staging_receipt.campaign_id > 0) {
+        $('scec07-revision').textContent += ' · Staging draft #' +
+          data.staging_receipt.campaign_id + ' (last local receipt; not live provider status)';
+      }
       dirty = false;
       message('Loaded private revision ' + revision + '. Sending is disabled.');
     }).catch(function (error) {
