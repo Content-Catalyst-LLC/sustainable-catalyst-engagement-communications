@@ -205,11 +205,29 @@ final class SC_Media07_Studio {
             'preheader'=>(string)get_post_meta($id, self::META . 'preheader', true),
             'revision'=>(int)get_post_meta($id, self::META . 'revision', true),
             'sha256'=>(string)get_post_meta($id, self::META . 'sha256', true),
+            'staging_receipt'=>self::current_staging_receipt($id),
             'project'=>$project,
             'sending_enabled'=>false,
         ));
     }
 
+
+    /** Private local acknowledgement, not an assertion of live provider health. */
+    private static function current_staging_receipt($id) {
+        $receipt = get_post_meta($id, self::META . 'staging_receipt', true);
+        if (!is_array($receipt) ||
+            ($receipt['revision'] ?? 0) !== (int)get_post_meta($id, self::META . 'revision', true) ||
+            ($receipt['source_sha256'] ?? '') !== (string)get_post_meta($id, self::META . 'sha256', true)) {
+            return null;
+        }
+        return array(
+            'revision' => $receipt['revision'],
+            'campaign_id' => (int)($receipt['campaign_id'] ?? 0),
+            'synthetic_only' => true,
+            'last_synced_utc' => (string)($receipt['synced_utc'] ?? ''),
+            'live_provider_status_verified' => false,
+        );
+    }
 
     /** Never expose the bridge URL or secret to browser scripts. */
     private static function bridge_ready() {
