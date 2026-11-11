@@ -20,6 +20,7 @@ final class SC_Media07_Studio {
         add_action('admin_enqueue_scripts', array(__CLASS__, 'assets'));
         add_action('wp_ajax_scec07_save', array(__CLASS__, 'save'));
         add_action('wp_ajax_scec07_load', array(__CLASS__, 'load'));
+        add_action('wp_ajax_scec07_sync_staging', array(__CLASS__, 'sync_staging_draft'));
     }
 
     public static function register_type() {
@@ -78,6 +79,7 @@ final class SC_Media07_Studio {
                 'issues' => self::list_issues(),
                 'substackUrl' => 'https://newsletter.sustainablecatalyst.com/',
                 'maxJsonBytes' => self::MAX_JSON_BYTES,
+                'listmonkStagingAvailable' => self::bridge_ready(),
             ), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) . ';', 'before');
     }
 
@@ -208,6 +210,133 @@ final class SC_Media07_Studio {
         ));
     }
 
+
+    /** Never expose the bridge URL or secret to browser scripts. */
+    private static function bridge_ready() {
+        return defined('SCEC_MEDIA07_STUDIO_BRIDGE_ENABLED') &&
+            SCEC_MEDIA07_STUDIO_BRIDGE_ENABLED === true &&
+            defined('SCEC_MEDIA07_STUDIO_BRIDGE_URL') &&
+            defined('SCEC_MEDIA07_STUDIO_BRIDGE_SHARED_KEY') &&
+            defined('SCEC_MEDIA07_STUDIO_ORGANIZATION_ID') &&
+            is_string(SCEC_MEDIA07_STUDIO_BRIDGE_SHARED_KEY) &&
+            strlen(SCEC_MEDIA07_STUDIO_BRIDGE_SHARED_KEY) >= 32 &&
+            preg_match('/^[a-f0-9-]{36}$/i', (string)SCEC_MEDIA07_STUDIO_ORGANIZATION_ID);
+    }
+
+    /**
+     * Explicit administrator action: sign and transfer only the current,
+     * private, saved Studio revision to the independently gated API canary.
+     * No subscribers, list IDs, SMTP, or listmonk credentials live here.
+     */
+    public static function sync_staging_draft() {
+        self::authorize();
+        if (!self::bridge_ready()) {
+            wp_send_json_error(array('message'=>'Private staging bridge not configured'), 503);
+        }
+        $id = absint($_POST['id'] ?? 0);
+        $rev = absint($_POST['revision'] ?? 0);
+        $p = self::issue($id);
+        if (!$p) { wp_send_json_error(array('message'=>'Private draft not found'), 404); }
+
+        $stored_rev = (int)get_post_meta($id, self::META . 'revision', true);
+        $stored_sha = (string)get_post_meta($id, self::META . 'sha256', true);
+        $claimed_sha = sanitize_text_field(wp_unslash((string)($_POST['studio_revision_sha256'] ?? '')));
+        $source = self::validate_project(get_post_meta($id, self::META . 'project', true));
+        $subject = (string)get_post_meta($id, self::META . 'subject', true);
+        $preheader = (string)get_post_meta($id, self::META . 'preheader', true);
+        if ($rev < 1 || $rev !== $stored_rev || $source === false ||
+            !preg_match('/^[a-f0-9]{64}$/', $stored_sha) ||
+            !hash_equals($stored_sha, $claimed_sha)) {
+            wp_send_json_error(array('message'=>'Draft changed. Reload the saved revision before staging.'), 409);
+        }
+        $canonical = wp_json_encode($source, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        if (!hash_equals($stored_sha, hash('sha256', $canonical . "\n" . $subject . "\n" . $preheader))) {
+            wp_send_json_error(array('message'=>'Stored draft fingerprint does not match source'), 409);
+        }
+
+        $html = wp_unslash((string)($_POST['body_html'] ?? ''));
+        if (strlen($html) < 20 || strlen($html) > 100000 ||
+            preg_match('/<\s*\/?\s*(?:script|iframe|object|embed|form|input|svg|math)\b|on[a-z]{3,24}\s*=|javascript\s*:/i', $html) ||
+            strpos($html, '{{') !== false || strpos($html, '}}') !== false) {
+            wp_send_json_error(array('message'=>'Compiled HTML rejected by staging safety gate'), 422);
+        }
+        $altbody = trim(preg_replace('/\s+/u', ' ', wp_strip_all_tags($html)));
+        if (strlen($altbody) < 1 || strlen($altbody) > 15000) {
+            wp_send_json_error(array('message'=>'Plain-text newsletter must be 1-15000 bytes'), 422);
+        }
+
+        $url = (string)SCEC_MEDIA07_STUDIO_BRIDGE_URL;
+        $parts = wp_parse_url($url);
+        if (!is_array($parts) || ($parts['scheme'] ?? '') !== 'https' ||
+            empty($parts['host']) ||
+            ($parts['path'] ?? '') !== '/v1/newsletter-studio/bridge/drafts' ||
+            isset($parts['user']) || isset($parts['pass']) ||
+            isset($parts['query']) || isset($parts['fragment']) ||
+            (isset($parts['port']) && $parts['port'] !== 443)) {
+            wp_send_json_error(array('message'=>'Approved HTTPS staging bridge URL is invalid'), 503);
+        }
+
+        $payload = array(
+            'schema_version' => 'scec.media07.listmonk-draft/1',
+            'organization_id' => (string)SCEC_MEDIA07_STUDIO_ORGANIZATION_ID,
+            'newsletter_ref' => 'wp-newsletter:' . $id,
+            'studio_revision_sha256' => $stored_sha,
+            'rendered_html_sha256' => hash('sha256', $html),
+            'title' => $p->post_title,
+            'subject' => $subject,
+            'preheader' => $preheader,
+            'body_html' => $html,
+            'altbody' => $altbody,
+            'synthetic_only' => true,
+        );
+        $body = wp_json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        if (!is_string($body)) {
+            wp_send_json_error(array('message'=>'Could not encode private staging payload'), 422);
+        }
+        $stamp = (string)time();
+        $signature = hash_hmac('sha256', $stamp . "\n" . $body, SCEC_MEDIA07_STUDIO_BRIDGE_SHARED_KEY);
+        $response = wp_safe_remote_post($url, array(
+            'timeout' => 8, 'redirection' => 0, 'sslverify' => true,
+            'headers' => array(
+                'Content-Type' => 'application/json',
+                'Accept' => 'application/json',
+                'X-SCEC-MEDIA07-Timestamp' => $stamp,
+                'X-SCEC-MEDIA07-Signature' => $signature,
+            ),
+            'body' => $body,
+        ));
+        if (is_wp_error($response) || (int)wp_remote_retrieve_response_code($response) !== 201) {
+            // Never echo host, proxy, response body or secrets to the editor.
+            wp_send_json_error(array('message'=>'Isolated staging draft sync unavailable or rejected'), 502);
+        }
+        $receipt = json_decode(wp_remote_retrieve_body($response), true);
+        if (!is_array($receipt) ||
+            ($receipt['campaign_status'] ?? '') !== 'draft' ||
+            ($receipt['synthetic_only'] ?? false) !== true ||
+            ($receipt['sent'] ?? true) !== false ||
+            ($receipt['organization_id'] ?? '') !== (string)SCEC_MEDIA07_STUDIO_ORGANIZATION_ID ||
+            !isset($receipt['campaign_id']) || !is_int($receipt['campaign_id']) || $receipt['campaign_id'] <= 0) {
+            wp_send_json_error(array('message'=>'Provider did not confirm an unsent staging draft'), 502);
+        }
+        // A change during network transfer cannot be claimed as current.
+        if ((int)get_post_meta($id, self::META . 'revision', true) !== $rev ||
+            (string)get_post_meta($id, self::META . 'sha256', true) !== $stored_sha) {
+            wp_send_json_error(array('message'=>'Revision changed during staging sync; reconcile existing draft'), 409);
+        }
+        update_post_meta($id, self::META . 'staging_receipt', array(
+            'revision' => $rev, 'source_sha256' => $stored_sha,
+            'campaign_id' => $receipt['campaign_id'],
+            'fingerprint' => sanitize_text_field((string)($receipt['fingerprint'] ?? '')),
+            'synced_utc' => gmdate('c'), 'synthetic_only' => true,
+        ));
+        wp_send_json_success(array(
+            'campaign_id' => $receipt['campaign_id'],
+            'campaign_status' => 'draft', 'synthetic_only' => true, 'sent' => false,
+            'draft_reused' => ($receipt['draft_reused'] ?? false) === true,
+            'revision' => $rev,
+        ));
+    }
+
     public static function screen() {
         if (!current_user_can('manage_options')) { wp_die('Forbidden', '', 403); }
         ?>
@@ -241,6 +370,8 @@ final class SC_Media07_Studio {
               <button type="button" class="button" id="scec07-media">Insert WordPress image</button>
               <a class="button" href="<?php echo esc_url(admin_url('options-general.php?page=scec-media08')); ?>">Open Press Room drafts</a>
               <div class="scec07-revision" id="scec07-revision" aria-live="polite">Unsaved draft</div>
+              <button type="button" class="button" id="scec07-listmonk" <?php disabled(!self::bridge_ready()); ?>>Create private listmonk staging draft</button>
+              <p class="scec07-note">Saved revisions only · empty synthetic list · no recipients or sending. <?php echo self::bridge_ready() ? 'Bridge configured; independent staging acceptance still required.' : 'Staging bridge is disabled until separately configured.'; ?></p>
               <hr>
               <label>Preview</label>
               <div class="scec07-actions">
