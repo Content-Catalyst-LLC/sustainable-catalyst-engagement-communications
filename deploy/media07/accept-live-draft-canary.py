@@ -50,7 +50,7 @@ def credential(path: Path):
     if set(obj) != {"username", "token"} or obj["username"] != "sc_media07_drafts":
         fail("Credential is not the dedicated sc_media07_drafts account")
     if (not isinstance(obj["token"], str) or not 16 <= len(obj["token"]) <= 512
-            or any(ch in obj["token"] for ch in "\\r\\n")):
+            or any(ch in obj["token"] for ch in "\r\n")):
         fail("Credential token is malformed")
     return obj["username"], obj["token"]
 
