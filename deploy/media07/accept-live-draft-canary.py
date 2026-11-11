@@ -177,7 +177,8 @@ def hmac_request(key, payload):
 
 
 def run(args):
-    file = args.credential_file.resolve(strict=True)
+    # Do not resolve() before lstat: that would hide a credential-file symlink.
+    file = Path(os.path.abspath(os.path.expanduser(str(args.credential_file))))
     user, token = credential(file)
     # The credential is read once and never logged. Listmonk stays localhost-only.
     with httpx.Client(base_url=LISTMONK, auth=(user, token), **NO_REDIRECTS) as provider, \
