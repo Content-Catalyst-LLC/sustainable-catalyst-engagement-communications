@@ -60,7 +60,11 @@ async def sync_saved_studio_draft(
         raise HTTPException(401, "Expired newsletter bridge authorization")
     if request.headers.get("content-type", "").split(";")[0].strip().lower() != "application/json":
         raise HTTPException(415, "JSON content type required")
-    if int(request.headers.get("content-length", "0") or 0) > MAX_BODY_BYTES:
+    try:
+        declared_size = int(request.headers.get("content-length", "0") or 0)
+    except (ValueError, OverflowError):
+        raise HTTPException(400, "Invalid request length") from None
+    if declared_size < 0 or declared_size > MAX_BODY_BYTES:
         raise HTTPException(413, "Newsletter draft too large")
     raw = await request.body()
     if len(raw) > MAX_BODY_BYTES:
@@ -73,6 +77,8 @@ async def sync_saved_studio_draft(
         payload = DraftCandidate.model_validate_json(raw)
     except ValidationError:
         raise HTTPException(422, "Invalid saved newsletter draft") from None
+    if not payload.title.startswith("[SYNTHETIC]") or not payload.subject.startswith("[SYNTHETIC]"):
+        raise HTTPException(422, "Only explicitly labeled synthetic drafts are permitted")
     _staging_config(payload.organization_id)
     response = create_draft(payload, tenant=payload.organization_id)
     LOG.info("synthetic_studio_draft org_hash=%s campaign_id=%s reused=%s",
