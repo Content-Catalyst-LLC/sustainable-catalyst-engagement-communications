@@ -233,6 +233,9 @@ final class SC_Media07_Studio {
         if (!self::bridge_ready()) {
             wp_send_json_error(array('message'=>'Private staging bridge not configured'), 503);
         }
+        if (($_POST['synthetic_confirmed'] ?? '') !== '1') {
+            wp_send_json_error(array('message'=>'Synthetic-content confirmation required'), 422);
+        }
         $id = absint($_POST['id'] ?? 0);
         $rev = absint($_POST['revision'] ?? 0);
         $p = self::issue($id);
@@ -243,6 +246,9 @@ final class SC_Media07_Studio {
         $claimed_sha = sanitize_text_field(wp_unslash((string)($_POST['studio_revision_sha256'] ?? '')));
         $source = self::validate_project(get_post_meta($id, self::META . 'project', true));
         $subject = (string)get_post_meta($id, self::META . 'subject', true);
+        if (strpos($p->post_title, '[SYNTHETIC]') !== 0 || strpos($subject, '[SYNTHETIC]') !== 0) {
+            wp_send_json_error(array('message'=>'Staging transfer requires a [SYNTHETIC] title and subject'), 422);
+        }
         $preheader = (string)get_post_meta($id, self::META . 'preheader', true);
         if ($rev < 1 || $rev !== $stored_rev || $source === false ||
             !preg_match('/^[a-f0-9]{64}$/', $stored_sha) ||
@@ -370,6 +376,7 @@ final class SC_Media07_Studio {
               <button type="button" class="button" id="scec07-media">Insert WordPress image</button>
               <a class="button" href="<?php echo esc_url(admin_url('options-general.php?page=scec-media08')); ?>">Open Press Room drafts</a>
               <div class="scec07-revision" id="scec07-revision" aria-live="polite">Unsaved draft</div>
+              <label><input type="checkbox" id="scec07-synthetic-confirm" /> I confirm this saved issue contains synthetic test content only.</label>
               <button type="button" class="button" id="scec07-listmonk" <?php disabled(!self::bridge_ready()); ?>>Create private listmonk staging draft</button>
               <p class="scec07-note">Saved revisions only · empty synthetic list · no recipients or sending. <?php echo self::bridge_ready() ? 'Bridge configured; independent staging acceptance still required.' : 'Staging bridge is disabled until separately configured.'; ?></p>
               <hr>
