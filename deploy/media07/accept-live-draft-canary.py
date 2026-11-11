@@ -9,6 +9,7 @@ The logged receipt never includes authentication secrets or newsletter content.
 from __future__ import annotations
 
 import argparse
+import fcntl
 import hashlib
 import hmac
 import json
@@ -48,7 +49,8 @@ def credential(path: Path):
     obj = json.loads(path.read_text())
     if set(obj) != {"username", "token"} or obj["username"] != "sc_media07_drafts":
         fail("Credential is not the dedicated sc_media07_drafts account")
-    if not isinstance(obj["token"], str) or not 16 <= len(obj["token"]) <= 512:
+    if (not isinstance(obj["token"], str) or not 16 <= len(obj["token"]) <= 512
+            or any(ch in obj["token"] for ch in "\\r\\n")):
         fail("Credential token is malformed")
     return obj["username"], obj["token"]
 
@@ -176,6 +178,27 @@ def hmac_request(key, payload):
     )
 
 
+def assert_delivery_endpoints_blocked(config):
+    """These authenticated calls stay inside TestClient, NEVER at listmonk."""
+    from fastapi.testclient import TestClient
+    from app.identity import mint_token
+    from app.main import app
+    token = mint_token(
+        subject="media07:synthetic-live-canary", organization_id=TEST_ORG,
+        roles=("administrator",), expires_at=int(time.time()) + 60,
+        secret=config["SCEC_IDENTITY_SIGNING_KEY"],
+    )
+    headers = {"Authorization": "Bearer " + token, "X-SCEC-Organization-ID": TEST_ORG}
+    with TestClient(app) as test_client:
+        for route in ("/send", "/schedule", "/test-send", "/subscribers/import", "/campaigns/1/status"):
+            response = test_client.post("/v1/newsletter-studio/listmonk" + route, headers=headers)
+            if response.status_code != 503:
+                fail("NO-GO: forbidden newsletter route was not blocked: " + route)
+        status = test_client.get("/v1/newsletter-studio/listmonk/status", headers=headers)
+        if status.status_code != 200 or status.json().get("external_sending_enabled") is not False:
+            fail("NO-GO: staging delivery status did not confirm sending disabled")
+
+
 def run(args):
     # Do not resolve() before lstat: that would hide a credential-file symlink.
     file = Path(os.path.abspath(os.path.expanduser(str(args.credential_file))))
@@ -208,6 +231,24 @@ def run(args):
         # No actual external HTTP service is started. FastAPI executes in-process,
         # but uses the real listmonk host-local API with the restricted credential.
         config = enter_local_test_environment(list_id, file)
+        assert_delivery_endpoints_blocked(config)
+        # Refuse a second simultaneous local canary writer on this host.
+        lock_path = Path.home() / "media07-private" / ".media07-03-canary.lock"
+        lock_fd = os.open(lock_path, os.O_CREAT | os.O_RDWR, 0o600)
+        try:
+            fcntl.flock(lock_fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError:
+            os.close(lock_fd)
+            fail("NO-GO: another MEDIA-07.3 local canary is already running")
+        try:
+            run_authenticated_fixture(provider, capture, list_id, fixture, digest, name, before, config, user)
+        finally:
+            fcntl.flock(lock_fd, fcntl.LOCK_UN)
+            os.close(lock_fd)
+        return
+
+
+def run_authenticated_fixture(provider, capture, list_id, fixture, digest, name, before, config, user):
         first = hmac_request(config["SCEC_MEDIA07_STUDIO_BRIDGE_SHARED_KEY"], fixture)
         if first.status_code != 201:
             fail("NO-GO: first authenticated bridge draft rejected HTTP " + str(first.status_code))
