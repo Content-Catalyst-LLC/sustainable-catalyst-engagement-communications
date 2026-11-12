@@ -30,7 +30,7 @@ test -z "$(git status --porcelain)"  # stop if local worktree is dirty
 git fetch origin feature/media-07-03-listmonk-draft-adapter-20261109
 git merge --ff-only origin/feature/media-07-03-listmonk-draft-adapter-20261109
 . "$HOME/media07-private/venv-canary/bin/activate"
-python -m pytest -q backend/tests/test_media07_studio_gateway_v1291.py backend/tests/test_media07_studio_bridge_v1290.py
+(cd backend && python -m pytest -q tests/test_media07_studio_gateway_v1291.py tests/test_media07_studio_bridge_v1290.py)
 # Safe one-time private-file creation. Will NOT overwrite an existing env file.
 python deploy/media07/gate-d/provision-env.py --provision-synthetic-staging
 python deploy/media07/gate-d/preflight.py
