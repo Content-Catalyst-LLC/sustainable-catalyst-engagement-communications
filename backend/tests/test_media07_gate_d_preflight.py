@@ -46,7 +46,7 @@ def test_preflight_fails_closed_on_public_file_or_changed_list(tmp_path):
     provisioner.provision(env)
     opts = preflight.read_env_file(env)
     opts["SCEC_MEDIA07_EMPTY_LIST_ID"] = "4"
-    with pytest.raises(RuntimeError, match="synthetic"):
+    with pytest.raises(RuntimeError, match="SCEC_MEDIA07_EMPTY_LIST_ID"):
         preflight.check_configuration(opts, cred)
     env.chmod(0o644)
     with pytest.raises(RuntimeError, match="private file"):
