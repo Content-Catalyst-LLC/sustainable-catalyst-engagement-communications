@@ -86,6 +86,7 @@ final class SC_Media07_Studio {
     private static function list_issues() {
         $posts = get_posts(array(
             'post_type' => self::TYPE, 'post_status' => 'private',
+            'author' => get_current_user_id(),
             'numberposts' => 100, 'orderby' => 'modified', 'order' => 'DESC'
         ));
         return array_map(function($p) {
@@ -113,7 +114,10 @@ final class SC_Media07_Studio {
     private static function issue($id) {
         if ($id <= 0) { return null; }
         $p = get_post($id);
-        return ($p && $p->post_type === self::TYPE && $p->post_status === 'private')
+        // Private issues are owner-scoped until an explicit reviewed editorial
+        // delegation system exists. manage_options alone is not ownership.
+        return ($p && $p->post_type === self::TYPE && $p->post_status === 'private' &&
+                (int)$p->post_author === (int)get_current_user_id())
             ? $p : null;
     }
 
