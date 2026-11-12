@@ -45,6 +45,8 @@ jobs:
           assert "self::META . 'rendered_html_sha256'" in php
           assert 'Only the stored, hashed revision' in php
           assert "($_POST['body_html']" not in php
+          assert "'author' => get_current_user_id()" in php
+          assert "(int)$p->post_author === (int)get_current_user_id()" in php
           assert "compiled_html: compiledHtml" in js
           assert "body_html: html" not in js
           assert 'sha256Html(html)' in js
