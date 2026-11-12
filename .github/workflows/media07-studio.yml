@@ -41,6 +41,15 @@ jobs:
           assert 'wp_ajax_scec07_sync_staging' in php
           assert 'SCEC_MEDIA07_STUDIO_BRIDGE_ENABLED' in php
           assert 'synthetic_confirmed' in php and '[SYNTHETIC]' in php
+          assert "self::META . 'compiled_html'" in php
+          assert "self::META . 'rendered_html_sha256'" in php
+          assert 'Only the stored, hashed revision' in php
+          assert "($_POST['body_html']" not in php
+          assert "compiled_html: compiledHtml" in js
+          assert "body_html: html" not in js
+          assert 'sha256Html(html)' in js
+          assert 'SCEC_MEDIA07_ACCESS_CLIENT_SECRET' in php
+          assert 'SCEC_MEDIA07_STUDIO_BRIDGE_SHARED_KEY' in php
           assert 'smtp' not in js.lower()
           print('MEDIA-07 no-delivery editor contract: PASS')
           PY
@@ -72,16 +81,16 @@ jobs:
         run: |
           set -euo pipefail
           cd wordpress-bridge
-          zip -qr "$GITHUB_WORKSPACE/scec-media-and-newsletter-studio-8.9.3.zip" \
+          zip -qr "$GITHUB_WORKSPACE/scec-media-and-newsletter-studio-8.9.4.zip" \
             sustainable-catalyst-engagement-communications \
             -x '*/tests/*'
-          unzip -t "$GITHUB_WORKSPACE/scec-media-and-newsletter-studio-8.9.3.zip" | tail -1
-          sha256sum "$GITHUB_WORKSPACE/scec-media-and-newsletter-studio-8.9.3.zip"
+          unzip -t "$GITHUB_WORKSPACE/scec-media-and-newsletter-studio-8.9.4.zip" | tail -1
+          sha256sum "$GITHUB_WORKSPACE/scec-media-and-newsletter-studio-8.9.4.zip"
       - uses: actions/upload-artifact@v4
         with:
-          name: scec-media-and-newsletter-studio-8.9.3
+          name: scec-media-and-newsletter-studio-8.9.4
           path: |
-            scec-media-and-newsletter-studio-8.9.3.zip
+            scec-media-and-newsletter-studio-8.9.4.zip
             media07-vendor-sha256.txt
           if-no-files-found: error
           retention-days: 14
