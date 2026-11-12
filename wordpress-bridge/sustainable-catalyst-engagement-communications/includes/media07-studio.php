@@ -131,6 +131,14 @@ final class SC_Media07_Studio {
         return $project;
     }
 
+
+    /** Bounded, inert HTML for a synthetic staging draft. No template execution. */
+    public static function validate_compiled_html($html) {
+        return is_string($html) && strlen($html) >= 20 && strlen($html) <= 100000 &&
+            !preg_match('/<\s*\/?\s*(?:script|iframe|object|embed|form|input|svg|math)\b|on[a-z]{3,24}\s*=|javascript\s*:/i', $html) &&
+            strpos($html, '{{') === false && strpos($html, '}}') === false;
+    }
+
     public static function save() {
         self::authorize();
         $id = isset($_POST['id']) ? absint($_POST['id']) : 0;
@@ -140,6 +148,11 @@ final class SC_Media07_Studio {
         $raw = wp_unslash((string)($_POST['project'] ?? ''));
         $rev = isset($_POST['revision']) ? absint($_POST['revision']) : 0;
         $project = self::validate_project($raw);
+        $html = wp_unslash((string)($_POST['compiled_html'] ?? ''));
+        if (!self::validate_compiled_html($html)) {
+            wp_send_json_error(array('message'=>'Save requires valid compiled synthetic-safe newsletter HTML'), 422);
+        }
+        $html_sha = hash('sha256', $html);
         if ($title === '' || $subject === '' ||
             strlen($title) > 140 || strlen($subject) > 200 ||
             strlen($preheader) > 180 || $project === false) {
@@ -170,9 +183,13 @@ final class SC_Media07_Studio {
 
         // Store editable project JSON only, not compiled HTML or subscriber details.
         $canonical = wp_json_encode($project, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-        $sha = hash('sha256', $canonical . "\n" . $subject . "\n" . $preheader);
+        $sha = hash('sha256', $canonical . "\n" . $subject . "\n" . $preheader . "\n" . $html_sha);
         $next = $latest_rev + 1;
         update_post_meta($id, self::META . 'project', wp_slash($canonical));
+        // The exact HTML used for staging is now bound to the saved revision.
+        // Existing legacy revisions must be re-saved before staging transfer.
+        update_post_meta($id, self::META . 'compiled_html', wp_slash($html));
+        update_post_meta($id, self::META . 'rendered_html_sha256', $html_sha);
         update_post_meta($id, self::META . 'subject', $subject);
         update_post_meta($id, self::META . 'preheader', $preheader);
         update_post_meta($id, self::META . 'revision', $next);
@@ -182,10 +199,12 @@ final class SC_Media07_Studio {
         $history = get_post_meta($id, self::META . 'history', true);
         if (!is_array($history)) { $history = array(); }
         $history[] = array('revision'=>$next, 'sha256'=>$sha,
+            'rendered_html_sha256'=>$html_sha,
             'actor_id'=>get_current_user_id(), 'saved_utc'=>gmdate('c'));
         update_post_meta($id, self::META . 'history', array_slice($history, -25));
         wp_send_json_success(array('id'=>(int)$id, 'revision'=>$next,
-            'sha256'=>$sha, 'issues'=>self::list_issues(),
+            'sha256'=>$sha, 'rendered_html_sha256'=>$html_sha,
+            'issues'=>self::list_issues(),
             'sending_enabled'=>false, 'substack_published'=>false));
     }
 
@@ -205,6 +224,7 @@ final class SC_Media07_Studio {
             'preheader'=>(string)get_post_meta($id, self::META . 'preheader', true),
             'revision'=>(int)get_post_meta($id, self::META . 'revision', true),
             'sha256'=>(string)get_post_meta($id, self::META . 'sha256', true),
+            'rendered_html_sha256'=>(string)get_post_meta($id, self::META . 'rendered_html_sha256', true),
             'staging_receipt'=>self::current_staging_receipt($id),
             'project'=>$project,
             'sending_enabled'=>false,
@@ -274,16 +294,16 @@ final class SC_Media07_Studio {
             wp_send_json_error(array('message'=>'Draft changed. Reload the saved revision before staging.'), 409);
         }
         $canonical = wp_json_encode($source, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-        if (!hash_equals($stored_sha, hash('sha256', $canonical . "\n" . $subject . "\n" . $preheader))) {
-            wp_send_json_error(array('message'=>'Stored draft fingerprint does not match source'), 409);
+        $html = (string)get_post_meta($id, self::META . 'compiled_html', true);
+        $html_sha = (string)get_post_meta($id, self::META . 'rendered_html_sha256', true);
+        if (!self::validate_compiled_html($html) ||
+            !preg_match('/^[a-f0-9]{64}$/', $html_sha) ||
+            !hash_equals($html_sha, hash('sha256', $html)) ||
+            !hash_equals($stored_sha, hash('sha256', $canonical . "\n" . $subject . "\n" . $preheader . "\n" . $html_sha))) {
+            wp_send_json_error(array('message'=>'Saved compiled HTML missing or inconsistent with the private revision; re-save draft'), 409);
         }
-
-        $html = wp_unslash((string)($_POST['body_html'] ?? ''));
-        if (strlen($html) < 20 || strlen($html) > 100000 ||
-            preg_match('/<\s*\/?\s*(?:script|iframe|object|embed|form|input|svg|math)\b|on[a-z]{3,24}\s*=|javascript\s*:/i', $html) ||
-            strpos($html, '{{') !== false || strpos($html, '}}') !== false) {
-            wp_send_json_error(array('message'=>'Compiled HTML rejected by staging safety gate'), 422);
-        }
+        // Ignore any browser-supplied HTML. Only the stored, hashed revision
+        // may be signed and transferred to the synthetic staging adapter.
         $altbody = trim(preg_replace('/\s+/u', ' ', wp_strip_all_tags($html)));
         if (strlen($altbody) < 1 || strlen($altbody) > 15000) {
             wp_send_json_error(array('message'=>'Plain-text newsletter must be 1-15000 bytes'), 422);
@@ -305,7 +325,7 @@ final class SC_Media07_Studio {
             'organization_id' => (string)SCEC_MEDIA07_STUDIO_ORGANIZATION_ID,
             'newsletter_ref' => 'wp-newsletter:' . $id,
             'studio_revision_sha256' => $stored_sha,
-            'rendered_html_sha256' => hash('sha256', $html),
+            'rendered_html_sha256' => $html_sha,
             'title' => $p->post_title,
             'subject' => $subject,
             'preheader' => $preheader,
