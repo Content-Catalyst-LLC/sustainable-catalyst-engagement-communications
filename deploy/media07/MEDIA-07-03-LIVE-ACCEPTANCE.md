@@ -67,3 +67,21 @@ If any step fails, **NO-GO**. Review the private state before retrying. The scri
 Required separately: deploy an isolated single-writer Python canary, private authenticated HTTPS ingress from Bluehost (Bluehost cannot access Contabo localhost), secrets provided only through approved server-side channels, install/test the v8.9.3 WordPress plugin after backup, verify saved revision/nonce and cross-user isolation, and execute the manual synthetic draft action twice with one resulting draft and zero Mailpit increment. Document rollback and approved network restrictions. Leave every send/subscriber/publication gate off.
 
 **Full MEDIA-07.3 release remains BLOCKED** until Gate D and independent permission verification succeed. Source-only mocked CI or an in-process live provider acceptance is not equivalent to a deployed authenticated Newsletter Studio bridge.
+
+
+## Gate C execution receipt — 11 November 2026
+
+**OPERATOR-REPORTED LIVE_PROVIDER_DRAFT_PASS, not independently reproduced by GitHub CI.**
+
+Sanitized Contabo terminal evidence supplied by the operator:
+
+```text
+PREFLIGHT_PASS list_id=3 subscriber_count=0 mailpit_baseline=1 exact_matching_drafts=0 API_user=sc_media07_drafts
+LIVE_PROVIDER_DRAFT_PASS campaign_id=2 duplicate_reconciled=true mailpit_delta=0
+LOCAL_RECEIPT /home/catalystadmin/media07-private/acceptance/MEDIA07-03-LIVE-CANARY.json
+NOT_ACCEPTED: independent permission denial, deployed HTTPS bridge and Bluehost Studio UI
+```
+
+Verified by the runner at execution: private active synthetic list #3 with zero subscribers, authenticated draft creation (campaign #2), second invocation reconciled rather than duplicated, draft readback, and Mailpit total unchanged at one message. The operator passed `--roles-reviewed` and `--synthetic-acknowledged`; these are operator attestations, **not** machine-verified absence of `campaigns:send` or `tx:send` privileges. No customer emails or newsletter subscribers were involved in this test, based on the runner's checks. The private receipt remains on Contabo and must **not** be committed to a public repository or exposed with credentials.
+
+**Status progression:** Gate B PASS; Gate C LIVE PROVIDER / IN-PROCESS BACKEND PASS; Gate D DEPLOYED WORDPRESS-TO-CONTABO HTTPS and real Studio browser acceptance NOT STARTED. Do not mark the whole release complete. Before Gate D: independently review restricted account effective permissions, preserve exact draft identity and Mailpit count, prepare a separate private TLS route and isolated single-writer canary, and establish rollback. No production sending enablement or changes to existing listmonk Compose are authorized.
