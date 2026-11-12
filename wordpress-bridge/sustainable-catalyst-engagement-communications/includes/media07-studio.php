@@ -339,14 +339,36 @@ final class SC_Media07_Studio {
         }
         $stamp = (string)time();
         $signature = hash_hmac('sha256', $stamp . "\n" . $body, SCEC_MEDIA07_STUDIO_BRIDGE_SHARED_KEY);
+        $headers = array(
+            'Content-Type' => 'application/json',
+            'Accept' => 'application/json',
+            'X-SCEC-MEDIA07-Timestamp' => $stamp,
+            'X-SCEC-MEDIA07-Signature' => $signature,
+        );
+        // Optional defense-in-depth transport: Cloudflare Access service
+        // credentials remain in wp-config, never localized to JS or receipts.
+        // Either supply BOTH constants or neither. An approved private mTLS/
+        // allowlisted TLS ingress is also possible; never plain HTTP.
+        $has_access_id = defined('SCEC_MEDIA07_ACCESS_CLIENT_ID') &&
+            is_string(SCEC_MEDIA07_ACCESS_CLIENT_ID) && SCEC_MEDIA07_ACCESS_CLIENT_ID !== '';
+        $has_access_secret = defined('SCEC_MEDIA07_ACCESS_CLIENT_SECRET') &&
+            is_string(SCEC_MEDIA07_ACCESS_CLIENT_SECRET) && SCEC_MEDIA07_ACCESS_CLIENT_SECRET !== '';
+        if ($has_access_id !== $has_access_secret) {
+            wp_send_json_error(array('message'=>'Private ingress credentials incomplete'), 503);
+        }
+        if ($has_access_id) {
+            if (preg_match('/[\r\n]/', SCEC_MEDIA07_ACCESS_CLIENT_ID . SCEC_MEDIA07_ACCESS_CLIENT_SECRET) ||
+                strlen(SCEC_MEDIA07_ACCESS_CLIENT_ID) > 256 ||
+                strlen(SCEC_MEDIA07_ACCESS_CLIENT_SECRET) < 32 ||
+                strlen(SCEC_MEDIA07_ACCESS_CLIENT_SECRET) > 512) {
+                wp_send_json_error(array('message'=>'Private ingress credentials invalid'), 503);
+            }
+            $headers['CF-Access-Client-Id'] = SCEC_MEDIA07_ACCESS_CLIENT_ID;
+            $headers['CF-Access-Client-Secret'] = SCEC_MEDIA07_ACCESS_CLIENT_SECRET;
+        }
         $response = wp_safe_remote_post($url, array(
             'timeout' => 8, 'redirection' => 0, 'sslverify' => true,
-            'headers' => array(
-                'Content-Type' => 'application/json',
-                'Accept' => 'application/json',
-                'X-SCEC-MEDIA07-Timestamp' => $stamp,
-                'X-SCEC-MEDIA07-Signature' => $signature,
-            ),
+            'headers' => $headers,
             'body' => $body,
         ));
         if (is_wp_error($response) || (int)wp_remote_retrieve_response_code($response) !== 201) {
