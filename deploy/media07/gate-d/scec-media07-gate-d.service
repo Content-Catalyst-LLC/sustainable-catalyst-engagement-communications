@@ -1,0 +1,26 @@
+# Gate D staging ONLY. Install as a systemd --user unit on Contabo after
+# preparing a private 0600 EnvironmentFile and independently auditing role grants.
+# DO NOT enable in production; no direct TCP exposure except host loopback.
+[Unit]
+Description=Sustainable Catalyst MEDIA-07.3 private synthetic-draft API canary
+After=network.target
+StartLimitIntervalSec=60
+StartLimitBurst=3
+
+[Service]
+Type=simple
+WorkingDirectory=%h/media07-03-candidate/backend
+EnvironmentFile=%h/media07-private/gate-d.env
+ExecStartPre=%h/media07-private/venv-canary/bin/python %h/media07-03-candidate/deploy/media07/gate-d/preflight.py
+ExecStart=%h/media07-private/venv-canary/bin/python -m uvicorn app.media07_studio_gateway_v1291:app --host 127.0.0.1 --port 18903 --workers 1 --no-access-log --no-server-header
+Restart=on-failure
+RestartSec=6
+TimeoutStopSec=30
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+MemoryMax=512M
+TasksMax=128
+
+[Install]
+WantedBy=default.target

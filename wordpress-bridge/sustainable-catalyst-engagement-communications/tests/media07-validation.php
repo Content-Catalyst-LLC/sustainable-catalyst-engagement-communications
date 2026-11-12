@@ -17,5 +17,10 @@ verify(SC_Media07_Studio::validate_project('{"pages":[]}') === false, 'zero page
 verify(SC_Media07_Studio::validate_project('{"pages":[{},{}]}') === false, 'multiple pages rejected');
 verify(SC_Media07_Studio::validate_project('{"pages":[') === false, 'malformed JSON rejected');
 verify(SC_Media07_Studio::validate_project(str_repeat('A', 262145)) === false, 'oversized body rejected');
+verify(SC_Media07_Studio::validate_compiled_html('<html><body><h1>[SYNTHETIC] Test</h1></body></html>'), 'valid compiled HTML');
+verify(!SC_Media07_Studio::validate_compiled_html('<script>alert(1)</script>'), 'script rejected');
+verify(!SC_Media07_Studio::validate_compiled_html('<html onload=alert(1)>Hello world</html>'), 'handler rejected');
+verify(!SC_Media07_Studio::validate_compiled_html('<p>{{ campaign.subject }} injection</p>'), 'template directive rejected');
+verify(!SC_Media07_Studio::validate_compiled_html(str_repeat('X', 100001)), 'oversized compiled HTML rejected');
 verify(SC_Media07_Studio::TYPE === 'scec_newsletter', 'private post type');
 echo "MEDIA-07 PHP validation: PASS\n";

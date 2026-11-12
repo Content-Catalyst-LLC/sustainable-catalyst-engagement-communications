@@ -4,7 +4,7 @@
 
   var boot = window.SCEC07_BOOT || {};
   var $ = function (id) { return document.getElementById(id); };
-  var editor, selectedId = 0, revision = 0, dirty = false, inFlight = false;
+  var editor, selectedId = 0, revision = 0, sourceSha = '', renderedSha = '', dirty = false, inFlight = false;
   var autosaveTimer = null, opening = false;
 
   function esc(value) {
@@ -146,6 +146,9 @@
     window.clearTimeout(autosaveTimer);
     selectedId = 0;
     revision = 0;
+    sourceSha = '';
+    renderedSha = '';
+    if ($('scec07-synthetic-confirm')) { $('scec07-synthetic-confirm').checked = false; }
     $('scec07-issues').value = '0';
     $('scec07-template').value = kind || 'research';
     $('scec07-title').value = kind === 'policy' ? 'Policy digest'
@@ -201,6 +204,13 @@
       message('The newsletter project is too large. Remove unused blocks or assets.', true);
       return;
     }
+    var compiledHtml;
+    try { compiledHtml = compiled(); }
+    catch (error) { message('Cannot save without valid compiled HTML: ' + error.message, true); return; }
+    if (new TextEncoder().encode(compiledHtml).length > 100000) {
+      message('Compiled HTML exceeds the private revision limit.', true);
+      return;
+    }
     inFlight = true;
     $('scec07-save').disabled = true;
     var existingId = selectedId;
@@ -212,10 +222,12 @@
     request('save', {
       id: String(selectedId), title: title, subject: subject,
       preheader: $('scec07-preheader').value.trim(),
-      revision: String(revision), project: project
+      revision: String(revision), project: project, compiled_html: compiledHtml
     }).then(function (data) {
       selectedId = data.id;
       revision = data.revision;
+      sourceSha = data.sha256;
+      renderedSha = data.rendered_html_sha256 || '';
       // If the user changed the editor during the request, preserve unsaved state.
       dirty = before !== JSON.stringify({
         project: JSON.stringify(editor.getProjectData()),
@@ -248,12 +260,19 @@
       editor.loadProjectData(data.project);
       selectedId = data.id;
       revision = data.revision;
+      sourceSha = data.sha256;
+      renderedSha = data.rendered_html_sha256 || '';
+      if ($('scec07-synthetic-confirm')) { $('scec07-synthetic-confirm').checked = false; }
       $('scec07-issues').value = String(id);
       $('scec07-title').value = data.title;
       $('scec07-subject').value = data.subject;
       $('scec07-preheader').value = data.preheader;
       $('scec07-revision').textContent = 'Saved r' + revision + ' · SHA-256 ' +
         data.sha256.slice(0, 12);
+      if (data.staging_receipt && data.staging_receipt.campaign_id > 0) {
+        $('scec07-revision').textContent += ' · Staging draft #' +
+          data.staging_receipt.campaign_id + ' (last local receipt; not live provider status)';
+      }
       dirty = false;
       message('Loaded private revision ' + revision + '. Sending is disabled.');
     }).catch(function (error) {
@@ -448,6 +467,68 @@
   function confirmDiscard() {
     return !dirty || window.confirm('This newsletter has unsaved edits. Discard changes?');
   }
+
+  function sha256Html(value) {
+    if (!window.isSecureContext || !window.crypto || !window.crypto.subtle) {
+      return Promise.reject(new Error('Newsletter staging requires a secure HTTPS editor context.'));
+    }
+    return window.crypto.subtle.digest('SHA-256', new TextEncoder().encode(value))
+      .then(function (buffer) {
+        return Array.from(new Uint8Array(buffer))
+          .map(function (byte) { return byte.toString(16).padStart(2, '0'); }).join('');
+      });
+  }
+
+  function syncStagingDraft() {
+    if (!boot.listmonkStagingAvailable) {
+      message('Staging bridge is disabled. No provider operation occurred.', true);
+      return;
+    }
+    if (!selectedId || !revision || !sourceSha || !renderedSha || dirty || inFlight) {
+      message('Save the current newsletter revision before staging; unsaved changes cannot be transferred.', true);
+      return;
+    }
+    if (!$('scec07-synthetic-confirm').checked ||
+        !$('scec07-title').value.startsWith('[SYNTHETIC]') ||
+        !$('scec07-subject').value.startsWith('[SYNTHETIC]')) {
+      message('Confirm synthetic-only content and use [SYNTHETIC] at the start of title and subject.', true);
+      return;
+    }
+    var html;
+    try { html = compiled(); }
+    catch (error) { message('Cannot stage invalid newsletter HTML: ' + error.message, true); return; }
+    if (new TextEncoder().encode(html).length > 100000) {
+      message('Compiled email exceeds the 100 KB staging limit.', true);
+      return;
+    }
+    inFlight = true;
+    $('scec07-listmonk').disabled = true;
+    message('Creating or reconciling an empty-list staging draft; no email will be sent…');
+    sha256Html(html).then(function (digest) {
+      if (digest !== renderedSha) {
+        throw new Error('Current MJML render differs from the saved HTML revision. Re-save before staging.');
+      }
+      return request('sync_staging', {
+        id: String(selectedId), revision: String(revision),
+        studio_revision_sha256: sourceSha, synthetic_confirmed: '1'
+      });
+    }).then(function (data) {
+      if (data.campaign_status !== 'draft' || data.sent !== false ||
+          data.synthetic_only !== true) {
+        throw new Error('Staging provider did not confirm an unsent draft.');
+      }
+      message('Private listmonk staging draft #' + data.campaign_id +
+        (data.draft_reused ? ' reconciled' : ' created') +
+        ' from saved revision ' + data.revision +
+        '. No subscribers were contacted and no email was sent.');
+    }).catch(function (error) {
+      message('Staging draft transfer failed: ' + error.message, true);
+    }).finally(function () {
+      inFlight = false;
+      $('scec07-listmonk').disabled = !boot.listmonkStagingAvailable;
+    });
+  }
+
   function initialize() {
     if (!boot.ajaxUrl || !boot.nonce || !window.grapesjs) {
       message('Editor dependencies unavailable. Verify the approved admin scripts and reload.', true);
@@ -486,6 +567,7 @@
     });
     $('scec07-save').addEventListener('click', function () { save(false); });
     $('scec07-media').addEventListener('click', insertImage);
+    $('scec07-listmonk').addEventListener('click', syncStagingDraft);
     $('scec07-desktop').addEventListener('click', function () { setDevice(false); });
     $('scec07-mobile').addEventListener('click', function () { setDevice(true); });
     $('scec07-preview').addEventListener('click', showPreview);
