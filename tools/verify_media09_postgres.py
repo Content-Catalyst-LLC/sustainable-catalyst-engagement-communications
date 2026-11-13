@@ -115,7 +115,7 @@ assert browser.patch('/press/staff/inquiries/'+ident+'/assignment',json={'subjec
 r=browser.patch('/press/staff/inquiries/'+ident+'/assignment',headers={'origin':origin,'x-scec-csrf':csrf},json={'subject':'synthetic-operator','expected_version':3})
 assert r.status_code==200 and r.json()['version']==4,r.text
 assert browser.post('/v1/human-auth/logout',headers={'origin':origin,'x-scec-csrf':csrf}).status_code==204
-assert browser.get('/press/inbox').status_code==401
+assert browser.get('/press/inbox',follow_redirects=False).status_code==303
 checks['fixture_session_inbox_csrf_logout']=True
 assert client.patch(base+'/status',headers=headers(org),json={'status':'closed','expected_version':4}).status_code==200
 assert client.patch(base+'/status',headers=headers(org),json={'status':'reviewing','expected_version':5}).status_code==409

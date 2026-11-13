@@ -179,7 +179,11 @@ def callback(request:Request, code:str='', state:str='', error:str=''):
         db.execute('INSERT INTO sessions VALUES(?,?,?,?,?,?)',
                    (digest(token),sub,org,json.dumps(roles),digest(csrf),expires))
         db.commit()
-    response=RedirectResponse(cfg['SCEC_HUMAN_AUTH_ORIGIN'].rstrip('/')+'/v1/human-auth/session',status_code=303)
+    # Media uses the existing OIDC login and returns to its private inbox.
+    # The path is fixed server-side; no caller-controlled redirect target.
+    from .media09_release import real_intake
+    destination='/press/inbox' if (os.getenv('SCEC_MEDIA09_WEB_STAGING_ENABLED')=='1' or real_intake()) else '/v1/human-auth/session'
+    response=RedirectResponse(cfg['SCEC_HUMAN_AUTH_ORIGIN'].rstrip('/')+destination,status_code=303)
     set_cookie(response,SESSION_COOKIE,token,expires-int(time.time()))
     response.delete_cookie(FLOW_COOKIE,path='/',secure=True,httponly=True,samesite='lax')
     # CSRF token issued only to the same-origin callback client via non-HttpOnly *separate* cookie.

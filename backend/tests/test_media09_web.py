@@ -64,7 +64,7 @@ def test_production_and_default_off(setup,monkeypatch):
 
 def test_staff_no_service_token_browser_bypass(setup,monkeypatch):
     monkeypatch.setattr(human_auth,'config',lambda:{})
-    assert client.get('/press/inbox').status_code==401
+    assert client.get('/press/inbox',follow_redirects=False).status_code==303
     assert client.get('/press/staff/inquiries',headers={'authorization':'Bearer synthetic'}).status_code==401
 
 def test_staff_rechecks_membership_and_csrf(setup,monkeypatch):

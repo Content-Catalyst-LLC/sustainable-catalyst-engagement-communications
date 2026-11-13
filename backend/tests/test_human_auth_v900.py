@@ -74,3 +74,32 @@ def test_session_revocation_tenant_role_csrf(enabled):
 def test_sessions_not_connected_to_legacy_writes(enabled):
     client=TestClient(app)
     assert client.post('/v1/engagement/contacts',json={'name':'attempt'}).status_code in (401,403,503)
+
+@pytest.mark.parametrize('media_mode',[False,True])
+def test_verified_callback_returns_to_media_inbox(enabled,monkeypatch,media_mode):
+    from types import SimpleNamespace
+    client=TestClient(app,base_url='https://auth.example.test',follow_redirects=False)
+    org=str(uuid4())
+    monkeypatch.setenv('SCEC_HUMAN_MEMBERSHIPS',json.dumps({'synthetic-staff':{'organization_id':org,'roles':['contact_editor']}}))
+    if media_mode:monkeypatch.setenv('SCEC_MEDIA09_WEB_STAGING_ENABLED','1')
+    else:monkeypatch.delenv('SCEC_MEDIA09_WEB_STAGING_ENABLED',raising=False)
+    flow=client.get('/v1/human-auth/login')
+    state=parse_qs(urlsplit(flow.headers['location']).query)['state'][0]
+    with auth.store(auth.config()) as db:
+        nonce=db.execute('SELECT nonce FROM flows WHERE key=?',(auth.digest(state),)).fetchone()[0]
+    class Provider:
+        def __init__(self,**kwargs):pass
+        def __enter__(self):return self
+        def __exit__(self,*args):pass
+        def post(self,*args,**kwargs):
+            assert kwargs['data']['code_verifier']
+            return SimpleNamespace(raise_for_status=lambda:None,json=lambda:{'id_token':'synthetic-test-jwt'})
+    monkeypatch.setattr(auth.httpx,'Client',Provider)
+    monkeypatch.setattr(auth,'PyJWKClient',lambda *a,**kw:SimpleNamespace(get_signing_key_from_jwt=lambda token:SimpleNamespace(key='fixture-key')))
+    monkeypatch.setattr(auth.jwt,'decode',lambda *a,**kw:{'sub':'synthetic-staff','nonce':nonce})
+    response=client.get('/v1/human-auth/callback',params={'code':'synthetic-code','state':state})
+    assert response.status_code==303
+    destination='/press/inbox' if media_mode else '/v1/human-auth/session'
+    assert response.headers['location']=='https://auth.example.test'+destination
+    assert 'HttpOnly' in response.headers['set-cookie'] and 'Secure' in response.headers['set-cookie']
+    assert client.get('/v1/human-auth/session').json()['authenticated'] is True
