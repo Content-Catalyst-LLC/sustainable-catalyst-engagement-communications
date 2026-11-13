@@ -1,0 +1,164 @@
+SUSTAINABLE CATALYST — MEDIA & COMMUNICATIONS BRIDGE v8.8.8
+===========================================================
+
+WordPress installation
+----------------------
+1. Back up your existing plugin and your WordPress site.
+2. Plugins > Add New > Upload Plugin. Upload the ZIP, and replace the current version.
+3. Activate/confirm "Sustainable Catalyst — Media & Communications Bridge" v8.8.8.
+4. On the Media page, use [sc_media] in a Shortcode block. The old [sc_press]
+   continues to render the same Media page until you update the shortcode.
+5. Visit Settings > Media & Communications and review the connected URLs:
+   Substack: https://newsletter.sustainablecatalyst.com/
+   YouTube:  https://www.youtube.com/@SustainableCatalyst
+6. Connect your verified LinkedIn company/profile URL and other official social
+   channels in Settings > Media & Communications. Leave unknown links blank.
+7. Optionally configure a featured public YouTube video or playlist URL.
+8. Check the page while signed out; confirm Subscribe, archive, YouTube and
+   approved internal links, including keyboard and mobile behavior.
+9. Update the site's menu to Media > /media/ and redirect any previous
+   /channel/ and /press/ URLs via WordPress/hosting once verified.
+
+What this does
+--------------
+- Provides [sc_media] Media landing page with Substack, YouTube, LinkedIn and social channels.
+- LinkedIn gets a dedicated professional-network section.
+- Configurable X, Instagram, Facebook, Threads, Bluesky, Mastodon, GitHub,
+  and TikTok directory links. Unconfigured links never render as active links.
+- Supports an on-demand native Substack subscription form (visitor clicks first).
+- Displays up to 3 public RSS newsletter headlines, when public feed is reachable.
+- Can embed one configured featured YouTube video or playlist after a visitor click
+  using the privacy-enhanced youtube-nocookie.com player.
+- Links only already-published, public WordPress pages for news/events/contact.
+- Keeps all previous Engagement & Communications shortcodes and settings.
+
+What this does not do
+---------------------
+- No Substack subscriber import, sending, or newsletter creation.
+- No YouTube upload or authenticated API sync. MEDIA-03 can optionally read a public channel feed.
+- No LinkedIn/social media API writes, automated posting, social profile data
+  collection, credential storage, or scraping.
+- No private Workspace/Research/Engagement data or private API access.
+- No plugin-controlled WordPress page creation, slug redirects, or menu edits.
+- No background tracking or third-party browser requests until a visitor
+  clicks a subscription or video action; server-side public RSS may be fetched.
+
+If RSS fails the page still links to the newsletter archive and subscribe URL.
+Substack stores and processes its subscriptions; YouTube hosts its videos.
+
+MEDIA-02 — LIVE ACTIVATION AND REDIRECTS
+---------------------------------------
+1. WordPress > Settings > Media & Communications > MEDIA-02 Launch readiness.
+   Check that the published /media/ page is detected, public, and contains
+   [sc_media] (or temporary [sc_press] compatibility markup).
+2. Test /media/ on a private/incognito browser. Check layout on mobile,
+   keyboard navigation, public content, and active Substack/YouTube/social links.
+3. Confirm your WordPress navigation item is labelled Media and points to /media/.
+4. Check whether /press/ or /channel/ is still a real WordPress page. If so,
+   preserve its content and decide separately before deleting/redirecting.
+5. If no server/SEO redirect exists, enable the optional legacy-URL redirect
+   checkbox and Save settings. It is OFF by default and redirects ONLY clean
+   requests for exactly /press/ or /channel/, when the /media/ page is public
+   with an approved Media shortcode and no source-page collision exists.
+6. Verify exact HTTP 301 on a signed-out browser, and no redirect for other
+   paths, queries, POST requests, previews or distinct existing pages.
+7. Rollback: uncheck the redirect option; revert the WordPress slug/menu if
+   necessary; restore the previous plugin ZIP from backup. Clear caches.
+
+Does not configure your live WordPress site or prove public HTTP results.
+No automatic site/menu edits, publishing, subscriber storage or distribution.
+
+MEDIA-03 — UNIFIED CHANNEL DISCOVERY (v8.8.7)
+============================================
+1. Make a backup of the active Engagement & Communications Bridge plugin.
+2. Install this ZIP by WordPress > Plugins > Add New > Upload Plugin; choose
+   "Replace current" if WordPress reports an existing plugin.
+3. Keep [sc_media] in the published /media/ page. [sc_press] remains supported.
+4. Open Settings > Media & Communications. Under MEDIA-03:
+   - To show the unified public activity list, turn ON "Unified public updates".
+   - Enter the YouTube channel's canonical 24-character ID beginning with UC.
+     The @handle is not the channel ID. Leave empty if not known.
+   - Leave "WordPress updates" on to show ONLY published, non-password-protected
+     WordPress posts tagged "media-update". Tag posts intentionally.
+   - The existing "Recent newsletter issues" checkbox also controls whether
+     the Substack feed appears in the unified list.
+5. Save changes. Check the MEDIA-03 Discovery readiness table in Settings.
+6. View /media/ while signed out. Confirm that every item links to the actual
+   source, chronological ordering is sensible, no unpublished content appears,
+   and the no-updates fallback displays when feeds cannot be reached.
+7. Confirm /press/ and /channel/ legacy redirect behavior separately under
+   MEDIA-02. This package preserves the disabled-by-default redirect setting.
+
+IMPORTANT BOUNDARIES
+- MEDIA-03 additional RSS/Atom fetching is server-side and opt-in. The
+  legacy Substack recent-issues preview has its own separate setting.
+  The browser receives
+  only an HTML list of escaped text links; it never loads tracking images.
+- Responses are capped at 256 KB and a 5-second timeout, with no redirects.
+  Successes cache for 60 minutes; errors cache for 10 minutes. YouTube's
+  public feed availability is not guaranteed.
+- Substack subscriptions and delivery remain on Substack, videos on YouTube.
+  LinkedIn and social profiles remain approved manual links. No OAuth, contact
+  lists, outbound posting, newsletter sending or Research/Workspace API writes.
+- Website owner should verify that PHP SimpleXML is available for public XML
+  feeds. Without it, automatic external feed discovery fails closed.
+- Roll back by unchecking "Unified public updates", or reinstall v8.8.6.
+
+
+MEDIA-04 — CENTRALIZED EDITORIAL & MANUAL DISTRIBUTION (v8.8.8)
+===============================================================
+1. Back up the current v8.8.7 plugin and WordPress database. Install the v8.8.8
+   ZIP. It replaces the same plugin (do not install alongside it).
+2. Open WordPress > Settings > Media Distribution (or use the link from
+   Settings > Media & Communications). You must have manage_options permission.
+3. To create a package, provide title, summary, an already-PUBLISHED public
+   WordPress article/page permalink, and the target channels. Draft packages
+   are nonpublic and not accessible through REST or public post queries.
+4. Submit for review. A site administrator explicitly confirms source rights,
+   attribution, absence of embargo, and approves the reviewed version. Reviewer
+   user ID, timestamp and a content/source SHA-256 are stored in private metadata.
+   Self-review is currently permitted; this is not independent dual approval.
+5. After approval, generate a WordPress editorial DRAFT (not published) tagged
+   media-update. Open it in the regular editor and use WordPress's normal
+   publishing permissions and review process. MEDIA-03 can discover it only
+   AFTER it is publicly published and discovery is enabled.
+6. Use copy-ready text for each selected external channel; manually publish to
+   Substack/YouTube/LinkedIn/socials in those platforms. Optionally record the
+   public permalink from each platform. Records are operator-attested, NOT
+   automatically verified. Export JSON manifest for a future reviewed backend
+   handoff. No automatic sending, credentials, subscriber access or OAuth.
+7. Revise an already-submitted/approved package by creating a new package.
+   In-place edits after submission are blocked. If the source WordPress article
+   is changed after approval, downstream actions fail closed. Create and
+   review a new package representing the new source revision.
+8. Check the workflow as an administrator and as an anonymous visitor; confirm
+   that private distribution packages never appear on /media/. Test admin
+   access/nonce controls and that no external platform receives a request.
+
+ROLLBACK / CAUTIONS
+- Do NOT disable the plugin until you have exported/retained your reviewed
+  private distribution records or tested that restoration keeps their data.
+- Back up WordPress DB before reverting: private package posts/meta created in
+  v8.8.8 persist in the database even when the plugin is replaced with v8.8.7.
+- Reinstall the old v8.8.7 ZIP to disable the new authoring interface. This
+  release does not migrate the existing internal Engagement & Communications DB.
+- The seven historical Engagement & Communications production identity/privacy
+  acceptance gates remain outstanding. MEDIA-04 is a local WordPress editorial
+  handoff, NOT an activation of the private Contabo SCEC backend or external API.
+
+MEDIA-05 (v8.8.9) — PRIVATE ENGAGEMENT BACKEND BRIDGE
+----------------------------------------------------
+The public Media page remains [sc_media]; there is no new public shortcode.
+The private WordPress admin page is Settings → Media Backend Bridge.
+
+Install the v8.8.9 ZIP as an upgrade to v8.8.8 (back up before replacing).
+The bridge is disabled by default. To activate in staging, an authorized
+administrator must configure SCEC_MEDIA05_ENABLED, SCEC_MEDIA05_API_ORIGIN,
+SCEC_MEDIA05_ORGANIZATION_ID and SCEC_MEDIA05_SERVICE_BEARER in protected
+wp-config.php, and separately enable the matching tenant-bound staging API.
+Never enter credentials into the Media page or paste them into chat.
+
+Use an already approved, unchanged MEDIA-04 package to send a metadata-only
+review request. Check status first. A receipt means the backend validated a
+private PREVIEW; it does not mean any channel has published a message.
+Detailed requirements and rollback: MEDIA-05-RELEASE.md.

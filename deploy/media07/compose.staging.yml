@@ -1,0 +1,87 @@
+# MEDIA-07: isolated, local-only listmonk staging; NOT a production mail deployment.
+# Database and capture SMTP are dedicated to MEDIA-07, never shared with MEDIA-06.
+# Usage: docker compose --env-file /protected/path/media07.env -f compose.staging.yml up -d
+# No public HTTP/SMTP/DB ports. Mailpit captures messages rather than forwarding.
+name: sc-media07-staging
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: listmonk
+      POSTGRES_DB: listmonk
+      POSTGRES_PASSWORD: ${MEDIA07_DB_PASSWORD:?Set MEDIA07_DB_PASSWORD in a private env file}
+    volumes:
+      - media07_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U listmonk -d listmonk"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks: [media07_private]
+    security_opt: [no-new-privileges:true]
+
+  listmonk:
+    image: listmonk/listmonk:v6.2.0
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    command: [sh, -c, "./listmonk --install --idempotent --yes --config '' && ./listmonk --upgrade --yes --config '' && ./listmonk --config ''"]
+    environment:
+      LISTMONK_app__address: 0.0.0.0:9000
+      LISTMONK_db__host: db
+      LISTMONK_db__port: 5432
+      LISTMONK_db__user: listmonk
+      LISTMONK_db__database: listmonk
+      LISTMONK_db__password: ${MEDIA07_DB_PASSWORD:?Set MEDIA07_DB_PASSWORD in a private env file}
+      LISTMONK_db__ssl_mode: disable
+      LISTMONK_ADMIN_USER: ${MEDIA07_ADMIN_USER:?Set MEDIA07_ADMIN_USER in a private env file}
+      LISTMONK_ADMIN_PASSWORD: ${MEDIA07_ADMIN_PASSWORD:?Set MEDIA07_ADMIN_PASSWORD in a private env file}
+      TZ: Etc/UTC
+    # No host exposure: the admin_proxy is the only loopback listener.
+    volumes:
+      - media07_uploads:/listmonk/uploads
+    networks: [media07_private]
+    security_opt: [no-new-privileges:true]
+
+  mailpit:
+    # Captured test mail only. No relay, forwarding, public SMTP, or subscriber imports.
+    image: axllent/mailpit:v1.32.0
+    restart: unless-stopped
+    environment:
+      MP_MAX_MESSAGES: "1000"
+      MP_DATABASE: /data/mailpit.db
+    # No host exposure: private SMTP/HTTP services stay on the internal bridge.
+    volumes:
+      - media07_mailpit_data:/data
+    networks: [media07_private]
+    security_opt: [no-new-privileges:true]
+
+  admin_proxy:
+    # Only this proxy has an external network interface. Upstream services
+    # are isolated and have no direct route outside the internal bridge.
+    image: caddy:2.10.2-alpine
+    restart: unless-stopped
+    depends_on:
+      - listmonk
+      - mailpit
+    networks: [media07_private, media07_admin]
+    ports:
+      - "127.0.0.1:18898:9000"
+      - "127.0.0.1:18899:8025"
+    volumes:
+      - ./Caddyfile.staging:/etc/caddy/Caddyfile:ro
+    security_opt: [no-new-privileges:true]
+
+networks:
+  media07_private:
+    driver: bridge
+    internal: true # listmonk, PostgreSQL and Mailpit have zero external egress
+  media07_admin:
+    driver: bridge # only the fixed-purpose reverse proxy joins this network
+
+volumes:
+  media07_pg_data:
+  media07_uploads:
+  media07_mailpit_data:

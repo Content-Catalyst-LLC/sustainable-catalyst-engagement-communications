@@ -1,0 +1,267 @@
+<?php
+/**
+ * MEDIA-07 — Private WordPress Newsletter Studio (Substack-first).
+ *
+ * Editor revisions are private WP metadata, never posts or public REST output.
+ * The browser compiles and downloads email HTML; this endpoint never sends.
+ * No Substack credentials, subscriber lists, SMTP, or provider API integration.
+ */
+if (!defined('ABSPATH')) { exit; }
+
+final class SC_Media07_Studio {
+    const PAGE = 'scec-media07';
+    const TYPE = 'scec_newsletter';
+    const META = '_scec_media07_';
+    const MAX_JSON_BYTES = 262144;
+
+    public static function boot() {
+        add_action('init', array(__CLASS__, 'register_type'));
+        add_action('admin_menu', array(__CLASS__, 'menu'));
+        add_action('admin_enqueue_scripts', array(__CLASS__, 'assets'));
+        add_action('wp_ajax_scec07_save', array(__CLASS__, 'save'));
+        add_action('wp_ajax_scec07_load', array(__CLASS__, 'load'));
+    }
+
+    public static function register_type() {
+        register_post_type(self::TYPE, array(
+            'label' => 'Private newsletters',
+            'public' => false, 'publicly_queryable' => false,
+            'show_ui' => false, 'show_in_rest' => false,
+            'exclude_from_search' => true, 'has_archive' => false,
+            'rewrite' => false,
+            'supports' => array('title', 'author'),
+            'capability_type' => 'post',
+            'map_meta_cap' => false,
+            'capabilities' => array_fill_keys(array(
+                'edit_post','read_post','delete_post','edit_posts','edit_others_posts',
+                'publish_posts','read_private_posts','delete_posts','delete_private_posts',
+                'delete_published_posts','delete_others_posts','edit_private_posts',
+                'edit_published_posts','create_posts'
+            ), 'manage_options'),
+        ));
+    }
+
+    public static function menu() {
+        add_submenu_page('options-general.php', 'Newsletter Studio',
+            'Newsletter Studio (MEDIA-07)', 'manage_options',
+            self::PAGE, array(__CLASS__, 'screen'));
+    }
+
+    public static function assets($hook) {
+        if ($hook !== 'settings_page_' . self::PAGE || !current_user_can('manage_options')) { return; }
+        $base = plugin_dir_url(dirname(__DIR__) . '/sustainable-catalyst-engagement-communications.php');
+        // Production candidate assets are self-hosted by the CI release ZIP.
+        // Source checkouts without vendor assets can use pinned CDN for local staging.
+        $vendor_dir = dirname(__DIR__) . '/assets/vendor/';
+        $local = is_file($vendor_dir . 'grapes.min.js') &&
+            is_file($vendor_dir . 'grapes.min.css') &&
+            is_file($vendor_dir . 'grapesjs-mjml.min.js');
+        $grapes_css = $local ? $base . 'assets/vendor/grapes.min.css'
+            : 'https://cdn.jsdelivr.net/npm/grapesjs@0.23.6/dist/css/grapes.min.css';
+        $grapes_js = $local ? $base . 'assets/vendor/grapes.min.js'
+            : 'https://cdn.jsdelivr.net/npm/grapesjs@0.23.6/dist/grapes.min.js';
+        $mjml_js = $local ? $base . 'assets/vendor/grapesjs-mjml.min.js'
+            : 'https://cdn.jsdelivr.net/npm/grapesjs-mjml@1.0.8/dist/grapesjs-mjml.min.js';
+        wp_enqueue_style('scec07-grapesjs', $grapes_css, array(), '0.23.6');
+        wp_enqueue_script('scec07-grapesjs', $grapes_js, array(), '0.23.6', true);
+        wp_enqueue_script('scec07-mjml', $mjml_js,
+            array('scec07-grapesjs'), '1.0.8', true);
+        wp_enqueue_style('scec07-ui', $base . 'assets/media07-studio.css',
+            array('scec07-grapesjs'), '8.9.2');
+        wp_enqueue_script('scec07-ui', $base . 'assets/media07-studio.js',
+            array('scec07-mjml'), '8.9.2', true);
+        wp_enqueue_media();
+        wp_add_inline_script('scec07-ui', 'window.SCEC07_BOOT = ' .
+            wp_json_encode(array(
+                'ajaxUrl' => admin_url('admin-ajax.php'),
+                'nonce' => wp_create_nonce('scec07_editor'),
+                'issues' => self::list_issues(),
+                'substackUrl' => 'https://newsletter.sustainablecatalyst.com/',
+                'maxJsonBytes' => self::MAX_JSON_BYTES,
+            ), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) . ';', 'before');
+    }
+
+    private static function list_issues() {
+        $posts = get_posts(array(
+            'post_type' => self::TYPE, 'post_status' => 'private',
+            'numberposts' => 100, 'orderby' => 'modified', 'order' => 'DESC'
+        ));
+        return array_map(function($p) {
+            return array(
+                'id' => (int)$p->ID,
+                'title' => $p->post_title,
+                'revision' => (int)get_post_meta($p->ID, self::META . 'revision', true),
+                'modified' => get_post_modified_time('c', true, $p->ID),
+            );
+        }, $posts);
+    }
+
+    private static function authorize() {
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(array('message'=>'Forbidden'), 403);
+        }
+        if (!check_ajax_referer('scec07_editor', 'nonce', false)) {
+            wp_send_json_error(array('message'=>'Invalid or expired editor nonce'), 403);
+        }
+        if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
+            wp_send_json_error(array('message'=>'POST required'), 405);
+        }
+    }
+
+    private static function issue($id) {
+        if ($id <= 0) { return null; }
+        $p = get_post($id);
+        return ($p && $p->post_type === self::TYPE && $p->post_status === 'private')
+            ? $p : null;
+    }
+
+    /** Validate only JSON structure and bounded size, not renderability or MJML safety. */
+    public static function validate_project($raw) {
+        if (!is_string($raw) || strlen($raw) < 2 || strlen($raw) > self::MAX_JSON_BYTES) {
+            return false;
+        }
+        $project = json_decode($raw, true, 48);
+        if (!is_array($project) || json_last_error() !== JSON_ERROR_NONE ||
+            !isset($project['pages']) || !is_array($project['pages']) ||
+            count($project['pages']) !== 1) { return false; }
+        // The actual markup is rendered only in the authenticated admin browser,
+        // never echoed by PHP or used in a public template.
+        return $project;
+    }
+
+    public static function save() {
+        self::authorize();
+        $id = isset($_POST['id']) ? absint($_POST['id']) : 0;
+        $title = sanitize_text_field(wp_unslash((string)($_POST['title'] ?? '')));
+        $subject = sanitize_text_field(wp_unslash((string)($_POST['subject'] ?? '')));
+        $preheader = sanitize_text_field(wp_unslash((string)($_POST['preheader'] ?? '')));
+        $raw = wp_unslash((string)($_POST['project'] ?? ''));
+        $rev = isset($_POST['revision']) ? absint($_POST['revision']) : 0;
+        $project = self::validate_project($raw);
+        if ($title === '' || $subject === '' ||
+            strlen($title) > 140 || strlen($subject) > 200 ||
+            strlen($preheader) > 180 || $project === false) {
+            wp_send_json_error(array('message'=>'Invalid metadata or newsletter project'), 422);
+        }
+
+        $p = self::issue($id);
+        if ($id > 0 && !$p) { wp_send_json_error(array('message'=>'Newsletter not found'), 404); }
+        $latest_rev = $p ? (int)get_post_meta($id, self::META . 'revision', true) : 0;
+        if ($rev !== $latest_rev) {
+            wp_send_json_error(array('message'=>'Revision conflict. Reload before saving to avoid overwriting changes.',
+                'revision'=>$latest_rev), 409);
+        }
+        if (!$p) {
+            $id = wp_insert_post(array(
+                'post_type'=>self::TYPE, 'post_status'=>'private',
+                'post_title'=>$title, 'post_author'=>get_current_user_id()
+            ), true);
+            if (is_wp_error($id) || !$id) {
+                wp_send_json_error(array('message'=>'Could not create private newsletter'), 500);
+            }
+        } else {
+            $result = wp_update_post(array('ID'=>$id, 'post_title'=>$title), true);
+            if (is_wp_error($result)) {
+                wp_send_json_error(array('message'=>'Could not update newsletter'), 500);
+            }
+        }
+
+        // Store editable project JSON only, not compiled HTML or subscriber details.
+        $canonical = wp_json_encode($project, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        $sha = hash('sha256', $canonical . "\n" . $subject . "\n" . $preheader);
+        $next = $latest_rev + 1;
+        update_post_meta($id, self::META . 'project', wp_slash($canonical));
+        update_post_meta($id, self::META . 'subject', $subject);
+        update_post_meta($id, self::META . 'preheader', $preheader);
+        update_post_meta($id, self::META . 'revision', $next);
+        update_post_meta($id, self::META . 'sha256', $sha);
+
+        // Bounded metadata receipts; no recipient or sending claims.
+        $history = get_post_meta($id, self::META . 'history', true);
+        if (!is_array($history)) { $history = array(); }
+        $history[] = array('revision'=>$next, 'sha256'=>$sha,
+            'actor_id'=>get_current_user_id(), 'saved_utc'=>gmdate('c'));
+        update_post_meta($id, self::META . 'history', array_slice($history, -25));
+        wp_send_json_success(array('id'=>(int)$id, 'revision'=>$next,
+            'sha256'=>$sha, 'issues'=>self::list_issues(),
+            'sending_enabled'=>false, 'substack_published'=>false));
+    }
+
+    public static function load() {
+        self::authorize();
+        $id = isset($_POST['id']) ? absint($_POST['id']) : 0;
+        $p = self::issue($id);
+        if (!$p) { wp_send_json_error(array('message'=>'Newsletter not found'), 404); }
+        $json = get_post_meta($id, self::META . 'project', true);
+        $project = self::validate_project($json);
+        if ($project === false) {
+            wp_send_json_error(array('message'=>'Stored project is invalid'), 500);
+        }
+        wp_send_json_success(array(
+            'id'=>$id, 'title'=>$p->post_title,
+            'subject'=>(string)get_post_meta($id, self::META . 'subject', true),
+            'preheader'=>(string)get_post_meta($id, self::META . 'preheader', true),
+            'revision'=>(int)get_post_meta($id, self::META . 'revision', true),
+            'sha256'=>(string)get_post_meta($id, self::META . 'sha256', true),
+            'project'=>$project,
+            'sending_enabled'=>false,
+        ));
+    }
+
+    public static function screen() {
+        if (!current_user_can('manage_options')) { wp_die('Forbidden', '', 403); }
+        ?>
+        <div class="wrap scec07-wrap">
+          <div class="scec07-heading">
+            <div><span class="scec07-kicker">SUSTAINABLE CATALYST / MEDIA-07</span>
+              <h1>Newsletter Studio<span class="scec07-red">.</span></h1>
+              <p>Design once. Export a Substack edition. Keep your editable master independent of delivery.</p></div>
+            <div class="scec07-state">PRIVATE DRAFTS <span>•</span> SENDING DISABLED</div>
+          </div>
+          <div class="scec07-app">
+            <aside class="scec07-sidebar">
+              <label for="scec07-issues">Saved newsletters</label>
+              <select id="scec07-issues"><option value="0">New newsletter</option></select>
+              <label for="scec07-template">Starting template</label>
+              <select id="scec07-template">
+                <option value="research">Research bulletin</option>
+                <option value="policy">Policy digest</option>
+                <option value="institutional">Institutional update</option>
+              </select>
+              <button type="button" class="button" id="scec07-new">Create new draft</button>
+              <hr>
+              <label for="scec07-title">Internal title</label>
+              <input id="scec07-title" type="text" maxlength="140" placeholder="Research bulletin · November" />
+              <label for="scec07-subject">Email subject</label>
+              <input id="scec07-subject" type="text" maxlength="200" placeholder="Research, policy &amp; insight" />
+              <label for="scec07-preheader">Preheader</label>
+              <textarea id="scec07-preheader" rows="2" maxlength="180" placeholder="A short preview of the issue"></textarea>
+              <hr>
+              <button type="button" class="button button-primary" id="scec07-save">Save private revision</button>
+              <button type="button" class="button" id="scec07-media">Insert WordPress image</button>
+              <a class="button" href="<?php echo esc_url(admin_url('options-general.php?page=scec-media08')); ?>">Open Press Room drafts</a>
+              <div class="scec07-revision" id="scec07-revision" aria-live="polite">Unsaved draft</div>
+              <hr>
+              <label>Preview</label>
+              <div class="scec07-actions">
+                <button type="button" class="button" id="scec07-desktop">Desktop</button>
+                <button type="button" class="button" id="scec07-mobile">Mobile</button>
+                <button type="button" class="button" id="scec07-preview">Full email</button>
+              </div>
+              <label>Download &amp; transfer</label>
+              <button type="button" class="button" id="scec07-html">Download email HTML</button>
+              <button type="button" class="button" id="scec07-mjml">Download editable MJML</button>
+              <button type="button" class="button" id="scec07-json">Download project JSON</button>
+              <button type="button" class="button" id="scec07-substack">Copy Substack edition</button>
+              <p class="scec07-note">Substack does not accept arbitrary custom HTML/CSS. Review the pasted version there before sending. No subscriber data or credentials are shared here.</p>
+            </aside>
+            <section class="scec07-main" aria-label="Visual newsletter editor">
+              <div class="scec07-mainbar"><span>VISUAL EDITOR</span><span>DRAG ELEMENTS • SELECT TO EDIT • SAVE REVISIONS</span></div>
+              <div id="scec07-editor" aria-label="Drag and drop newsletter canvas"></div>
+              <p class="scec07-feedback" id="scec07-feedback" role="status" aria-live="polite">Loading visual editor…</p>
+            </section>
+          </div>
+        </div>
+        <?php
+    }
+}

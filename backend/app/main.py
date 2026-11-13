@@ -262,3 +262,14 @@ app.include_router(campaigns_router, dependencies=[Depends(require_service_token
 # No public form receiver, HubSpot client, or email delivery route is registered.
 from .media09_press import router as media09_press_router
 app.include_router(media09_press_router, dependencies=[Depends(require_service_token)])
+# MEDIA-05 — private, nonpersistent WordPress metadata preview bridge (default-off).
+from .media_bridge_v1250 import router as media_bridge_router
+app.include_router(media_bridge_router, dependencies=[Depends(require_service_token)])
+
+# MEDIA-06: separate, default-off signed editorial operations; no provider dispatch.
+from .media_operations_v1260 import router as media_ops_router
+app.include_router(media_ops_router)
+
+# MEDIA-07: offline newsletter distribution planning; listmonk and SMTP are separate and not invoked.
+from .media07_delivery_v1270 import router as media07_router
+app.include_router(media07_router, dependencies=[Depends(require_service_token)])

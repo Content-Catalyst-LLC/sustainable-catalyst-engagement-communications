@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sustainablecatalyst.com/schemas/media04-distribution-package-v1.json",
+  "title": "Sustainable Catalyst MEDIA-04 approved distribution package export",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "source_system", "distribution_mode", "package_id", "title", "source_url", "source_content_sha256", "approved_package_sha256", "approval_utc", "channels", "copy_ready_messages", "wordpress_draft_id", "manual_external_records", "assurance"],
+  "properties": {
+    "schema_version": {"const": "media-distribution-package/1.0"},
+    "source_system": {"const": "WordPress Media"},
+    "distribution_mode": {"const": "manual_only"},
+    "package_id": {"type": "integer", "minimum": 1},
+    "title": {"type": "string", "minLength": 1, "maxLength": 140},
+    "source_url": {"type": "string", "format": "uri", "pattern": "^https://"},
+    "source_content_sha256": {"$ref": "#/$defs/sha256"},
+    "approved_package_sha256": {"$ref": "#/$defs/sha256"},
+    "approval_utc": {"type": "string", "format": "date-time"},
+    "channels": {"type": "array", "uniqueItems": true, "items": {"enum": ["substack", "youtube", "linkedin", "x", "facebook", "instagram", "threads", "bluesky", "mastodon"]}},
+    "copy_ready_messages": {"type": "object", "additionalProperties": {"type": "string"}},
+    "wordpress_draft_id": {"type": "integer", "minimum": 0},
+    "manual_external_records": {"type": "object", "additionalProperties": {"type": "object", "required": ["url", "recorded_utc", "recorded_by", "verification"], "properties": {"url": {"type": "string", "format": "uri"}, "recorded_utc": {"type": "string", "format": "date-time"}, "recorded_by": {"type": "integer"}, "verification": {"const": "operator_attested_not_api_verified"}}}},
+    "assurance": {"type": "object", "properties": {"source_published": {"const": true}, "no_automated_external_distribution": {"const": true}, "external_records_are_operator_attested": {"const": true}}, "required": ["source_published", "no_automated_external_distribution", "external_records_are_operator_attested"]}
+  },
+  "$defs": {"sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}}
+}
