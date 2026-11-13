@@ -4,7 +4,7 @@ Canonical Contact and Inquiry remain the records of authority. This table
 stores only the synthetic Press-specific body and policy metadata.
 """
 from sqlalchemy import Table, Column, String, DateTime, Boolean, Integer, ForeignKey, CheckConstraint, Index
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import UUID, JSONB
 from .models import metadata
 
 press_inquiry_details = Table(
@@ -12,6 +12,8 @@ press_inquiry_details = Table(
     Column("id", UUID(as_uuid=True), ForeignKey("inquiries.id", ondelete="RESTRICT"), primary_key=True),
     Column("organization_id", UUID(as_uuid=True), ForeignKey("organizations.id", ondelete="RESTRICT"), nullable=False),
     Column("contact_id", UUID(as_uuid=True), ForeignKey("contacts.id", ondelete="RESTRICT"), nullable=False),
+    Column("assigned_to", String(200)),
+    Column("sync_result", JSONB),
     Column("kind", String(40), nullable=False),
     Column("body", String(800), nullable=False),
     Column("status", String(20), nullable=False),

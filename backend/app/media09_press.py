@@ -144,7 +144,7 @@ def create_record(db: Session, tenant: UUID, payload: PressInquiryCreate) -> dic
     ident = _id(tenant, payload.idempotency_key)
     fingerprint = _fingerprint(payload)
     now = datetime.now(timezone.utc)
-    contact_id = uuid5(NAMESPACE_URL, f"sc-media09.1:contact:{tenant}:{payload.idempotency_key}")
+    contact_id = uuid5(NAMESPACE_URL, f"sc-media09.1:contact:{tenant}:{payload.email}")
     try:
         with db.begin():
             _advisory_lock(db, tenant)
@@ -167,6 +167,12 @@ def create_record(db: Session, tenant: UUID, payload: PressInquiryCreate) -> dic
             ).scalar_one()
             if recent >= MAX_PER_MINUTE:
                 raise HTTPException(429, "Synthetic intake rate limit exceeded")
+            existing_contact = db.execute(select(TABLES["contacts"].c.id).where(
+                TABLES["contacts"].c.organization_id == tenant,
+                func.lower(TABLES["contacts"].c.payload["email"].astext) == payload.email
+            ).order_by(TABLES["contacts"].c.created_at, TABLES["contacts"].c.id).limit(1)).scalar_one_or_none()
+            if existing_contact:
+                contact_id = existing_contact
             contact = Contact(id=contact_id, organization_id=tenant, classification=Classification.restricted,
                               display_name=payload.name, email=payload.email, marketing_consent=False,
                               created_at=now, updated_at=now)
@@ -174,6 +180,8 @@ def create_record(db: Session, tenant: UUID, payload: PressInquiryCreate) -> dic
                               subject=payload.subject, status="new", contact_id=contact_id,
                               created_at=now, updated_at=now)
             for kind, entity in (("contacts", contact), ("inquiries", inquiry)):
+                if kind == "contacts" and existing_contact:
+                    continue
                 db.execute(insert(TABLES[kind]).values(
                     id=entity.id, organization_id=tenant, schema_version=entity.schema_version,
                     classification=entity.classification.value,
@@ -186,6 +194,8 @@ def create_record(db: Session, tenant: UUID, payload: PressInquiryCreate) -> dic
                 request_digest=fingerprint, created_at=now, updated_at=now,
             ))
             for record_type, record_id in (("contacts", contact_id), ("inquiries", ident), ("press_inquiries", ident)):
+                if record_type == "contacts" and existing_contact:
+                    continue
                 db.execute(insert(audit_events).values(
                     organization_id=tenant, record_type=record_type,
                     record_id=record_id, operation="created", recorded_at=now,
@@ -224,6 +234,7 @@ def detail_record(db: Session, tenant: UUID, ident: UUID) -> dict:
         "message": row["body"], "privacy_notice_version": row["notice_version"],
         "consent_to_reply_for_synthetic_fixture": row["reply_consent"],
         "marketing_consent": False,
+        "assigned_to": row["assigned_to"], "sync_result": row["sync_result"],
     }
 
 
@@ -238,7 +249,7 @@ def list_records(db: Session, tenant: UUID, limit: int, offset: int) -> dict:
     return {"items": [
         {"inquiry_id": str(row["id"]), "kind": row["kind"],
          "subject": row["inquiry"]["subject"], "status": row["status"],
-         "version": row["version"], "synthetic_only": True}
+         "version": row["version"], "assigned_to": row["assigned_to"], "synthetic_only": True}
         for row in rows
     ], "limit": limit, "offset": offset, "no_personal_data_in_list": True}
 

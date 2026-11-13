@@ -273,3 +273,7 @@ app.include_router(media_ops_router)
 # MEDIA-07: offline newsletter distribution planning; listmonk and SMTP are separate and not invoked.
 from .media07_delivery_v1270 import router as media07_router
 app.include_router(media07_router, dependencies=[Depends(require_service_token)])
+
+# Browser boundary reuses platform OIDC sessions; no service bearer in browser.
+from .media09_web import install as install_media09_web
+install_media09_web(app)
