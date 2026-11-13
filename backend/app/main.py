@@ -257,3 +257,8 @@ app.include_router(calendar_router, dependencies=[Depends(require_service_token)
 
 from .campaigns_v1220 import router as campaigns_router
 app.include_router(campaigns_router, dependencies=[Depends(require_service_token)])
+
+# MEDIA-09.1: tenant-bound, synthetic-only private Press inquiry inbox.
+# No public form receiver, HubSpot client, or email delivery route is registered.
+from .media09_press import router as media09_press_router
+app.include_router(media09_press_router, dependencies=[Depends(require_service_token)])
