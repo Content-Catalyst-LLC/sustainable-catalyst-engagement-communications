@@ -1,0 +1,78 @@
+{
+  "schema": "sc.media09.owner-decision.v1",
+  "build_id": "MEDIA-09.0",
+  "packet_status": "DRAFT_REVIEW_ONLY",
+  "provider_choice": "undecided",
+  "credential_strategy": "none",
+  "webhooks_required": false,
+  "purpose_codes": [
+    "press_inquiry_response"
+  ],
+  "proposed_fields": {
+    "contacts": [
+      "email",
+      "firstname",
+      "lastname"
+    ],
+    "companies": [
+      "name",
+      "domain"
+    ],
+    "deals": [],
+    "tasks": []
+  },
+  "reviews": {
+    "owner_provider_choice": {
+      "status": "pending",
+      "evidence_ref": null
+    },
+    "controller_and_rights_contact": {
+      "status": "pending",
+      "evidence_ref": null
+    },
+    "purpose_and_lawful_basis": {
+      "status": "pending",
+      "evidence_ref": null
+    },
+    "notice_and_collection_method": {
+      "status": "pending",
+      "evidence_ref": null
+    },
+    "processor_dpa_and_residency": {
+      "status": "pending",
+      "evidence_ref": null
+    },
+    "retention_erasure_and_backups": {
+      "status": "pending",
+      "evidence_ref": null
+    },
+    "data_mapping_and_minimization": {
+      "status": "pending",
+      "evidence_ref": null
+    },
+    "core_workspace_authorization": {
+      "status": "pending",
+      "evidence_ref": null
+    },
+    "vendor_security_and_key_management": {
+      "status": "pending",
+      "evidence_ref": null
+    },
+    "commercial_terms_and_limits": {
+      "status": "pending",
+      "evidence_ref": null
+    },
+    "limited_pilot_scope": {
+      "status": "pending",
+      "evidence_ref": null
+    }
+  },
+  "release_guards": {
+    "hubspot_credentials_configured": false,
+    "real_contact_export_enabled": false,
+    "public_intake_enabled": false,
+    "outbound_email_enabled": false,
+    "subscriber_sync_enabled": false,
+    "production_enabled": false
+  }
+}
