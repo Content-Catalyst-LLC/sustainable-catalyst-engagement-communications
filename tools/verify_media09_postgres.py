@@ -6,7 +6,7 @@ import subprocess
 import time
 from concurrent.futures import ThreadPoolExecutor
 from uuid import uuid4
-from sqlalchemy import create_engine, select, func
+from sqlalchemy import create_engine, select, func, text
 from sqlalchemy.orm import Session
 from fastapi.testclient import TestClient
 from fastapi import HTTPException
@@ -90,6 +90,20 @@ except HTTPException as e:assert e.status_code==422
 else:raise AssertionError('Unknown organization accepted')
 with engine.connect() as db:
     assert db.execute(select(TABLES['inquiries'].c.id).where(TABLES['inquiries'].c.id==press._id(bad_org,__import__('uuid').UUID(failing['idempotency_key'])))).first() is None
+# Prove rollback after canonical writes, with a temporary constraint in this
+# dedicated fixture database. The second tenant has no rate-cap consumption.
+forced=payload(email='rollback@example.org',message='Synthetic forced rollback case.')
+with engine.begin() as db:
+    db.execute(text("ALTER TABLE media09_press_inquiries ADD CONSTRAINT fixture_rollback CHECK (body <> 'Synthetic forced rollback case.')"))
+try:
+    try:create(forced,other)
+    except HTTPException as e:assert e.status_code==409
+    else:raise AssertionError('Expected forced transactional failure')
+    with engine.connect() as db:
+        assert db.execute(select(func.count()).select_from(TABLES['contacts']).where(TABLES['contacts'].c.organization_id==other)).scalar_one()==0
+        assert db.execute(select(func.count()).select_from(TABLES['inquiries']).where(TABLES['inquiries'].c.organization_id==other)).scalar_one()==0
+finally:
+    with engine.begin() as db:db.execute(text('ALTER TABLE media09_press_inquiries DROP CONSTRAINT fixture_rollback'))
 checks['failed_write_no_partial_inquiry']=True
 for route in ('send','crm-export','public-submit'):
     assert client.post('/v1/media09/press/'+route,headers=headers(org),json=payload()).status_code==503

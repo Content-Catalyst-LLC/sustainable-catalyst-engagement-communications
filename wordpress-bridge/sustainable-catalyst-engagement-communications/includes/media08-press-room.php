@@ -31,6 +31,7 @@ final class SC_Media08_Press_Room {
         add_action('admin_post_scec08_approve', array(__CLASS__, 'approve'));
         add_action('admin_post_scec08_release', array(__CLASS__, 'release'));
         add_shortcode('sc_press_room', array(__CLASS__, 'render'));
+        add_shortcode('sc_press_inquiry', array(__CLASS__, 'inquiry_link'));
     }
 
     public static function enabled() {
@@ -254,7 +255,22 @@ final class SC_Media08_Press_Room {
         $archive=$archive ?: '<p>No approved public press releases are available yet.</p>';
         return $base.'<section class="scec-press scec-press-archive" aria-labelledby="scec-press-archive-title">'.
             '<div class="scec-press-section"><h2 id="scec-press-archive-title">Official releases &amp; announcements</h2>'.
-            $archive.'</div></section>';
+            $archive.'</div></section>'.self::inquiry_link();
+    }
+
+    public static function inquiry_link() {
+        // A link to the first-party form; WordPress never owns inbox identity,
+        // stores contact records, or relays browser/service credentials.
+        if (!defined('SCEC_MEDIA09_PRESS_URL')) { return ''; }
+        $url = (string)SCEC_MEDIA09_PRESS_URL;
+        $parts = wp_parse_url($url);
+        if (!$parts || ($parts['scheme'] ?? '') !== 'https' ||
+            !in_array(strtolower($parts['host'] ?? ''), array('sustainablecatalyst.com', 'api.sustainablecatalyst.com'), true) ||
+            isset($parts['user']) || isset($parts['pass']) || isset($parts['query']) || isset($parts['fragment']) ||
+            (isset($parts['port']) && (int)$parts['port'] !== 443)) { return ''; }
+        return '<section class="scec-press"><div class="scec-press-section"><h2>Media &amp; institutional inquiries</h2>'.
+            '<p>Press, research collaboration, institutional partnership, and funding inquiries go directly to our private Media team.</p>'.
+            '<p><a class="scec880-action" href="'.esc_url($url).'">Send an inquiry</a></p></div></section>';
     }
 
     private static function form($action,$id,$label) {

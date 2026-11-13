@@ -92,6 +92,27 @@ class PressInquiryCreate(BaseModel):
         return self
 
 
+class RealPressInquiryCreate(PressInquiryCreate):
+    """Shared first-party contract after explicit owner release configuration."""
+    synthetic: Literal[False]
+    privacy_notice_version: str = Field(min_length=1,max_length=80)
+
+    @field_validator("email")
+    @classmethod
+    def synthetic_email(cls, value: str) -> str:
+        value=value.casefold()
+        if not EMAIL_RE.fullmatch(value):
+            raise ValueError("Valid reply email required")
+        return value
+
+    @model_validator(mode="after")
+    def fixture_only(self):
+        from .media09_release import approved_notice
+        if self.privacy_notice_version != approved_notice()['version']:
+            raise ValueError("Reload the approved privacy notice")
+        return self
+
+
 class PressStatusChange(BaseModel):
     model_config = ConfigDict(extra="forbid")
     status: Literal["reviewing", "closed"]
@@ -125,10 +146,10 @@ def _fingerprint(payload: PressInquiryCreate) -> str:
     return hashlib.sha256(json.dumps(content, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
 
 
-def _receipt(ident: UUID, status: str, version: int, created: bool) -> dict:
+def _receipt(ident: UUID, status: str, version: int, created: bool, synthetic_only: bool=True) -> dict:
     return {
         "inquiry_id": str(ident), "status": status,
-        "version": version, "created": created, "synthetic_only": True,
+        "version": version, "created": created, "synthetic_only": synthetic_only,
         "outbound_sent": False, "crm_exported": False,
     }
 
@@ -149,13 +170,13 @@ def create_record(db: Session, tenant: UUID, payload: PressInquiryCreate) -> dic
         with db.begin():
             _advisory_lock(db, tenant)
             previous = db.execute(
-                select(press_inquiry_details.c.request_digest, press_inquiry_details.c.status, press_inquiry_details.c.version)
+                select(press_inquiry_details.c.request_digest, press_inquiry_details.c.status, press_inquiry_details.c.version, press_inquiry_details.c.synthetic_only)
                 .where(press_inquiry_details.c.id == ident, press_inquiry_details.c.organization_id == tenant)
             ).mappings().first()
             if previous:
                 if not hmac.compare_digest(previous["request_digest"], fingerprint):
                     raise HTTPException(409, "Idempotency key reused with different content")
-                return _receipt(ident, previous["status"], previous["version"], False)
+                return _receipt(ident, previous["status"], previous["version"], False, previous["synthetic_only"])
             if db.execute(select(TABLES["organizations"].c.id).where(TABLES["organizations"].c.id == tenant)).scalar_one_or_none() is None:
                 raise HTTPException(422, "Staging organization must be registered first")
             recent = db.execute(
@@ -191,7 +212,7 @@ def create_record(db: Session, tenant: UUID, payload: PressInquiryCreate) -> dic
                 id=ident, organization_id=tenant, contact_id=contact_id,
                 kind=payload.kind, body=payload.message, status="new", version=1,
                 notice_version=payload.privacy_notice_version, reply_consent=True,
-                request_digest=fingerprint, created_at=now, updated_at=now,
+                request_digest=fingerprint, synthetic_only=payload.synthetic, created_at=now, updated_at=now,
             ))
             for record_type, record_id in (("contacts", contact_id), ("inquiries", ident), ("press_inquiries", ident)):
                 if record_type == "contacts" and existing_contact:
@@ -204,7 +225,7 @@ def create_record(db: Session, tenant: UUID, payload: PressInquiryCreate) -> dic
         raise HTTPException(409, "Conflicting or incomplete staging record") from None
     except SQLAlchemyError:
         raise HTTPException(503, "Staging storage unavailable") from None
-    return _receipt(ident, "new", 1, True)
+    return _receipt(ident, "new", 1, True, payload.synthetic)
 
 
 def _joined(tenant: UUID):
@@ -228,11 +249,11 @@ def detail_record(db: Session, tenant: UUID, ident: UUID) -> dict:
     if row is None:
         raise HTTPException(404, "Inquiry not found")
     return {
-        **_receipt(ident, row["status"], row["version"], False),
+        **_receipt(ident, row["status"], row["version"], False, row["synthetic_only"]),
         "kind": row["kind"], "subject": row["inquiry"]["subject"],
         "name": row["contact"]["display_name"], "email": row["contact"]["email"],
         "message": row["body"], "privacy_notice_version": row["notice_version"],
-        "consent_to_reply_for_synthetic_fixture": row["reply_consent"],
+        "consent_to_reply": row["reply_consent"],
         "marketing_consent": False,
         "assigned_to": row["assigned_to"], "sync_result": row["sync_result"],
     }
@@ -249,9 +270,9 @@ def list_records(db: Session, tenant: UUID, limit: int, offset: int) -> dict:
     return {"items": [
         {"inquiry_id": str(row["id"]), "kind": row["kind"],
          "subject": row["inquiry"]["subject"], "status": row["status"],
-         "version": row["version"], "assigned_to": row["assigned_to"], "synthetic_only": True}
+         "version": row["version"], "assigned_to": row["assigned_to"], "synthetic_only": row["synthetic_only"]}
         for row in rows
-    ], "limit": limit, "offset": offset, "no_personal_data_in_list": True}
+    ], "limit": limit, "offset": offset, "no_personal_data_in_list": all(row["synthetic_only"] for row in rows)}
 
 
 def transition_record(db: Session, tenant: UUID, ident: UUID, change: PressStatusChange) -> dict:
@@ -294,7 +315,7 @@ def transition_record(db: Session, tenant: UUID, ident: UUID, change: PressStatu
         raise HTTPException(409, "Conflicting review update") from None
     except SQLAlchemyError:
         raise HTTPException(503, "Staging storage unavailable") from None
-    return _receipt(ident, change.status, change.expected_version + 1, False)
+    return _receipt(ident, change.status, change.expected_version + 1, False, row["synthetic_only"])
 
 
 @router.get("/status")

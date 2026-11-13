@@ -1,3 +1,7 @@
+# Current release candidate
+
+See [MEDIA09 release status and runbook](MEDIA09-RELEASE.md) for the 2026-11-13 implementation and actual acceptance. The source-only checkpoint below is historical.
+
 # MEDIA-09.1 — First-Party Press Inquiry and Institutional Contact Management
 
 **Date:** 2026-11-12 (America/Chicago)  

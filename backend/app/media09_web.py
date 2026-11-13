@@ -2,6 +2,7 @@
 Production and real-data intake remain disabled pending owner privacy approval.
 """
 from dataclasses import asdict
+from html import escape
 from datetime import datetime, timezone
 import hashlib
 import hmac
@@ -20,6 +21,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from . import human_auth, media09_press as press
 from .contact_service import config, session
 from .hubspot import HubSpot
+from .media09_release import real_intake, approved_notice
 from .persistence.audit import audit_events
 from .persistence.media09 import press_inquiry_details as details
 
@@ -28,6 +30,10 @@ ASSETS = Path(__file__).parent / 'media09_assets'
 COOKIE = '__Host-sc_press_form'
 
 def enabled():
+    if real_intake():
+        approved_notice()
+        config()
+        return
     if os.getenv('SCEC_MEDIA09_WEB_STAGING_ENABLED') != '1' or os.getenv('SCEC_MEDIA09_PRESS_STAGING_ENABLED') != '1' or os.getenv('SCEC_ENV', 'production') == 'production':
         raise HTTPException(503, 'Press inquiry service is awaiting release approval')
     config()
@@ -72,7 +78,17 @@ def verify_form(request):
 def public_page():
     tenant()
     token = form_token()
-    response = HTMLResponse((ASSETS/'press.html').read_text().replace('FORM_TOKEN',token))
+    page=(ASSETS/'press.html').read_text().replace('FORM_TOKEN',token)
+    if real_intake():
+        notice=approved_notice()
+        start=page.index('<div class="notice"')
+        end=page.index('</div>',start)+len('</div>')
+        page=page[:start]+'<div class="notice" id="privacy">'+escape(notice['text'])+' <a href="'+escape(notice['privacy_url'],quote=True)+'">Privacy policy</a></div>'+page[end:]
+        page=page.replace('content="noindex,nofollow"','content="index,follow"')
+        page=page.replace('<form id="inquiry"', '<form data-mode="real" data-notice="'+escape(notice['version'],quote=True)+'" id="inquiry"')
+        for a,b in [('Test name','Name'),('Test email','Email'),('Synthetic Press Person','Your name'),('press@example.org','you@institution.org'),('Submit test inquiry','Submit inquiry'),('staging privacy notice and am submitting synthetic test information only.','privacy notice and agree to be contacted about this inquiry.'),('Use synthetic text only. No HTML, links, or contact details in the message.','Do not include sensitive personal information or private research. No HTML or links.')]:
+            page=page.replace(a,b)
+    response = HTMLResponse(page)
     response.set_cookie(COOKIE, token, secure=True, httponly=True, samesite='strict', max_age=1800, path='/')
     return response
 
@@ -85,9 +101,9 @@ async def public_submit(request: Request, db: Session=Depends(session)):
         body.extend(chunk)
         if len(body)>8192: raise HTTPException(413,'Submission too large')
     try:
-        payload=press.PressInquiryCreate.model_validate_json(body)
+        payload=(press.RealPressInquiryCreate if real_intake() else press.PressInquiryCreate).model_validate_json(body)
     except (ValidationError, ValueError):
-        raise HTTPException(422,'Use synthetic test details only; check the required fields') from None
+        raise HTTPException(422,'Check the required fields and current privacy notice' if real_intake() else 'Use synthetic test details only; check the required fields') from None
     result=press.create_record(db,org,payload)
     return JSONResponse(result,status_code=201 if result['created'] else 200)
 
@@ -107,7 +123,7 @@ def staff(request: Request):
 
 @router.get('/press/inbox',response_class=HTMLResponse)
 def inbox_page(context=Depends(staff)):
-    return HTMLResponse((ASSETS/'inbox.html').read_text())
+    return HTMLResponse((ASSETS/'inbox.html').read_text().replace('Private · Synthetic staging','Private · Press inquiries') if real_intake() else (ASSETS/'inbox.html').read_text())
 
 @router.get('/press/staff/inquiries')
 def inbox(context=Depends(staff),db:Session=Depends(session)):
@@ -186,7 +202,7 @@ def press_health(db:Session=Depends(session)):
         db.execute(select(details.c.id).limit(1)).first()
     except SQLAlchemyError:
         raise HTTPException(503,'Press storage unavailable') from None
-    return {'status':'ok','synthetic_only':True,'public_personal_data_enabled':False}
+    return {'status':'ok','synthetic_only':not real_intake(),'public_personal_data_enabled':real_intake()}
 
 @router.get('/press/assets/{name}')
 def asset(name:str):

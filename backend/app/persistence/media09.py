@@ -12,6 +12,7 @@ press_inquiry_details = Table(
     Column("id", UUID(as_uuid=True), ForeignKey("inquiries.id", ondelete="RESTRICT"), primary_key=True),
     Column("organization_id", UUID(as_uuid=True), ForeignKey("organizations.id", ondelete="RESTRICT"), nullable=False),
     Column("contact_id", UUID(as_uuid=True), ForeignKey("contacts.id", ondelete="RESTRICT"), nullable=False),
+    Column("synthetic_only", Boolean, nullable=False, server_default="true"),
     Column("assigned_to", String(200)),
     Column("sync_result", JSONB),
     Column("kind", String(40), nullable=False),
