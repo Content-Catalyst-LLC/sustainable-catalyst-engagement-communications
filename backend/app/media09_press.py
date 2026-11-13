@@ -2,7 +2,7 @@
 
 No public intake, no email, no HubSpot, no subscriber sync. Uses existing
 canonical Contact/Inquiry PostgreSQL tables; only the supplementary Press detail
-record is new. Real personal data is rejected at the schema boundary.
+record is new. Input is restricted to synthetic-style fixtures, but those\nrestrictions cannot prove that free text contains no real personal data. Never\nsubmit actual personal information; all real public intake remains disabled.
 """
 from __future__ import annotations
 
