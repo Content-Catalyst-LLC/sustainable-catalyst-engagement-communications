@@ -12,6 +12,6 @@ def test_existing_pages_preserved():
 def test_independent_services_navigation():
     s = PLUGIN.read_text()
     assert "add_shortcode('sc_engagement_public_links'" in s
-    for item in ("Contact", "Feedback", "Channel", "Support"):
+    for item in ("Contact", "Feedback", "Media", "Support"):
         assert "array('" + item + "'" in s
     assert ".scec881-public-grid" in CSS.read_text()

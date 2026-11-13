@@ -1,3 +1,44 @@
+# MEDIA-05 — WordPress Media → Engagement & Communications Bridge
+
+The **Media** public page remains WordPress-owned ([sc_media]). The separate internal Engagement & Communications service gains a manually initiated, metadata-only integration preview (default-off). No public login federation, private record synchronization, or social sending is authorized.
+
+- New WordPress **Settings → Media Backend Bridge** screen checks configuration without exposing any service token.
+- Approved and unchanged MEDIA-04 packages can be reviewed by the tenant-authorized, signed, admin-only E&C preview route.
+- Source title/body, subscribers, contacts, API credentials, and unpublished research are never transferred.
+- There is no automated publication to Substack, YouTube, LinkedIn, or other channels.
+- Use the v8.8.9 ZIP and [full release/rollback instructions](sustainable-catalyst-engagement-communications/MEDIA-05-RELEASE.md). Do not enable the WordPress setting or backend staging flag until authorized test credentials, HTTPS origin, and exact tenant allowlists have been provisioned.
+
+See also [MEDIA-05 E&C backend handoff](../backend/MEDIA-05-BACKEND-HANDOFF.md).
+
+---
+
+# MEDIA-04 — Controlled Editorial Distribution (v8.8.8)
+
+A functional **private WordPress Media Distribution workspace** is now included. Under **Settings → Media Distribution**, administrators create private distribution packages from already-published WordPress articles/pages, submit them for review, approve with rights/embargo confirmation, generate a **WordPress draft** tagged `media-update`, copy channel-specific text, record operator-attested public social URLs and export the approved JSON handoff manifest. Approval is fingerprinted to the public source content; changes invalidate downstream actions.
+
+This **does not** send newsletters, publish to Substack, upload videos, post to LinkedIn/social networks, or activate the private Engagement & Communications backend. Self-review is logged but permitted; it is not two-person approval. WordPress's regular post publishing remains a separate manual action.
+
+Review `wordpress-bridge/sustainable-catalyst-engagement-communications/MEDIA-04-RELEASE.md` and `wordpress-bridge/MEDIA-04-TEST-REPORT.md` for acceptance and rollback. Plugin upgrade to v8.8.8 and actual site verification have **not** occurred through the repository change.
+
+---
+# MEDIA-03 — Unified Channel Discovery (WordPress v8.8.7)
+
+**Packaged source; local QA passed; production not yet accepted.** The `[sc_media]` page can show an optional, server-rendered and cached stream of public Substack RSS issues, YouTube Atom uploads (explicit 24-character UC channel ID required), and *published WordPress posts explicitly tagged* `media-update`. It links to source publishers; it does **not** post content to external channels, transmit subscribers, or access private Engagement & Communications data. The new MEDIA-03 feed requests remain disabled until the owner enables discovery in **Settings → Media & Communications**; the existing Substack recent-issues widget has its own independent switch.
+
+The feed uses safe HTTPS-only 5-second/256-KB fetches with redirects disallowed, source-host validation, XML parse safeguards, 60-minute positive and 10-minute negative caching, and a visible empty state. Public source availability, WordPress SimpleXML and anonymous browser behavior require live acceptance.
+
+See [MEDIA-03 release notes](sustainable-catalyst-engagement-communications/MEDIA-03-RELEASE.md), [MEDIA-03 local test report](MEDIA-03-TEST-REPORT.md) and [installation instructions](sustainable-catalyst-engagement-communications/INSTALLATION.txt). MEDIA-02 v8.8.6 readiness checks, legacy 301 redirect safeguards and old shortcodes remain supported. Target site: `https://sustainablecatalyst.com/media/`.
+
+---
+
+# MEDIA-02 — Public Media activation candidate v8.8.6
+
+The public WordPress hub is now **Media** at the intended `/media/` page, while the internal backend remains **Engagement & Communications**. This plugin build includes [sc_media], legacy [sc_press] compatibility, Substack, YouTube, LinkedIn and public social links. It also adds **Settings → Media & Communications → MEDIA-02 Launch readiness** and conservative, optional legacy redirects.
+
+**Release status:** source packaged and local QA passed; **not yet live-accepted or merged**. Use the ready-to-upload ZIP, review `sustainable-catalyst-engagement-communications/MEDIA-02-RELEASE.md`, and test from a logged-out browser. Legacy redirects are disabled by default. No emails or social posts are sent.
+
+---
+
 # WordPress bridge v8.8.0
 
 The WordPress plugin uses shortcodes to render a public landing/launch surface. The standalone v8.7.0 app remains separate. **No iframe**, login forwarding, cross-domain tokens, proxy, live API calls, customer data, or database writes. No automatic page creation or route replacement.

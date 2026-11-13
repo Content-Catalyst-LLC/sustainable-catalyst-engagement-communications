@@ -140,3 +140,8 @@ Staging-only serializer at `/v1/research-feeds/preview`, requiring existing boun
 
 ## v11.2.0 — Institutional Newsroom
 Tenant-bound synthetic newsroom announcement and release-history previews with provenance, editorial states, rights, privacy, source integrity and institutional review. No live publication, distribution, transport, persistence, or authorization. All existing WordPress destinations remain untouched. Seven live production gates remain pending.
+
+
+## MEDIA-09.1 — first-party Press inquiry staging API (source candidate)
+
+A private **synthetic-only** Press inquiry and institutional contact review workflow now exists in source under `backend/app/media09_press.py`, reusing canonical Contact/Inquiry persistence, an additive `media09_press_inquiries` PostgreSQL table and the existing tenant-bound principal model. See [implementation and acceptance](docs/MEDIA-09.1-FIRST-PARTY-PRESS-INQUIRY.md). Run `bash backend/tools/media09_1_source_preflight.sh` for syntax/focused unit checks. **Not deployed, no public WordPress form, no real personal-data intake, no HubSpot connection, no sending or subscriber sync.** Migration and real-account/restore tests still need separate staging acceptance; MEDIA-09.0 privacy and owner decisions remain open.

@@ -18,7 +18,7 @@ def check_source():
     data['security_headers']='X-Frame-Options DENY' in nginx and 'Content-Security-Policy' in nginx and "connect-src 'none'" in nginx
     plugin=(ROOT/'wordpress-bridge/sustainable-catalyst-engagement-communications/sustainable-catalyst-engagement-communications.php').read_text()
     data['wordpress_bridge_present']='sc_engagement_communications' in plugin
-    data['wordpress_five_existing_links']=all("array('"+label+"'," in plugin for label in ['Contact','Feedback','Feature Suggestions','Channel','Support'])
+    data['wordpress_five_existing_links']=all("array('"+label+"'," in plugin for label in ['Contact','Feedback','Feature Suggestions','Media','Support'])
     data['wordpress_no_forms_or_redirects']=not any(x in plugin for x in ['wp_insert_post(', 'wp_delete_post(', 'wp_redirect(', 'wp_remote_post('])
     import sys
     sys.path.insert(0, str(ROOT / "backend"))

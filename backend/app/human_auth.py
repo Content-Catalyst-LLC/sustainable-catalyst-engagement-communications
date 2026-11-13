@@ -45,7 +45,17 @@ def config():
     if vals['SCEC_OIDC_REDIRECT_URI'] != vals['SCEC_HUMAN_AUTH_ORIGIN'].rstrip('/') + '/v1/human-auth/callback':
         raise HTTPException(503, 'OIDC callback/origin mismatch')
     if os.getenv('SCEC_PERSISTENCE_ENABLED','0') != '0':
-        raise HTTPException(503, 'Staging human auth requires production writes disabled')
+        # Reuse this platform OIDC session boundary for isolated synthetic Press.
+        # Dedicated database validation remains mandatory; production stays denied.
+        from .media09_release import real_intake, approved_notice
+        if real_intake():
+            approved_notice()
+        elif (os.getenv('SCEC_HUMAN_AUTH_MEDIA09_STAGING_ENABLED') != '1'
+                or os.getenv('SCEC_MEDIA09_PRESS_STAGING_ENABLED') != '1'
+                or os.getenv('SCEC_ENV', 'production') == 'production'):
+            raise HTTPException(503, 'Staging human auth requires production writes disabled')
+        from .contact_service import config as persistence_config
+        persistence_config()
     return vals
 
 

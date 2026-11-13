@@ -53,7 +53,7 @@ def preview_evidence(payload: IntakeBridgeEvidence, organization_id: str):
 
 def source_report(root: Path):
     bridge = (root/'wordpress-bridge/sustainable-catalyst-engagement-communications/sustainable-catalyst-engagement-communications.php').read_text()
-    entries = ('Contact','Feedback','Feature Suggestions','Channel','Support')
+    entries = ('Contact','Feedback','Feature Suggestions','Media','Support')
     checks = {
         'five_public_destinations':all("array('"+title+"'," in bridge for title in entries),
         'read_only_launcher':all(s in bridge for s in ('resolve_public_page','get_page_by_path','get_permalink')),
