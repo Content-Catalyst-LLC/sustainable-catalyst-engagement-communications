@@ -83,6 +83,17 @@ Expected default: all 11 review gates pending, `documentary_review_complete=fals
 
 **Important:** The validator checks file shape and documentary status, not signatures or reviewer authority. Even an all-approved *self-asserted* manifest never authorizes integration or real data export. A separately controlled approval service and human evidence verification are necessary. Do not use the output of this CLI as access control.
 
+## Isolated source validation — 2026-11-12
+
+**13/13 tests PASS** using Python 3.13.5 in an isolated local environment. Exact Git blob hashes for executed files were verified against this feature branch:
+- Validator: `09ab187aa5f9e1490c0e693d2022cfbe3fb57adf`
+- Unit tests: `1fc7ca028102d987e14f23ee96d5ce9aebb8dff0`
+- Default decision fixture: `a2c84d9943b4d86a24a4e5ebc66779af462a59cb`
+
+The CLI returned exit 0, `valid=true`, 11 pending reviews, `documentary_review_complete=false`, `owner_authorization_effective=false`, `hubspot_connected=false`, and zero production or personal-data activity.
+
+[Data evidence record](https://github.com/Content-Catalyst-LLC/data/blob/feature/media-09-0-governance-20261112/evidence/media/media-09-0-source-tests-20261112.json). **Full backend CI, production/staging acceptance, security review and actual independent owner evidence verification were NOT performed.**
+
 ## MEDIA-09.0 exit and MEDIA-09.1 handoff
 
 Source implementation exit: validator, tests, no-PII example, architecture/privacy packet, and cross-repository ledger in review. **Owner-approved governance exit remains BLOCKED** until all 11 decisions, including independent evidence verification, are supplied. Gate MEDIA-09.1 only to synthetic, first-party Press inquiry design until owner consent/privacy controls are approved. MEDIA-09.2 HubSpot connector, REAL imports, outbound sync, subscriber lists, sending, DNS and production changes remain disabled.
