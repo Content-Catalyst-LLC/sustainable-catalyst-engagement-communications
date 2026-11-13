@@ -13,7 +13,7 @@ import secrets
 import time
 from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Request, Query
-from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 from sqlalchemy import insert, select, update
 from sqlalchemy.orm import Session
@@ -122,7 +122,13 @@ def staff(request: Request):
     return UUID(org), record['subject'], set(roles)
 
 @router.get('/press/inbox',response_class=HTMLResponse)
-def inbox_page(context=Depends(staff)):
+def inbox_page(request:Request):
+    try:
+        staff(request)
+    except HTTPException as exc:
+        if exc.status_code == 401:
+            return RedirectResponse('/v1/human-auth/login',status_code=303)
+        raise
     return HTMLResponse((ASSETS/'inbox.html').read_text().replace('Private · Synthetic staging','Private · Press inquiries') if real_intake() else (ASSETS/'inbox.html').read_text())
 
 @router.get('/press/staff/inquiries')
