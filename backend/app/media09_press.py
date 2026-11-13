@@ -16,6 +16,8 @@ from typing import Literal
 from uuid import UUID, NAMESPACE_URL, uuid5
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Query
+from fastapi.routing import APIRoute
+from fastapi.exceptions import RequestValidationError
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 from sqlalchemy import func, insert, select, text, update
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
@@ -28,7 +30,19 @@ from .persistence.models import TABLES
 from .persistence.audit import audit_events
 from .persistence.media09 import press_inquiry_details
 
-router = APIRouter(prefix="/v1/media09/press", tags=["media09-press-staging"])
+class RedactedPressRoute(APIRoute):
+    """Prevent FastAPI 422 responses from echoing rejected messages or email."""
+    def get_route_handler(self):
+        original = super().get_route_handler()
+        async def sanitized(request):
+            try:
+                return await original(request)
+            except RequestValidationError:
+                raise HTTPException(422, "Invalid synthetic Press submission") from None
+        return sanitized
+
+
+router = APIRouter(prefix="/v1/media09/press", tags=["media09-press-staging"], route_class=RedactedPressRoute)
 NOTICE = "MEDIA-09.1-SYNTHETIC-NOTICE-V1"
 SYNTHETIC_DOMAINS = ("example.org", "example.test", "example.invalid")
 KINDS = ("press", "research-collaboration", "institutional-partnership", "funding")
