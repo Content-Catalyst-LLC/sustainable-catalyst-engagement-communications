@@ -12,7 +12,7 @@ from pathlib import Path
 import secrets
 import time
 from uuid import UUID
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request, Query
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 from sqlalchemy import insert, select, update
@@ -126,8 +126,8 @@ def inbox_page(context=Depends(staff)):
     return HTMLResponse((ASSETS/'inbox.html').read_text().replace('Private · Synthetic staging','Private · Press inquiries') if real_intake() else (ASSETS/'inbox.html').read_text())
 
 @router.get('/press/staff/inquiries')
-def inbox(context=Depends(staff),db:Session=Depends(session)):
-    return press.list_records(db,context[0],50,0)
+def inbox(offset:int=Query(0,ge=0,le=100000),context=Depends(staff),db:Session=Depends(session)):
+    return press.list_records(db,context[0],50,offset)
 
 @router.get('/press/staff/inquiries/{ident}')
 def detail(ident:UUID,context=Depends(staff),db:Session=Depends(session)):
