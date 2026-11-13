@@ -218,3 +218,35 @@ def test_reject_invalid_pagination_and_cas(monkeypatch):
     assert r.status_code == 422
     assert CLIENT.patch("/v1/media09/press/inquiries/" + str(uuid4()) + "/status",
                         headers=headers, json={"status": "reviewing", "expected_version": 0}).status_code == 422
+
+
+def test_idempotent_route_replay_is_http_200(monkeypatch):
+    _, headers = setup(monkeypatch)
+    app.dependency_overrides[press.db_session] = fake_db
+    monkeypatch.setattr(press, "create_record", lambda db, tenant, payload: press._receipt(
+        press._id(tenant, payload.idempotency_key), "reviewing", 2, False
+    ))
+    r = CLIENT.post("/v1/media09/press/inquiries", headers=headers, json=item())
+    assert r.status_code == 200 and r.json()["created"] is False
+    assert r.json()["outbound_sent"] is False
+
+
+def test_database_unavailable_is_sanitized():
+    from sqlalchemy.exc import SQLAlchemyError
+    from fastapi import HTTPException
+
+    class BrokenDb:
+        def begin(self):
+            raise SQLAlchemyError("private-password-and-db-details-must-not-escape")
+
+    with pytest.raises(HTTPException) as exc:
+        press.create_record(BrokenDb(), uuid4(), press.PressInquiryCreate(**item()))
+    assert exc.value.status_code == 503
+    assert "private-password" not in str(exc.value.detail)
+
+
+def test_fixture_does_not_claim_real_consent():
+    row = press.PressInquiryCreate(**item())
+    assert press.NOTICE.startswith("MEDIA-09.1-SYNTHETIC")
+    assert row.consent_to_reply is True
+    assert row.email.endswith("@example.org")
