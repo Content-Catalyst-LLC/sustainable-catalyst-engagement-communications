@@ -28,7 +28,7 @@ class HubSpot:
         fields = {'contacts': {'email', 'firstname', 'lastname'},
                   'companies': {'domain', 'name'}}
         key = {'contacts': 'email', 'companies': 'domain'}.get(kind)
-        if key is None or not properties or set(properties) - fields[kind] or not properties.get(key):
+        if key is None or not properties or set(properties) - fields[kind] or not properties.get(key) or any(not isinstance(v,str) or not v.strip() or len(v)>254 for v in properties.values()):
             return SyncResult('invalid_mapping')
         # Search before creation; 409 is retried by searching again. Never
         # blindly retry a timed-out create, since the provider may have saved it.

@@ -94,6 +94,6 @@ checks['failed_write_no_partial_inquiry']=True
 for route in ('send','crm-export','public-submit'):
     assert client.post('/v1/media09/press/'+route,headers=headers(org),json=payload()).status_code==503
 checks['no_sending_export']=True
-report={'result':'PASS_SYNTHETIC_POSTGRES','checks':checks,'tenant':str(org),'source_sha':subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()}
+report={'result':'PASS_SYNTHETIC_POSTGRES','checks':checks,'tenant':str(org),'source_sha':os.environ['MEDIA09_SOURCE_SHA']}
 Path(os.environ['MEDIA09_RECEIPT']).write_text(json.dumps(report,indent=2)+'\n')
 print(json.dumps({'result':report['result'],'checks':checks}))

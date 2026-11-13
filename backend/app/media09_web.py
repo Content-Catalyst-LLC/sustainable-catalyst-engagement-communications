@@ -16,13 +16,14 @@ from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 from sqlalchemy import insert, select, update
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import SQLAlchemyError
 from . import human_auth, media09_press as press
 from .contact_service import config, session
 from .hubspot import HubSpot
 from .persistence.audit import audit_events
 from .persistence.media09 import press_inquiry_details as details
 
-router = APIRouter()
+router = APIRouter(route_class=press.RedactedPressRoute)
 ASSETS = Path(__file__).parent / 'media09_assets'
 COOKIE = '__Host-sc_press_form'
 
@@ -178,6 +179,15 @@ def sync_contact(ident:UUID,payload:SyncApproval,context=Depends(staff),db:Sessi
             operation='updated',recorded_at=datetime.now(timezone.utc)))
     return outcome
 
+@router.get('/press/health')
+def press_health(db:Session=Depends(session)):
+    enabled()
+    try:
+        db.execute(select(details.c.id).limit(1)).first()
+    except SQLAlchemyError:
+        raise HTTPException(503,'Press storage unavailable') from None
+    return {'status':'ok','synthetic_only':True,'public_personal_data_enabled':False}
+
 @router.get('/press/assets/{name}')
 def asset(name:str):
     if name not in {'press.css','press.js','inbox.js'}: raise HTTPException(404,'Not found')
@@ -186,7 +196,12 @@ def asset(name:str):
 def install(app):
     @app.middleware('http')
     async def protect(request, call_next):
-        response=await call_next(request)
+        try:
+            response=await call_next(request)
+        except SQLAlchemyError:
+            if not request.url.path.startswith('/press/'):
+                raise
+            response=JSONResponse({'detail':'Press storage unavailable'},status_code=503)
         if request.url.path.startswith('/press/'):
             response.headers.update({'Cache-Control':'no-store','X-Content-Type-Options':'nosniff',
                 'Referrer-Policy':'no-referrer','X-Frame-Options':'DENY',
