@@ -15,7 +15,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Literal
 from uuid import UUID, NAMESPACE_URL, uuid5
 
-from fastapi import APIRouter, Depends, Header, HTTPException, Query
+from fastapi import APIRouter, Depends, Header, HTTPException, Query, Response
 from fastapi.routing import APIRoute
 from fastapi.exceptions import RequestValidationError
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
@@ -192,6 +192,8 @@ def create_record(db: Session, tenant: UUID, payload: PressInquiryCreate) -> dic
                 ))
     except IntegrityError:
         raise HTTPException(409, "Conflicting or incomplete staging record") from None
+    except SQLAlchemyError:
+        raise HTTPException(503, "Staging storage unavailable") from None
     return _receipt(ident, "new", 1, True)
 
 
@@ -209,7 +211,10 @@ def _joined(tenant: UUID):
 
 
 def detail_record(db: Session, tenant: UUID, ident: UUID) -> dict:
-    row = db.execute(_joined(tenant).where(press_inquiry_details.c.id == ident)).mappings().first()
+    try:
+        row = db.execute(_joined(tenant).where(press_inquiry_details.c.id == ident)).mappings().first()
+    except SQLAlchemyError:
+        raise HTTPException(503, "Staging storage unavailable") from None
     if row is None:
         raise HTTPException(404, "Inquiry not found")
     return {
@@ -223,10 +228,13 @@ def detail_record(db: Session, tenant: UUID, ident: UUID) -> dict:
 
 
 def list_records(db: Session, tenant: UUID, limit: int, offset: int) -> dict:
-    rows = db.execute(
-        _joined(tenant).order_by(press_inquiry_details.c.created_at.desc(), press_inquiry_details.c.id)
-        .limit(limit).offset(offset)
-    ).mappings().all()
+    try:
+        rows = db.execute(
+            _joined(tenant).order_by(press_inquiry_details.c.created_at.desc(), press_inquiry_details.c.id)
+            .limit(limit).offset(offset)
+        ).mappings().all()
+    except SQLAlchemyError:
+        raise HTTPException(503, "Staging storage unavailable") from None
     return {"items": [
         {"inquiry_id": str(row["id"]), "kind": row["kind"],
          "subject": row["inquiry"]["subject"], "status": row["status"],
@@ -273,6 +281,8 @@ def transition_record(db: Session, tenant: UUID, ident: UUID, change: PressStatu
             ))
     except IntegrityError:
         raise HTTPException(409, "Conflicting review update") from None
+    except SQLAlchemyError:
+        raise HTTPException(503, "Staging storage unavailable") from None
     return _receipt(ident, change.status, change.expected_version + 1, False)
 
 
@@ -282,7 +292,8 @@ def status(context=Depends(_actor)):
     return {"build": "MEDIA-09.1", "organization_id": str(tenant),
             "staging": True, "synthetic_only": True, "public_intake_enabled": False,
             "hubspot_connected": False, "outbound_enabled": False,
-            "private_queue_enabled": True}
+            "private_queue_feature_configured": True,
+            "postgres_acceptance_verified": False}
 
 
 @router.get("/form-spec")
@@ -295,9 +306,11 @@ def form_spec(context=Depends(_actor)):
 
 
 @router.post("/inquiries", status_code=201)
-def create(payload: PressInquiryCreate, context=Depends(_actor), db: Session=Depends(db_session)):
+def create(payload: PressInquiryCreate, response: Response, context=Depends(_actor), db: Session=Depends(db_session)):
     tenant, _ = context
     result = create_record(db, tenant, payload)
+    if not result["created"]:
+        response.status_code = 200  # Idempotent replay, not another new record.
     return result
 
 
