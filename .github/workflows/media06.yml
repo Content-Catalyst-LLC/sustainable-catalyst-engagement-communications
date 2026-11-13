@@ -1,4 +1,4 @@
-name: MEDIA-06 candidate verification
+name: Media backend integration verification
 on:
   push:
     branches:
@@ -8,6 +8,14 @@ on:
       - 'backend/app/media_operations_v1260.py'
       - 'backend/tests/test_media_operations_v1260.py'
       - 'backend/app/main.py'
+      - 'backend/app/media09*'
+      - 'backend/app/hubspot.py'
+      - 'backend/app/human_auth.py'
+      - 'backend/app/persistence/media09.py'
+      - 'backend/alembic/**'
+      - 'backend/tests/test_media09*'
+      - 'backend/tests/test_hubspot.py'
+      - 'tools/verify_media09_postgres.py'
       - 'wordpress-bridge/sustainable-catalyst-engagement-communications/includes/media06-operations.php'
       - 'wordpress-bridge/sustainable-catalyst-engagement-communications/sustainable-catalyst-engagement-communications.php'
       - '.github/workflows/media06.yml'
@@ -24,9 +32,9 @@ jobs:
           python-version: '3.12'
       - name: Install pinned backend test requirements
         run: python -m pip install -r backend/requirements-dev.txt
-      - name: Run MEDIA-05 regression and MEDIA-06 acceptance
+      - name: Run complete backend regression including Media Press and HubSpot
         working-directory: backend
-        run: python -m pytest -q tests/test_media_bridge_v1250.py tests/test_media_operations_v1260.py
+        run: python -m pytest -q tests
       - name: PHP syntax checks
         run: |
           php -l wordpress-bridge/sustainable-catalyst-engagement-communications/includes/media06-operations.php
@@ -97,3 +105,24 @@ jobs:
             echo 'Unsafe database was changed'
             exit 1
           fi
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install Media PostgreSQL acceptance dependencies
+        run: python -m pip install -r backend/requirements-dev.txt
+      - name: Run real synthetic Media Press PostgreSQL acceptance
+        env:
+          SCEC_DATABASE_URL: postgresql+psycopg://postgres:media06_ci_only@127.0.0.1:5432/scec_engagement_media09_acceptance
+          SCEC_ENV: development
+          SCEC_IDENTITY_MODE: bound
+          SCEC_AUTH_MODE: token
+          SCEC_IDENTITY_SIGNING_KEY: synthetic-ci-signing-key-never-production-123456789
+          SCEC_PERSISTENCE_ENABLED: '1'
+          SCEC_MEDIA09_PRESS_STAGING_ENABLED: '1'
+          SCEC_MEDIA09_WEB_STAGING_ENABLED: '1'
+          SCEC_ALLOWED_ORGANIZATION_IDS: 00000000-0000-0000-0000-000000000001
+        run: |
+          createdb scec_engagement_media09_acceptance
+          (cd backend && PYTHONPATH=. python -m alembic upgrade head)
+          MEDIA09_SOURCE_SHA="$GITHUB_SHA" MEDIA09_RECEIPT="$RUNNER_TEMP/media09-postgres.json" PYTHONPATH=backend python tools/verify_media09_postgres.py
