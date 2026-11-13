@@ -4,6 +4,7 @@ from alembic import context
 from sqlalchemy import engine_from_config, pool
 from app.persistence.models import metadata
 from app.persistence import audit  # register audit table
+from app.persistence import media09  # register MEDIA-09.1 supplemental staging table
 config=context.config
 target_metadata=metadata
 url=os.environ.get('SCEC_DATABASE_URL')
