@@ -4,6 +4,8 @@ import os
 from pathlib import Path
 import subprocess
 import time
+import secrets
+import httpx
 from concurrent.futures import ThreadPoolExecutor
 from uuid import uuid4
 from sqlalchemy import create_engine, select, func, text
@@ -69,10 +71,54 @@ assert client.patch(base+'/status',headers=headers(org),json={'status':'reviewin
 assert client.patch(base+'/status',headers=headers(org),json={'status':'closed','expected_version':1}).status_code==409
 # Assignment through the same database and staff service, using a provisioned synthetic subject.
 os.environ['SCEC_HUMAN_MEMBERSHIPS']=json.dumps({'synthetic-operator':{'organization_id':str(org),'roles':['administrator']}})
-r=web.assign(__import__('uuid').UUID(ident),web.Assignment(expected_version=2,subject='synthetic-operator'),(org,'synthetic-operator',{'administrator'}),Session(engine))
-assert r['version']==3
-assert client.patch(base+'/status',headers=headers(org),json={'status':'closed','expected_version':3}).status_code==200
-assert client.patch(base+'/status',headers=headers(org),json={'status':'reviewing','expected_version':4}).status_code==409
+# Exercise optional export with the real persistence path and a mock provider.
+from app.hubspot import HubSpot
+calls=[]
+def provider(request):
+    calls.append(request)
+    if request.url.path.endswith('/search'):return httpx.Response(200,json={'results':[]})
+    assert set(json.loads(request.content)['properties'])=={'email','firstname'}
+    return httpx.Response(201,json={'id':'123'})
+class MockHubSpot(HubSpot):
+    def __init__(self,token):super().__init__(token,transport=httpx.MockTransport(provider))
+credential=Path(os.environ['MEDIA09_RECEIPT']).parent/'mock-hubspot-token'
+credential.write_text('synthetic-only-not-a-provider-credential');credential.chmod(0o600)
+os.environ['SCEC_HUBSPOT_TOKEN_FILE']=str(credential)
+os.environ['SCEC_MEDIA09_HUBSPOT_ENABLED']='1'
+original_connector=web.HubSpot;web.HubSpot=MockHubSpot
+try:
+    with Session(engine) as db:
+        outcome=web.sync_contact(__import__('uuid').UUID(ident),web.SyncApproval(expected_version=2,approved=True),(org,'synthetic-operator',{'administrator'}),db)
+    assert outcome['state']=='synced' and outcome['provider_id']=='123' and len(calls)==2
+finally:
+    web.HubSpot=original_connector
+    os.environ.pop('SCEC_MEDIA09_HUBSPOT_ENABLED')
+checks['mock_contact_sync_outcome_persisted']=True
+# Actual platform session-store, CSRF and logout paths; no OIDC provider claim.
+from app import human_auth
+origin='https://media09.example.test'
+for k,v in {'SCEC_HUMAN_AUTH_ENABLED':'1','SCEC_HUMAN_AUTH_MEDIA09_STAGING_ENABLED':'1',
+    'SCEC_HUMAN_AUTH_ORIGIN':origin,'SCEC_HUMAN_SESSION_DB':str(Path(os.environ['MEDIA09_RECEIPT']).parent/'fixture-sessions.sqlite3'),
+    'SCEC_OIDC_ISSUER':'https://idp.example.test','SCEC_OIDC_CLIENT_ID':'synthetic-media09',
+    'SCEC_OIDC_CLIENT_SECRET':'synthetic-fixture-not-a-real-secret','SCEC_OIDC_AUTH_URL':'https://idp.example.test/auth',
+    'SCEC_OIDC_TOKEN_URL':'https://idp.example.test/token','SCEC_OIDC_JWKS_URL':'https://idp.example.test/keys',
+    'SCEC_OIDC_REDIRECT_URI':origin+'/v1/human-auth/callback','SCEC_MEDIA09_ORIGIN':origin}.items():os.environ[k]=v
+cookie=secrets.token_urlsafe(48);csrf=secrets.token_urlsafe(48)
+with human_auth.store(human_auth.config()) as store:
+    store.execute('INSERT INTO sessions VALUES(?,?,?,?,?,?)',(human_auth.digest(cookie),'synthetic-operator',str(org),json.dumps(['administrator']),human_auth.digest(csrf),int(time.time())+120))
+    store.commit()
+browser=TestClient(app,base_url=origin)
+browser.cookies.set(human_auth.SESSION_COOKIE,cookie)
+assert browser.get('/press/inbox').status_code==200
+assert browser.get('/press/staff/inquiries').status_code==200
+assert browser.patch('/press/staff/inquiries/'+ident+'/assignment',json={'subject':'synthetic-operator','expected_version':3}).status_code==403
+r=browser.patch('/press/staff/inquiries/'+ident+'/assignment',headers={'origin':origin,'x-scec-csrf':csrf},json={'subject':'synthetic-operator','expected_version':3})
+assert r.status_code==200 and r.json()['version']==4,r.text
+assert browser.post('/v1/human-auth/logout',headers={'origin':origin,'x-scec-csrf':csrf}).status_code==204
+assert browser.get('/press/inbox').status_code==401
+checks['fixture_session_inbox_csrf_logout']=True
+assert client.patch(base+'/status',headers=headers(org),json={'status':'closed','expected_version':4}).status_code==200
+assert client.patch(base+'/status',headers=headers(org),json={'status':'reviewing','expected_version':5}).status_code==409
 checks['review_assignment_close_cas']=True
 for _ in range(3):create(payload())
 try:create(payload())
