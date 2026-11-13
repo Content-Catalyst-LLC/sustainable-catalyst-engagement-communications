@@ -21,10 +21,16 @@ def upgrade():
     op.alter_column('media09_press_inquiries','last_substantive_at',nullable=False)
     # This legacy bit is retained only for historical synthetic clients. Real
     # inquiry processing records notice acknowledgment, never implied consent.
-    connection=op.get_bind()
-    for constraint in sa.inspect(connection).get_check_constraints('media09_press_inquiries'):
-        if 'reply_consent' in constraint['sqltext']:
-            op.drop_constraint(op.f(constraint['name']),'media09_press_inquiries',type_='check')
+    op.execute("""DO $privacy$
+    DECLARE constraint_name text;
+    BEGIN
+      FOR constraint_name IN SELECT conname FROM pg_constraint
+        WHERE conrelid='media09_press_inquiries'::regclass AND contype='c'
+          AND pg_get_constraintdef(oid) LIKE '%reply_consent%'
+      LOOP
+        EXECUTE format('ALTER TABLE media09_press_inquiries DROP CONSTRAINT %I',constraint_name);
+      END LOOP;
+    END $privacy$;""")
     op.create_check_constraint(op.f('ck_media09_real_no_inferred_consent'),'media09_press_inquiries',
         'synthetic_only OR reply_consent = FALSE')
 
