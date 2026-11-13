@@ -3,7 +3,7 @@ const form=document.querySelector('#inquiry'), result=document.querySelector('#r
 let key=crypto.randomUUID();
 form.addEventListener('submit',async event=>{
  event.preventDefault(); submit.disabled=true; result.classList.remove('error'); result.textContent='Submitting…';
- const data=new FormData(form); const payload={synthetic:form.dataset.mode!=='real',idempotency_key:key,name:data.get('name'),email:data.get('email'),subject:data.get('subject'),message:data.get('message'),kind:data.get('kind'),company:data.get('company'),privacy_notice_version:form.dataset.notice||'MEDIA-09.1-SYNTHETIC-NOTICE-V1',consent_to_reply:true};
+ const data=new FormData(form); const payload={synthetic:form.dataset.mode!=='real',idempotency_key:key,name:data.get('name'),email:data.get('email'),subject:data.get('subject'),message:data.get('message'),kind:data.get('kind'),company:data.get('company'),privacy_notice_version:form.dataset.notice||'MEDIA-09.1-SYNTHETIC-NOTICE-V1',privacy_notice_acknowledged:true};
  try{
   const response=await fetch('/press/inquiries',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json','X-SC-Form':document.querySelector('#form-token').value},body:JSON.stringify(payload)});
   const body=await response.json();

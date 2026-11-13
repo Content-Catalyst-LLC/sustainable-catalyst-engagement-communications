@@ -106,7 +106,8 @@ def test_real_intake_requires_owner_records(setup,monkeypatch,tmp_path):
     assert response.status_code==200 and 'data-mode="real"' in response.text
     assert '&lt;not markup&gt;' in response.text and '<not markup>' not in response.text
     assert 'Do not enter real personal information' not in response.text
-    data=payload()|{'synthetic':False,'name':'Fixture Institution Desk','privacy_notice_version':values['version']}
+    data=payload()|{'synthetic':False,'name':'Fixture Institution Desk','privacy_notice_version':values['version'],'privacy_notice_acknowledged':True}
+    data.pop('consent_to_reply')
     seen=[]
     monkeypatch.setattr(press,'create_record',lambda db,org,p:(seen.append(p) or press._receipt(uuid4(),'new',1,True,p.synthetic)))
     headers={'origin':'https://press.example.test','x-sc-form':client.cookies.get(web.COOKIE)}

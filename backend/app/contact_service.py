@@ -65,6 +65,10 @@ def put_record(kind: str, payload: dict, tenant: UUID, db: Session):
              legacy_external_id=legacy.external_id if legacy else None,payload=obj)
     try:
         with db.begin():
+            from .media09_privacy import assert_record
+            assert_record(db,tenant,kind,model.id)
+            if kind == "inquiries" and model.contact_id:
+                assert_record(db,tenant,"contacts",model.contact_id)
             if kind != 'organizations':
                 org = db.execute(select(TABLES['organizations'].c.id).where(TABLES['organizations'].c.id == tenant)).first()
                 if org is None:
@@ -84,6 +88,8 @@ def put_record(kind: str, payload: dict, tenant: UUID, db: Session):
 
 def read_record(kind: str, record_id: UUID, tenant: UUID, db: Session):
     if kind not in ALLOWED: raise HTTPException(404,'Unknown record type')
+    from .media09_privacy import assert_record
+    assert_record(db,tenant,kind,record_id)
     table=TABLES[kind]
     result=db.execute(select(table.c.payload).where(and_(table.c.id==record_id,table.c.organization_id==tenant))).scalar_one_or_none()
     if result is None: raise HTTPException(404,'Record not found')
@@ -94,4 +100,15 @@ def list_records(kind: str, tenant: UUID, db: Session, limit: int=50, offset: in
     if not (1<=limit<=100 and 0<=offset<=100000):raise HTTPException(422,'Invalid pagination')
     table=TABLES[kind]
     result=db.execute(select(table.c.payload).where(table.c.organization_id==tenant).order_by(table.c.created_at.desc(),table.c.id).limit(limit).offset(offset)).scalars().all()
+    from .media09_privacy import configured,assert_record,guard
+    guard(db,tenant)
+    if configured():
+        visible=[]
+        for item in result:
+            try:assert_record(db,tenant,kind,UUID(item['id']))
+            except HTTPException as exc:
+                if exc.status_code in (410,423):continue
+                raise
+            visible.append(item)
+        result=visible
     return {'items':result,'limit':limit,'offset':offset}
