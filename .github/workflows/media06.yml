@@ -66,10 +66,13 @@ jobs:
       - uses: actions/checkout@v4
       - name: PostgreSQL client availability
         run: |
-          if ! command -v psql >/dev/null; then
+          if [ ! -x /usr/lib/postgresql/16/bin/pg_dump ]; then
             sudo apt-get update -qq
-            sudo apt-get install -y postgresql-client
+            sudo apt-get install -y postgresql-client-16
           fi
+          echo /usr/lib/postgresql/16/bin >> "$GITHUB_PATH"
+          /usr/lib/postgresql/16/bin/pg_dump --version
+          /usr/lib/postgresql/16/bin/pg_restore --version
       - name: Apply actual MEDIA-06 migration to disposable database
         run: psql -X -v ON_ERROR_STOP=1 -f backend/migrations/MEDIA06_CREATE.sql
       - name: Check three tables and immutable evidence triggers
