@@ -62,17 +62,24 @@ jobs:
       PGDATABASE: scec_engagement_media06_ci
       PGUSER: postgres
       PGPASSWORD: media06_ci_only
+      PG_SERVICE_CONTAINER: ${{ job.services.postgres.id }}
     steps:
       - uses: actions/checkout@v4
-      - name: PostgreSQL client availability
+      - name: Use PostgreSQL 16 clients from the existing service
         run: |
-          if [ ! -x /usr/lib/postgresql/16/bin/pg_dump ]; then
-            sudo apt-get update -qq
-            sudo apt-get install -y postgresql-client-16
-          fi
-          echo /usr/lib/postgresql/16/bin >> "$GITHUB_PATH"
-          /usr/lib/postgresql/16/bin/pg_dump --version
-          /usr/lib/postgresql/16/bin/pg_restore --version
+          python - <<'PYCLIENT'
+          import os
+          from pathlib import Path
+          root=Path(os.environ['RUNNER_TEMP'])/'media09-pg16-bin'
+          root.mkdir()
+          for name in ('psql','createdb','pg_dump','pg_restore'):
+              path=root/name
+              path.write_text('#!/bin/sh\nexec python "$GITHUB_WORKSPACE/tools/ci_postgres_client.py" '+name+' "$@"\n')
+              path.chmod(0o755)
+          with open(os.environ['GITHUB_PATH'],'a') as out:out.write(str(root)+'\n')
+          PYCLIENT
+          docker exec "$PG_SERVICE_CONTAINER" pg_dump --version
+          docker exec "$PG_SERVICE_CONTAINER" pg_restore --version
       - name: Apply actual MEDIA-06 migration to disposable database
         run: psql -X -v ON_ERROR_STOP=1 -f backend/migrations/MEDIA06_CREATE.sql
       - name: Check three tables and immutable evidence triggers
