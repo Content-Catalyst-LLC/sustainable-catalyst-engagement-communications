@@ -231,7 +231,10 @@ def erase(db,tenant,contact_id,*,reason='rights',inquiry_ids=None,synthetic_exte
         raise HTTPException(409,'External CRM erasure must be reconciled before local completion')
     all_inquiries=db.execute(select(TABLES['inquiries'].c.id).where(TABLES['inquiries'].c.organization_id==tenant,
         TABLES['inquiries'].c.payload['contact_id'].astext==str(contact_id))).scalars().all()
-    shared=[]
+    # Existing contacts may serve an independent newsletter or imported
+    # legacy workflow. Do not report cross-purpose erasure as completed.
+    shared=[name for name,active in [('separate_marketing_purpose',contact.get('marketing_consent')),
+        ('external_legacy_identity',contact.get('legacy_identity'))] if active]
     for name,table in TABLES.items():
         if name in ('organizations','contacts','inquiries'):continue
         if db.execute(select(table.c.id).where(table.c.organization_id==tenant,cast(table.c.payload,String).contains(str(contact_id))).limit(1)).first():shared.append(name)

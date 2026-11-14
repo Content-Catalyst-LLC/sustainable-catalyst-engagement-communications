@@ -175,6 +175,14 @@ def test_rights_verify_restrict_rectify_access_response_and_deadlines(fixture):
 def test_failure_recovery_suppression_and_shared_record_guard(fixture):
     f=fixture;engine,org,_,root,_=f;row=inquiry(f)
     with Session(engine) as db,db.begin():
+        contact=db.execute(select(TABLES['contacts'].c.payload).where(TABLES['contacts'].c.id==row['contact_id'])).scalar_one()
+        db.execute(update(TABLES['contacts']).where(TABLES['contacts'].c.id==row['contact_id']).values(payload=dict(contact,marketing_consent=True)))
+    with Session(engine) as db,db.begin():
+        with pytest.raises(HTTPException) as exc:p.erase(db,org,row['contact_id'])
+        assert exc.value.status_code==409
+    with Session(engine) as db,db.begin():
+        db.execute(update(TABLES['contacts']).where(TABLES['contacts'].c.id==row['contact_id']).values(payload=dict(contact,marketing_consent=False)))
+    with Session(engine) as db,db.begin():
         # Scoped erasure may not silently delete a shared support-domain record.
         from app.contracts.canonical import Case
         case=Case(organization_id=org,title='Synthetic support',requester_contact_id=row['contact_id'])
