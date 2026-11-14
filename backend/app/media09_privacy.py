@@ -410,9 +410,10 @@ def expire_backups(db,tenant,at=None):
     if db.execute(select(legal_holds.c.id).where(legal_holds.c.released_at.is_(None))).first():
         return {'expired':0,'held':True}
     count=0
-    for row in db.execute(select(backups).where(backups.c.organization_id==tenant,backups.c.expired_at.is_(None),backups.c.expires_at<=at)).mappings():
+    for row in db.execute(select(backups).where(backups.c.organization_id==tenant,backups.c.expires_at<=at)).mappings():
         value=backup_manifest(row['id']);permit_real(value['synthetic_only'])
         path=owned_path('SCEC_MEDIA09_BACKUP_ROOT',row['object_key'])
+        if row['expired_at'] is not None and not path.exists():continue
         path.unlink(missing_ok=True)
         value['expired_at']=at.isoformat()
         # Expiration sidecar survives restoration of an older inventory table.

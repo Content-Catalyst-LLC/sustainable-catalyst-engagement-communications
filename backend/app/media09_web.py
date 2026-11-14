@@ -196,7 +196,8 @@ def sync_contact(ident:UUID,payload:SyncApproval,context=Depends(staff),db:Sessi
         if row is None: raise HTTPException(404,'Inquiry not found')
         if row['version']!=payload.expected_version or row['status']!='reviewing':
             raise HTTPException(409,'Review the current inquiry before export')
-        connector=HubSpot(path.read_text().strip())
+        try:connector=HubSpot(path.read_text().strip())
+        except ValueError:raise HTTPException(503,'Backend HubSpot credential is invalid') from None
         try:
             result=connector.sync('contacts',{'email':row['contact']['email'],
                 'firstname':row['contact']['display_name']},approved=True)
@@ -229,10 +230,10 @@ def install(app):
     async def protect(request, call_next):
         try:
             response=await call_next(request)
-        except SQLAlchemyError:
+        except (SQLAlchemyError,OSError):
             if not request.url.path.startswith('/press/'):
                 raise
-            response=JSONResponse({'detail':'Press storage unavailable'},status_code=503)
+            response=JSONResponse({'detail':'Press storage unavailable; privacy reconciliation may be required'},status_code=503)
         if request.url.path.startswith('/press/'):
             response.headers.update({'Cache-Control':'no-store','X-Content-Type-Options':'nosniff',
                 'Referrer-Policy':'no-referrer','X-Frame-Options':'DENY',
@@ -420,7 +421,8 @@ def sync_company(payload:CompanySync,context=Depends(staff),db:Session=Depends(s
         if not organization:raise HTTPException(404,'Canonical organization not found')
         # Export only the current tenant's canonical organization name and the
         # explicitly reviewed domain. No arbitrary company/name payload proxy.
-        connector=HubSpot(Path(os.environ['SCEC_HUBSPOT_TOKEN_FILE']).read_text().strip())
+        try:connector=HubSpot(Path(os.environ['SCEC_HUBSPOT_TOKEN_FILE']).read_text().strip())
+        except ValueError:raise HTTPException(503,'Backend HubSpot credential is invalid') from None
         try:result=connector.sync('companies',{'domain':payload.domain,'name':organization['name']},approved=True)
         finally:connector.close()
         outcome={**asdict(result),'at':datetime.now(timezone.utc).isoformat()}

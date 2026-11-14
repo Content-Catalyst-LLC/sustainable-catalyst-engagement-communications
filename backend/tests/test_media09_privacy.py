@@ -47,3 +47,15 @@ def test_managed_storage_rejects_escape_symlink_and_hardlink(monkeypatch,tmp_pat
     os.link(outside,root/'hard')
     with pytest.raises(HTTPException):privacy.owned_path('FILES','hard')
     assert outside.read_text()=='synthetic'
+
+
+def test_real_contract_does_not_accept_legacy_consent_as_acknowledgment(monkeypatch):
+    from app import media09_release
+    from pydantic import ValidationError
+    from uuid import uuid4
+    monkeypatch.setattr(media09_release,'approved_notice',lambda:{'version':'SYNTHETIC-APPROVAL-TEST'})
+    values=dict(synthetic=False,idempotency_key=uuid4(),name='Fixture Institution Desk',email='desk@example.org',
+        subject='Fixture public methods request',message='Please share the public methods summary.',kind='press',privacy_notice_version='SYNTHETIC-APPROVAL-TEST')
+    with pytest.raises(ValidationError):RealPressInquiryCreate(**values,consent_to_reply=True)
+    valid=RealPressInquiryCreate(**values,privacy_notice_acknowledged=True)
+    assert valid.consent_to_reply is None and valid.privacy_notice_acknowledged is True

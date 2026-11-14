@@ -66,6 +66,8 @@ def review(db,tenant,ident,change):
     if row is None:raise HTTPException(404,'Rights request not found')
     if row['version']!=change.expected_version:raise HTTPException(409,'Stale rights revision')
     privacy.permit_real(row['synthetic_only'])
+    if change.action!='verify' and change.contact_id and change.contact_id!=row['contact_id']:
+        raise HTTPException(409,'Verified rights scope cannot be changed by a review action')
     action=change.action;at=privacy.now();values={'version':row['version']+1}
     if action=='verify':
         if row['status']!='received' or not change.contact_id:raise HTTPException(409,'Received request and verified contact required')
