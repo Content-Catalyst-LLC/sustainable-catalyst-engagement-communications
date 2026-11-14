@@ -62,14 +62,16 @@ jobs:
       PGDATABASE: scec_engagement_media06_ci
       PGUSER: postgres
       PGPASSWORD: media06_ci_only
-      PG_SERVICE_CONTAINER: ${{ job.services.postgres.id }}
     steps:
       - uses: actions/checkout@v4
       - name: Use PostgreSQL 16 clients from the existing service
+        env:
+          PG_SERVICE_CONTAINER: ${{ job.services.postgres.id }}
         run: |
           python - <<'PYCLIENT'
           import os
           from pathlib import Path
+          with open(os.environ['GITHUB_ENV'],'a') as out:out.write('PG_SERVICE_CONTAINER='+os.environ['PG_SERVICE_CONTAINER']+'\n')
           root=Path(os.environ['RUNNER_TEMP'])/'media09-pg16-bin'
           root.mkdir()
           for name in ('psql','createdb','pg_dump','pg_restore'):
