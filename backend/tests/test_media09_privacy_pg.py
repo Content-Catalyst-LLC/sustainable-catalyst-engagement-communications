@@ -255,3 +255,57 @@ def test_api_tenant_roles_csrf_and_followup_clock(fixture):
     assert client.get('/press/privacy').status_code==200
     assert client.patch(f'/press/staff/privacy/requests/{rid}',json={'expected_version':1,'action':'verify','contact_id':str(row['contact_id']),'evidence_ref':'fixture_evidence'}).status_code==403
     assert client.patch(f'/press/staff/privacy/requests/{rid}',headers=headers,json={'expected_version':1,'action':'verify','contact_id':str(row['contact_id']),'evidence_ref':'fixture_evidence'}).status_code==200
+
+
+def test_log_expiry_and_suppression_minimization(fixture):
+    f=fixture;engine,org,_,root,mp=f;row=inquiry(f)
+    logs=root/'logs';logs.mkdir(mode=0o700);mp.setenv('SCEC_MEDIA09_LOG_ROOT',str(logs))
+    old=logs/'media09-20260101.log';old.write_text('Synthetic operation event')
+    unrelated=logs/'other-service.log';unrelated.write_text('do not touch')
+    stamp=(p.now()-timedelta(days=31)).timestamp();os.utime(old,(stamp,stamp))
+    with Session(engine) as db,db.begin():
+        with pytest.raises(HTTPException):p.expire_logs(db,org,synthetic_only=True)
+    policy(f,enabled=True,approval_ref='synthetic-policy-fixture')
+    with Session(engine) as db,db.begin():assert p.expire_logs(db,org,synthetic_only=True)['expired']==1
+    assert unrelated.exists()
+    with Session(engine) as db,db.begin():p.erase(db,org,row['contact_id'])
+    future=p.now()+timedelta(days=91)
+    with Session(engine) as db,db.begin():
+        with pytest.raises(HTTPException):p.compact_suppression(db,org,at=future)
+    mp.setenv('SCEC_MEDIA09_BACKUP_COVERAGE_APPROVAL_REF','synthetic-inventory-only')
+    with Session(engine) as db,db.begin():assert p.compact_suppression(db,org,at=future)['markers_removed']==1
+    with Session(engine) as db,db.begin():db.execute(delete(privacy_state).where(privacy_state.c.organization_id==org))
+    with Session(engine) as db,db.begin():
+        with pytest.raises(HTTPException) as exc:p.apply_suppression(db,org)
+        assert exc.value.status_code==503
+
+
+def test_manual_company_sync_is_scoped_minimal_and_durable(fixture):
+    import httpx
+    from app.hubspot import HubSpot
+    from app.persistence.media09_privacy import company_syncs
+    from pydantic import ValidationError
+    f=fixture;engine,org,_,root,mp=f
+    secret=root/'fake-crm-token';secret.write_text('synthetic-not-an-account-credential');secret.chmod(0o600)
+    mp.setenv('SCEC_HUBSPOT_TOKEN_FILE',str(secret));mp.setenv('SCEC_MEDIA09_HUBSPOT_ENABLED','1')
+    assert web.hubspot_status((org,'fixture',{'administrator'}))['status']=='approval_required'
+    mp.setenv('SCEC_MEDIA09_HUBSPOT_PRIVACY_APPROVAL_REF','synthetic-fixture-only')
+    saved=[];calls=[]
+    def mock(req):
+        calls.append(req)
+        if req.url.path.endswith('/search'):return httpx.Response(200,json={'results':saved})
+        body=json.loads(req.content)
+        assert body=={'properties':{'domain':'example.org','name':'Synthetic Institution'}}
+        saved[:]=[{'id':'456'}]
+        return httpx.Response(201,json={'id':'456'})
+    class MockHubSpot(HubSpot):
+        def __init__(self,token):super().__init__(token,transport=httpx.MockTransport(mock))
+    mp.setattr(web,'HubSpot',MockHubSpot)
+    with Session(engine) as db:
+        with pytest.raises(HTTPException) as exc:web.sync_company(web.CompanySync(approved=True,domain='example.org'),(org,'fixture',{'contact_editor'}),db)
+        assert exc.value.status_code==403
+    with pytest.raises(ValidationError):web.CompanySync(approved=True,domain='example.org',private_research='forbidden')
+    for _ in range(2):
+        with Session(engine) as db:assert web.sync_company(web.CompanySync(approved=True,domain='example.org'),(org,'fixture',{'administrator'}),db)['provider_id']=='456'
+    assert [c.method for c in calls]==['POST','POST','POST','PATCH']
+    with engine.connect() as db:assert db.execute(select(company_syncs.c.outcome).where(company_syncs.c.organization_id==org)).scalar_one()['state']=='synced'

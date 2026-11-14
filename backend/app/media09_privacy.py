@@ -249,7 +249,7 @@ def erase(db,tenant,contact_id,*,reason='rights',inquiry_ids=None,synthetic_exte
     with ledger() as value:
         state=value['tenants'].setdefault(str(tenant),{'generation':0,'entries':[]})
         state['generation']+=1
-        state['entries'].append({'receipt':str(receipt),'at':at.isoformat(),'reason':reason,'targets':targets,'counts':counts})
+        state['entries'].append({'generation':state['generation'],'receipt':str(receipt),'at':at.isoformat(),'reason':reason,'targets':targets,'counts':counts})
         save_ledger(value)
         new_generation=state['generation']
     for path in paths:path.unlink(missing_ok=True)
@@ -278,6 +278,8 @@ def apply_suppression(db,tenant):
     enabled();lock(db,tenant)
     with ledger() as value:
         state=value['tenants'].get(str(tenant),{'generation':0,'entries':[]})
+        if generation(db,tenant)<state.get('minimum_generation',0):
+            raise HTTPException(503,'Restored backup is older than the supported suppression window')
         for entry in state['entries']:
             target=entry['targets']
             ids={name:[i for i in db.execute(select(TABLES[name].c.id).where(TABLES[name].c.organization_id==tenant)).scalars()
@@ -343,7 +345,7 @@ def _redact_closed_right(db,tenant,rid):
     with ledger() as value:
         state=value['tenants'].setdefault(str(tenant),{'generation':0,'entries':[]});state['generation']+=1
         receipt=uuid4()
-        state['entries'].append({'receipt':str(receipt),'at':now().isoformat(),'reason':'rights_retention',
+        state['entries'].append({'generation':state['generation'],'receipt':str(receipt),'at':now().isoformat(),'reason':'rights_retention',
             'targets':{'rights':[digest(tenant,'rights',rid)]},'counts':{'rights_redacted':1}})
         save_ledger(value);new_generation=state['generation']
     _rights_redact(db,tenant,[rid],receipt);set_generation(db,tenant,new_generation)
@@ -419,3 +421,53 @@ def expire_backups(db,tenant,at=None):
         db.execute(update(backups).where(backups.c.id==row['id'],backups.c.organization_id==tenant).values(expired_at=at));count+=1
     if count:_record_receipt(db,tenant,'backup_expiration',{'backups':count},at=at)
     return {'expired':count,'held':False}
+
+
+def expire_logs(db,tenant,*,synthetic_only=False,at=None):
+    """Only the explicitly mounted Media-owned log directory, never host journals."""
+    enabled();guard(db,tenant);lock(db,tenant);permit_real(synthetic_only)
+    p=policy();at=at or now()
+    if not p.enabled:raise HTTPException(503,'Log retention defaults disabled')
+    root=Path(os.getenv('SCEC_MEDIA09_LOG_ROOT',''))
+    # Validate the same protected storage boundary even if the directory is empty.
+    owned_path('SCEC_MEDIA09_LOG_ROOT','validation-placeholder')
+    if db.execute(select(legal_holds.c.id).where(legal_holds.c.released_at.is_(None))).first():return {'expired':0,'held':True}
+    count=0
+    for candidate in root.iterdir():
+        import re
+        if not re.fullmatch(r'media09-\d{8}\.log',candidate.name):continue
+        path=owned_path('SCEC_MEDIA09_LOG_ROOT',candidate.name)
+        if datetime.fromtimestamp(path.stat().st_mtime,timezone.utc)+timedelta(days=p.security_log_days)<=at:
+            path.unlink();count+=1
+    if count:_record_receipt(db,tenant,'log_expiration',{'logs':count},at=at)
+    return {'expired':count,'held':False}
+
+
+def compact_suppression(db,tenant,at=None):
+    """Minimize pseudonymous markers only after approved complete backup coverage.
+    Restores older than the retained suppression window are permanently refused.
+    """
+    enabled();guard(db,tenant);lock(db,tenant);p=policy();at=at or now()
+    if not p.enabled or not p.approval_ref or not os.getenv('SCEC_MEDIA09_BACKUP_COVERAGE_APPROVAL_REF'):
+        raise HTTPException(503,'Approved policy and complete backup inventory required for compaction')
+    root=Path(os.getenv('SCEC_MEDIA09_BACKUP_ROOT',''))
+    owned_path('SCEC_MEDIA09_BACKUP_ROOT','validation-placeholder')
+    active=[]
+    for path in root.glob('*.dump'):
+        try:ident=UUID(path.stem)
+        except ValueError:raise HTTPException(409,'Unregistered backup blocks marker compaction') from None
+        if not path.with_suffix('.json').exists():raise HTTPException(409,'Unregistered backup blocks marker compaction')
+        value=backup_manifest(ident)
+        if not value['expired_at']:active.append(value)
+    with ledger() as value:
+        state=value['tenants'].get(str(tenant),{'generation':0,'entries':[]})
+        kept=[];floor=state.get('minimum_generation',0);removed=0
+        for index,entry in enumerate(state['entries']):
+            created=datetime.fromisoformat(entry['at'])
+            if created+timedelta(days=p.backup_days)<=at and not any(datetime.fromisoformat(b['created_at'])<=created for b in active):
+                floor=max(floor,entry.get('generation',index+1));removed+=1
+            else:kept.append(entry)
+        if removed:
+            state['entries']=kept;state['minimum_generation']=floor;state['generation']+=1
+            value['tenants'][str(tenant)]=state;save_ledger(value);set_generation(db,tenant,state['generation'])
+    return {'markers_removed':removed,'minimum_restorable_generation':floor}

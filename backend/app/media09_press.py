@@ -265,7 +265,7 @@ def detail_record(db: Session, tenant: UUID, ident: UUID) -> dict:
         raise HTTPException(404, "Inquiry not found")
     return {
         **_receipt(ident, row["status"], row["version"], False, row["synthetic_only"]),
-        "kind": row["kind"], "subject": row["inquiry"]["subject"],
+        "contact_id":str(row["contact_id"]), "kind": row["kind"], "subject": row["inquiry"]["subject"],
         "name": row["contact"]["display_name"], "email": row["contact"]["email"],
         "message": row["body"], "privacy_notice_version": row["notice_version"],
         "privacy_notice_acknowledged": row["privacy_notice_acknowledged"],

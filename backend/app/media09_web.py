@@ -415,3 +415,11 @@ def sync_company(payload:CompanySync,context=Depends(staff),db:Session=Depends(s
         db.execute(privacy.pg_insert(company_syncs).values(organization_id=org,outcome=outcome,updated_at=privacy.now()).on_conflict_do_update(
             index_elements=[company_syncs.c.organization_id],set_={'outcome':outcome,'updated_at':privacy.now()}))
     return outcome
+
+
+@router.get('/press/staff/privacy/receipts')
+def privacy_receipts(context=Depends(privacy_staff),db:Session=Depends(session)):
+    from .media09_privacy import guard,deletion_receipts
+    guard(db,context[0])
+    rows=db.execute(select(deletion_receipts).where(deletion_receipts.c.organization_id==context[0]).order_by(deletion_receipts.c.recorded_at.desc()).limit(100)).mappings().all()
+    return {'items':[dict(row) for row in rows]}

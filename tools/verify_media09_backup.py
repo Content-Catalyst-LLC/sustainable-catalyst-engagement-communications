@@ -25,7 +25,7 @@ sql(f'CREATE DATABASE scec_engagement_media09_baseline_{suffix}')
 migrate(f'scec_engagement_media09_baseline_{suffix}','850_001')
 baseline=dump(f'scec_engagement_media09_baseline_{suffix}',f'before-media09-{suffix}.dump')
 migrate(f'scec_engagement_media09_baseline_{suffix}','head')
-assert sql('SELECT version_num FROM alembic_version',f'scec_engagement_media09_baseline_{suffix}')=='media09_1_003'
+assert sql('SELECT version_num FROM alembic_version',f'scec_engagement_media09_baseline_{suffix}')=='media09_1_004'
 # Restore rollback snapshot into a different disposable database. Never drop production tables.
 sql(f'CREATE DATABASE scec_engagement_media09_rollback_{suffix}')
 cmd(['docker','exec','-i',container,'pg_restore','--exit-on-error','--no-owner','--no-acl','-U','postgres','-d',f'scec_engagement_media09_rollback_{suffix}'],input=baseline.read_bytes())
@@ -34,7 +34,7 @@ assert sql("SELECT count(*) FROM information_schema.tables WHERE table_name='med
 post=dump('scec_engagement_media09_acceptance',f'accepted-media09-{suffix}.dump')
 sql(f'CREATE DATABASE scec_engagement_media09_restore_{suffix}')
 cmd(['docker','exec','-i',container,'pg_restore','--exit-on-error','--no-owner','--no-acl','-U','postgres','-d',f'scec_engagement_media09_restore_{suffix}'],input=post.read_bytes())
-for table in ['organizations','contacts','inquiries','media09_press_inquiries','engagement_audit_log']:
+for table in ['organizations','contacts','inquiries','media09_press_inquiries','engagement_audit_log','media09_rights_requests','media09_legal_holds','media09_deletion_receipts']:
  query=f'SELECT row_to_json(t)::text FROM (SELECT * FROM {table} ORDER BY id) t'
  assert sql(query,'scec_engagement_media09_acceptance')==sql(query,f'scec_engagement_media09_restore_{suffix}')
 report={'pre_migration_backup':True,'forward_migration':True,'rollback_snapshot_restored':True,'accepted_rows_restored_identically':True,

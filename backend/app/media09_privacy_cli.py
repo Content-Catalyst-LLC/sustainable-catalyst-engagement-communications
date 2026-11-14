@@ -10,7 +10,7 @@ from . import media09_privacy as privacy
 
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('operation',choices=['preview','retention','restore-suppression','expire-backups','register-backup'])
+    parser.add_argument('operation',choices=['preview','retention','restore-suppression','expire-backups','register-backup','expire-logs','compact-suppression'])
     parser.add_argument('--organization',type=UUID,required=True)
     parser.add_argument('--apply',action='store_true',help='Explicitly authorize this configured operator mutation')
     parser.add_argument('--backup-id',type=UUID)
@@ -28,6 +28,8 @@ def main():
                 elif args.operation=='retention':result=privacy.run_retention(db,args.organization)
                 elif args.operation=='restore-suppression':result=privacy.apply_suppression(db,args.organization)
                 elif args.operation=='expire-backups':result=privacy.expire_backups(db,args.organization)
+                elif args.operation=='expire-logs':result=privacy.expire_logs(db,args.organization,synthetic_only=args.synthetic_only)
+                elif args.operation=='compact-suppression':result=privacy.compact_suppression(db,args.organization)
                 else:
                     if not args.backup_id:raise HTTPException(422,'Backup ID required')
                     result=privacy.register_backup(db,args.organization,args.backup_id,synthetic_only=args.synthetic_only)

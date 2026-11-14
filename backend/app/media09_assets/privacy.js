@@ -10,3 +10,5 @@ async function holds(){const v=await api('/holds'),list=document.querySelector('
 document.querySelector('#hold').onsubmit=async e=>{e.preventDefault();const data=Object.fromEntries(new FormData(e.currentTarget));data.review_at=new Date(data.review_at).toISOString();try{await api('/holds','POST',data);e.target.reset();result.textContent='Legal hold recorded.';await load();}catch(e){result.textContent=e.message;}};
 document.querySelector('#preview').onclick=async()=>{try{document.querySelector('#retention').textContent=JSON.stringify(await api('/retention'),null,2);}catch(e){result.textContent=e.message;}};
 load();
+
+document.querySelector('#company-sync').onsubmit=async e=>{e.preventDefault();try{const r=await fetch('/press/staff/hubspot/company',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json','X-SCEC-CSRF':csrf()},body:JSON.stringify({approved:true,domain:new FormData(e.target).get('domain')})});const v=await r.json();if(!r.ok)throw Error(typeof v.detail==='string'?v.detail:'Company synchronization failed');result.textContent='Company synchronization: '+v.state;await load();}catch(error){result.textContent=error.message;}};

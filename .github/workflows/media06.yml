@@ -9,6 +9,8 @@ on:
       - 'backend/tests/test_media_operations_v1260.py'
       - 'backend/app/main.py'
       - 'backend/app/media09*'
+      - 'backend/app/persistence/media09*'
+      - 'backend/tests/test_media09_privacy*'
       - 'backend/app/hubspot.py'
       - 'backend/app/human_auth.py'
       - 'backend/app/persistence/media09.py'
@@ -126,3 +128,4 @@ jobs:
           createdb scec_engagement_media09_acceptance
           (cd backend && PYTHONPATH=. python -m alembic upgrade head)
           MEDIA09_SOURCE_SHA="$GITHUB_SHA" MEDIA09_RECEIPT="$RUNNER_TEMP/media09-postgres.json" PYTHONPATH=backend python tools/verify_media09_postgres.py
+          MEDIA09_PRIVACY_TEST_DATABASE_URL="$SCEC_DATABASE_URL" PYTHONPATH=backend python -m pytest -q backend/tests/test_media09_privacy_pg.py
