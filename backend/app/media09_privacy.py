@@ -143,6 +143,9 @@ def set_generation(db,tenant,value):
 
 def guard(db,tenant):
     if not configured():return
+    # Serialize privacy-aware reads with deletion/recovery decisions so a
+    # request cannot fetch an old payload after checking an earlier ledger.
+    lock(db,tenant)
     with ledger() as value:
         expected=value['tenants'].get(str(tenant),{}).get('generation',0)
         if generation(db,tenant)!=expected:
