@@ -306,10 +306,12 @@ def retention_preview(db,tenant,at=None,p=None):
         action=None
         if row['disposition'] in ('spam','invalid') and activity+timedelta(days=p.spam_days)<=at:action='erase'
         elif row['disposition']=='relationship':
-            if months(activity,p.relationship_months)<=at and row['status']=='closed':action='erase'
+            if months(activity,p.relationship_months)<=at:action='erase'
             elif months(row['retention_reviewed_at'] or activity,p.relationship_review_months)<=at:action='review'
         elif row['status']=='closed' and months(activity,p.closed_months)<=at:action='erase'
         elif row['status']!='closed' and months(row['retention_reviewed_at'] or activity,p.inactive_review_months)<=at:action='review'
+        if action and row['retention_exception_ref'] and row['retention_exception_until'] and row['retention_exception_until']>at:
+            action='retained_exception'
         if action:items.append({'inquiry_id':str(row['id']),'contact_id':str(row['contact_id']),'action':'held' if held else action,'synthetic_only':row['synthetic_only']})
     return {'policy_enabled':p.enabled,'policy_version':p.version,'items':items}
 

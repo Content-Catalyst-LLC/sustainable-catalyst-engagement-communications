@@ -16,6 +16,8 @@ press_inquiry_details = Table(
     Column("privacy_notice_acknowledged", Boolean, nullable=False, server_default="true"),
     Column("last_substantive_at", DateTime(timezone=True), nullable=False),
     Column("retention_reviewed_at", DateTime(timezone=True)),
+    Column("retention_exception_ref", String(120)),
+    Column("retention_exception_until", DateTime(timezone=True)),
     Column("disposition", String(24), nullable=False, server_default="routine"),
     Column("follow_up_at", DateTime(timezone=True)),
     Column("follow_up_note", String(500)),

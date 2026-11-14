@@ -25,7 +25,7 @@ sql(f'CREATE DATABASE scec_engagement_media09_baseline_{suffix}')
 migrate(f'scec_engagement_media09_baseline_{suffix}','850_001')
 baseline=dump(f'scec_engagement_media09_baseline_{suffix}',f'before-media09-{suffix}.dump')
 migrate(f'scec_engagement_media09_baseline_{suffix}','head')
-assert sql('SELECT version_num FROM alembic_version',f'scec_engagement_media09_baseline_{suffix}')=='media09_1_004'
+assert sql('SELECT version_num FROM alembic_version',f'scec_engagement_media09_baseline_{suffix}')=='media09_1_005'
 # Restore rollback snapshot into a different disposable database. Never drop production tables.
 sql(f'CREATE DATABASE scec_engagement_media09_rollback_{suffix}')
 cmd(['docker','exec','-i',container,'pg_restore','--exit-on-error','--no-owner','--no-acl','-U','postgres','-d',f'scec_engagement_media09_rollback_{suffix}'],input=baseline.read_bytes())

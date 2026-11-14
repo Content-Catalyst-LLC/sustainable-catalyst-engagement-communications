@@ -309,3 +309,19 @@ def test_manual_company_sync_is_scoped_minimal_and_durable(fixture):
         with Session(engine) as db:assert web.sync_company(web.CompanySync(approved=True,domain='example.org'),(org,'fixture',{'administrator'}),db)['provider_id']=='456'
     assert [c.method for c in calls]==['POST','POST','POST','PATCH']
     with engine.connect() as db:assert db.execute(select(company_syncs.c.outcome).where(company_syncs.c.organization_id==org)).scalar_one()['state']=='synced'
+
+
+def test_spam_relationship_and_reviewed_exception_boundaries(fixture):
+    f=fixture;engine,org,*_=f;at=p.now()
+    spam=inquiry(f,email='spam@example.org');relationship=inquiry(f,email='institution@example.org')
+    with Session(engine) as db,db.begin():
+        db.execute(update(p.details).where(p.details.c.id==spam['id']).values(disposition='spam',last_substantive_at=at-timedelta(days=30)))
+        db.execute(update(p.details).where(p.details.c.id==relationship['id']).values(disposition='relationship',last_substantive_at=p.months(at,-24),
+            retention_exception_ref='fixture_contract_review',retention_exception_until=at+timedelta(days=1)))
+    with Session(engine) as db:
+        before=p.retention_preview(db,org,at-timedelta(seconds=1))['items']
+        assert not any(i['inquiry_id']==str(spam['id']) for i in before)
+        items={i['inquiry_id']:i['action'] for i in p.retention_preview(db,org,at)['items']}
+        assert items[str(spam['id'])]=='erase' and items[str(relationship['id'])]=='retained_exception'
+        expired={i['inquiry_id']:i['action'] for i in p.retention_preview(db,org,at+timedelta(days=1))['items']}
+        assert expired[str(relationship['id'])]=='erase'

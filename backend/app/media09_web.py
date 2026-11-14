@@ -340,6 +340,8 @@ class FollowUp(BaseModel):
     substantive_correspondence_at:datetime | None=None
     disposition:str=Field(default='routine',pattern='^(routine|spam|invalid|relationship)$')
     retention_reviewed:bool=False
+    retention_exception_ref:str | None=Field(default=None,pattern=r'^[A-Za-z0-9_-]{8,120}$')
+    retention_exception_until:datetime | None=None
 
 @router.patch('/press/staff/inquiries/{ident}/follow-up')
 def follow_up(ident:UUID,payload:FollowUp,context=Depends(staff),db:Session=Depends(session)):
@@ -351,6 +353,15 @@ def follow_up(ident:UUID,payload:FollowUp,context=Depends(staff),db:Session=Depe
         if value and value.tzinfo is None:raise HTTPException(422,'Timezone-aware follow-up timestamp required')
     if payload.substantive_correspondence_at and payload.substantive_correspondence_at>privacy.now():
         raise HTTPException(422,'Correspondence cannot be in the future')
+    exception_change=bool(payload.model_fields_set & {'retention_exception_ref','retention_exception_until'})
+    if exception_change:
+        if 'administrator' not in context[2]:raise HTTPException(403,'Administrator review required for retention exception')
+        if not {'retention_exception_ref','retention_exception_until'}<=payload.model_fields_set:
+            raise HTTPException(422,'Exception reference and review expiry must be provided together')
+        if bool(payload.retention_exception_ref)!=bool(payload.retention_exception_until):raise HTTPException(422,'Complete exception or explicit clearing required')
+        until=payload.retention_exception_until
+        if until and (until.tzinfo is None or not privacy.now()<until<=privacy.months(privacy.now(),privacy.policy().relationship_review_months)):
+            raise HTTPException(422,'Exception requires a future expiry within the annual review interval')
     org=context[0]
     with db.begin():
         press._advisory_lock(db,org);privacy.assert_record(db,org,'inquiries',ident)
@@ -363,6 +374,7 @@ def follow_up(ident:UUID,payload:FollowUp,context=Depends(staff),db:Session=Depe
                 'updated_at':privacy.now(),'version':row['version']+1}
         if payload.substantive_correspondence_at:values['last_substantive_at']=payload.substantive_correspondence_at
         if payload.retention_reviewed:values['retention_reviewed_at']=privacy.now()
+        if exception_change:values.update(retention_exception_ref=payload.retention_exception_ref,retention_exception_until=payload.retention_exception_until)
         db.execute(update(details).where(details.c.id==ident,details.c.organization_id==org).values(**values))
         db.execute(insert(audit_events).values(organization_id=org,record_type='press_inquiries',record_id=ident,
             operation='updated',recorded_at=privacy.now()))
