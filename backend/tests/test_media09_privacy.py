@@ -59,3 +59,16 @@ def test_real_contract_does_not_accept_legacy_consent_as_acknowledgment(monkeypa
     with pytest.raises(ValidationError):RealPressInquiryCreate(**values,consent_to_reply=True)
     valid=RealPressInquiryCreate(**values,privacy_notice_acknowledged=True)
     assert valid.consent_to_reply is None and valid.privacy_notice_acknowledged is True
+
+
+def test_approval_metadata_alone_cannot_enable_real_processing(monkeypatch,tmp_path):
+    from app.media09_release import approved_notice
+    path=tmp_path/'notice.json'
+    data={key:'synthetic-review-test-only' for key in ('version','text','privacy_approval_ref','security_approval_ref','identity_acceptance_ref','cutover_authorization_ref','privacy_controls_acceptance_ref')}
+    data['privacy_url']='https://example.org/privacy'
+    path.write_text(json.dumps(data));path.chmod(0o600)
+    monkeypatch.setenv('SCEC_MEDIA09_REAL_INTAKE_ENABLED','1')
+    monkeypatch.setenv('SCEC_MEDIA09_APPROVED_NOTICE_FILE',str(path))
+    monkeypatch.delenv('SCEC_MEDIA09_PRIVACY_ENABLED',raising=False)
+    with pytest.raises(HTTPException) as exc:approved_notice()
+    assert exc.value.status_code==503

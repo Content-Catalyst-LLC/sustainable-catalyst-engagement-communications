@@ -1,3 +1,7 @@
+# Privacy-controls implementation update
+
+See [privacy operations](MEDIA09-PRIVACY-OPERATIONS.md) and [clean notice verification](MEDIA09-NOTICE-VERIFICATION.md) for the implemented, default-disabled retention/rights/erasure/restore controls and current approval requirements. The earlier release checkpoint below predates this increment.
+
 # Media / Press release candidate — 2026-11-13
 
 The candidate extends existing PR #37 and merges the existing Media-08 WordPress/Press implementation into it. It uses the canonical Media Contact/Inquiry PostgreSQL tables, existing platform OIDC sessions, and the existing WordPress Press Room. No production activation, DNS, newsletter sending, or Research publication change has occurred.
