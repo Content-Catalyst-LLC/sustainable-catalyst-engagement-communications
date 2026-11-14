@@ -99,23 +99,29 @@ def test_real_intake_requires_owner_records(setup,monkeypatch,tmp_path):
     notice=tmp_path/'approved-test-notice.json'
     values={'version':'TEST-APPROVAL-NOT-A-REAL-RELEASE','text':'Fixture notice <not markup>',
         'privacy_url':'https://example.org/privacy','privacy_approval_ref':'test-only',
-        'security_approval_ref':'test-only','identity_acceptance_ref':'test-only','cutover_authorization_ref':'test-only'}
+        'security_approval_ref':'test-only','identity_acceptance_ref':'test-only','cutover_authorization_ref':'test-only','privacy_controls_acceptance_ref':'test-only'}
     notice.write_text(json.dumps(values));notice.chmod(0o600)
     monkeypatch.setenv('SCEC_MEDIA09_APPROVED_NOTICE_FILE',str(notice))
+    from app import media09_privacy as privacy
+    monkeypatch.setattr(privacy,'enabled',lambda:None)
+    monkeypatch.setattr(privacy,'policy',lambda:privacy.RetentionPolicy(enabled=True,approval_ref='synthetic-test-only'))
     response=client.get('/press/')
     assert response.status_code==200 and 'data-mode="real"' in response.text
     assert '&lt;not markup&gt;' in response.text and '<not markup>' not in response.text
     assert 'Do not enter real personal information' not in response.text
-    data=payload()|{'synthetic':False,'name':'Fixture Institution Desk','privacy_notice_version':values['version']}
+    data=payload()|{'synthetic':False,'name':'Fixture Institution Desk','privacy_notice_version':values['version'],'privacy_notice_acknowledged':True}
+    data.pop('consent_to_reply')
     seen=[]
     monkeypatch.setattr(press,'create_record',lambda db,org,p:(seen.append(p) or press._receipt(uuid4(),'new',1,True,p.synthetic)))
     headers={'origin':'https://press.example.test','x-sc-form':client.cookies.get(web.COOKIE)}
     result=client.post('/press/inquiries',headers=headers,json=data)
     assert result.status_code==201 and result.json()['synthetic_only'] is False
     assert isinstance(seen[0],press.RealPressInquiryCreate)
+    assert seen[0].privacy_notice_acknowledged is True and seen[0].consent_to_reply is None
+    assert 'agree to be contacted' not in response.text
     data['privacy_notice_version']='OLD'
     assert client.post('/press/inquiries',headers=headers,json=data).status_code==422
-    for key in ('privacy_approval_ref','security_approval_ref','identity_acceptance_ref','cutover_authorization_ref'):
+    for key in ('privacy_approval_ref','security_approval_ref','identity_acceptance_ref','cutover_authorization_ref','privacy_controls_acceptance_ref'):
         notice.write_text(json.dumps({k:v for k,v in values.items() if k!=key}))
         assert client.get('/press/').status_code==503
     notice.write_text(json.dumps(values));notice.chmod(0o644)

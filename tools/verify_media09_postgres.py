@@ -85,6 +85,7 @@ credential=Path(os.environ['MEDIA09_RECEIPT']).parent/'mock-hubspot-token'
 credential.write_text('synthetic-only-not-a-provider-credential');credential.chmod(0o600)
 os.environ['SCEC_HUBSPOT_TOKEN_FILE']=str(credential)
 os.environ['SCEC_MEDIA09_HUBSPOT_ENABLED']='1'
+os.environ['SCEC_MEDIA09_HUBSPOT_PRIVACY_APPROVAL_REF']='synthetic-mock-only'
 original_connector=web.HubSpot;web.HubSpot=MockHubSpot
 try:
     with Session(engine) as db:
@@ -93,6 +94,7 @@ try:
 finally:
     web.HubSpot=original_connector
     os.environ.pop('SCEC_MEDIA09_HUBSPOT_ENABLED')
+    os.environ.pop('SCEC_MEDIA09_HUBSPOT_PRIVACY_APPROVAL_REF')
 checks['mock_contact_sync_outcome_persisted']=True
 # Actual platform session-store, CSRF and logout paths; no OIDC provider claim.
 from app import human_auth

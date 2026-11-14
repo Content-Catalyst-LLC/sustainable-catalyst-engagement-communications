@@ -13,6 +13,14 @@ press_inquiry_details = Table(
     Column("organization_id", UUID(as_uuid=True), ForeignKey("organizations.id", ondelete="RESTRICT"), nullable=False),
     Column("contact_id", UUID(as_uuid=True), ForeignKey("contacts.id", ondelete="RESTRICT"), nullable=False),
     Column("synthetic_only", Boolean, nullable=False, server_default="true"),
+    Column("privacy_notice_acknowledged", Boolean, nullable=False, server_default="true"),
+    Column("last_substantive_at", DateTime(timezone=True), nullable=False),
+    Column("retention_reviewed_at", DateTime(timezone=True)),
+    Column("retention_exception_ref", String(120)),
+    Column("retention_exception_until", DateTime(timezone=True)),
+    Column("disposition", String(24), nullable=False, server_default="routine"),
+    Column("follow_up_at", DateTime(timezone=True)),
+    Column("follow_up_note", String(500)),
     Column("assigned_to", String(200)),
     Column("sync_result", JSONB),
     Column("kind", String(40), nullable=False),
@@ -27,7 +35,7 @@ press_inquiry_details = Table(
     CheckConstraint("kind IN ('press','research-collaboration','institutional-partnership','funding')", name="kind"),
     CheckConstraint("status IN ('new','reviewing','closed')", name="status"),
     CheckConstraint("version >= 1", name="version"),
-    CheckConstraint("reply_consent = TRUE", name="reply_consent_synthetic"),
+    CheckConstraint("synthetic_only OR reply_consent = FALSE", name="real_no_inferred_consent"),
 )
 Index("ix_media09_press_tenant_created", press_inquiry_details.c.organization_id, press_inquiry_details.c.created_at)
 Index("ix_media09_press_tenant_status", press_inquiry_details.c.organization_id, press_inquiry_details.c.status)

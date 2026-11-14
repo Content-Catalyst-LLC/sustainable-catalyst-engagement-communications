@@ -9,6 +9,8 @@ on:
       - 'backend/tests/test_media_operations_v1260.py'
       - 'backend/app/main.py'
       - 'backend/app/media09*'
+      - 'backend/app/persistence/media09*'
+      - 'backend/tests/test_media09_privacy*'
       - 'backend/app/hubspot.py'
       - 'backend/app/human_auth.py'
       - 'backend/app/persistence/media09.py'
@@ -62,12 +64,24 @@ jobs:
       PGPASSWORD: media06_ci_only
     steps:
       - uses: actions/checkout@v4
-      - name: PostgreSQL client availability
+      - name: Use PostgreSQL 16 clients from the existing service
+        env:
+          PG_SERVICE_CONTAINER: ${{ job.services.postgres.id }}
         run: |
-          if ! command -v psql >/dev/null; then
-            sudo apt-get update -qq
-            sudo apt-get install -y postgresql-client
-          fi
+          python - <<'PYCLIENT'
+          import os
+          from pathlib import Path
+          with open(os.environ['GITHUB_ENV'],'a') as out:out.write('PG_SERVICE_CONTAINER='+os.environ['PG_SERVICE_CONTAINER']+'\n')
+          root=Path(os.environ['RUNNER_TEMP'])/'media09-pg16-bin'
+          root.mkdir()
+          for name in ('psql','createdb','pg_dump','pg_restore'):
+              path=root/name
+              path.write_text('#!/bin/sh\nexec python "$GITHUB_WORKSPACE/tools/ci_postgres_client.py" '+name+' "$@"\n')
+              path.chmod(0o755)
+          with open(os.environ['GITHUB_PATH'],'a') as out:out.write(str(root)+'\n')
+          PYCLIENT
+          docker exec "$PG_SERVICE_CONTAINER" pg_dump --version
+          docker exec "$PG_SERVICE_CONTAINER" pg_restore --version
       - name: Apply actual MEDIA-06 migration to disposable database
         run: psql -X -v ON_ERROR_STOP=1 -f backend/migrations/MEDIA06_CREATE.sql
       - name: Check three tables and immutable evidence triggers
@@ -126,3 +140,4 @@ jobs:
           createdb scec_engagement_media09_acceptance
           (cd backend && PYTHONPATH=. python -m alembic upgrade head)
           MEDIA09_SOURCE_SHA="$GITHUB_SHA" MEDIA09_RECEIPT="$RUNNER_TEMP/media09-postgres.json" PYTHONPATH=backend python tools/verify_media09_postgres.py
+          MEDIA09_PRIVACY_TEST_DATABASE_URL="$SCEC_DATABASE_URL" PYTHONPATH=backend python -m pytest -q backend/tests/test_media09_privacy_pg.py

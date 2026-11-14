@@ -1,0 +1,13 @@
+{
+  "enabled": false,
+  "version": "OWNER-PROPOSED-NOT-APPROVED",
+  "approval_ref": null,
+  "spam_days": 30,
+  "closed_months": 12,
+  "inactive_review_months": 6,
+  "relationship_months": 24,
+  "relationship_review_months": 12,
+  "backup_days": 90,
+  "security_log_days": 30,
+  "receipt_months": 24
+}

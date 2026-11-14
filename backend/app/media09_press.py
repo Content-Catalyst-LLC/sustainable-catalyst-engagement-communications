@@ -13,7 +13,7 @@ import os
 import re
 from datetime import datetime, timedelta, timezone
 from typing import Literal
-from uuid import UUID, NAMESPACE_URL, uuid5
+from uuid import UUID, NAMESPACE_URL, uuid5, uuid4
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Query, Response
 from fastapi.routing import APIRoute
@@ -67,7 +67,8 @@ class PressInquiryCreate(BaseModel):
     message: str = Field(min_length=10, max_length=800)
     kind: Literal["press", "research-collaboration", "institutional-partnership", "funding"]
     privacy_notice_version: Literal["MEDIA-09.1-SYNTHETIC-NOTICE-V1"]
-    consent_to_reply: Literal[True]
+    consent_to_reply: Literal[True] | None = None  # legacy synthetic fixtures only
+    privacy_notice_acknowledged: Literal[True] | None = None
     company: str = Field(default="", max_length=0)  # honeypot, always blank
 
     @field_validator("name", "subject", "message")
@@ -85,6 +86,8 @@ class PressInquiryCreate(BaseModel):
 
     @model_validator(mode="after")
     def fixture_only(self):
+        if not self.privacy_notice_acknowledged and not self.consent_to_reply:
+            raise ValueError("Privacy notice acknowledgment required")
         if not self.name.casefold().startswith("synthetic "):
             raise ValueError("Synthetic name prefix required")
         if "@" in self.message or "@" in self.subject:
@@ -95,6 +98,8 @@ class PressInquiryCreate(BaseModel):
 class RealPressInquiryCreate(PressInquiryCreate):
     """Shared first-party contract after explicit owner release configuration."""
     synthetic: Literal[False]
+    consent_to_reply: Literal[False] | None = None
+    privacy_notice_acknowledged: Literal[True]
     privacy_notice_version: str = Field(min_length=1,max_length=80)
 
     @field_validator("email")
@@ -142,7 +147,7 @@ def _id(tenant: UUID, key: UUID) -> UUID:
 
 
 def _fingerprint(payload: PressInquiryCreate) -> str:
-    content = payload.model_dump(mode="json", exclude={"idempotency_key", "company"})
+    content = payload.model_dump(mode="json", exclude={"idempotency_key", "company"}, exclude_none=True)
     return hashlib.sha256(json.dumps(content, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
 
 
@@ -169,6 +174,12 @@ def create_record(db: Session, tenant: UUID, payload: PressInquiryCreate) -> dic
     try:
         with db.begin():
             _advisory_lock(db, tenant)
+            from . import media09_privacy as privacy
+            privacy.guard(db,tenant)
+            if privacy.suppressed(tenant,"inquiries",ident):
+                raise HTTPException(410,"Inquiry previously erased; use a new request reference")
+            if privacy.suppressed(tenant,"contacts",contact_id):
+                contact_id=uuid4()  # a genuinely new inquiry may create a new contact
             previous = db.execute(
                 select(press_inquiry_details.c.request_digest, press_inquiry_details.c.status, press_inquiry_details.c.version, press_inquiry_details.c.synthetic_only)
                 .where(press_inquiry_details.c.id == ident, press_inquiry_details.c.organization_id == tenant)
@@ -193,6 +204,7 @@ def create_record(db: Session, tenant: UUID, payload: PressInquiryCreate) -> dic
                 func.lower(TABLES["contacts"].c.payload["email"].astext) == payload.email
             ).order_by(TABLES["contacts"].c.created_at, TABLES["contacts"].c.id).limit(1)).scalar_one_or_none()
             if existing_contact:
+                privacy.assert_record(db,tenant,"contacts",existing_contact)
                 contact_id = existing_contact
             contact = Contact(id=contact_id, organization_id=tenant, classification=Classification.restricted,
                               display_name=payload.name, email=payload.email, marketing_consent=False,
@@ -211,7 +223,8 @@ def create_record(db: Session, tenant: UUID, payload: PressInquiryCreate) -> dic
             db.execute(insert(press_inquiry_details).values(
                 id=ident, organization_id=tenant, contact_id=contact_id,
                 kind=payload.kind, body=payload.message, status="new", version=1,
-                notice_version=payload.privacy_notice_version, reply_consent=True,
+                notice_version=payload.privacy_notice_version, reply_consent=bool(payload.consent_to_reply) if payload.synthetic else False,
+                privacy_notice_acknowledged=True,last_substantive_at=now,disposition="routine",
                 request_digest=fingerprint, synthetic_only=payload.synthetic, created_at=now, updated_at=now,
             ))
             for record_type, record_id in (("contacts", contact_id), ("inquiries", ident), ("press_inquiries", ident)):
@@ -242,6 +255,8 @@ def _joined(tenant: UUID):
 
 
 def detail_record(db: Session, tenant: UUID, ident: UUID) -> dict:
+    from . import media09_privacy as privacy
+    privacy.assert_record(db,tenant,"inquiries",ident)
     try:
         row = db.execute(_joined(tenant).where(press_inquiry_details.c.id == ident)).mappings().first()
     except SQLAlchemyError:
@@ -250,16 +265,22 @@ def detail_record(db: Session, tenant: UUID, ident: UUID) -> dict:
         raise HTTPException(404, "Inquiry not found")
     return {
         **_receipt(ident, row["status"], row["version"], False, row["synthetic_only"]),
-        "kind": row["kind"], "subject": row["inquiry"]["subject"],
+        "contact_id":str(row["contact_id"]), "kind": row["kind"], "subject": row["inquiry"]["subject"],
         "name": row["contact"]["display_name"], "email": row["contact"]["email"],
         "message": row["body"], "privacy_notice_version": row["notice_version"],
-        "consent_to_reply": row["reply_consent"],
+        "privacy_notice_acknowledged": row["privacy_notice_acknowledged"],
+        "marketing_consent_inferred": False,
+        "last_substantive_at": row["last_substantive_at"],
+        "follow_up_at": row["follow_up_at"], "follow_up_note": row["follow_up_note"],
+        "disposition": row["disposition"],
         "marketing_consent": False,
         "assigned_to": row["assigned_to"], "sync_result": row["sync_result"],
     }
 
 
 def list_records(db: Session, tenant: UUID, limit: int, offset: int) -> dict:
+    from . import media09_privacy as privacy
+    privacy.guard(db,tenant)
     try:
         rows = db.execute(
             _joined(tenant).order_by(press_inquiry_details.c.created_at.desc(), press_inquiry_details.c.id)
@@ -267,12 +288,22 @@ def list_records(db: Session, tenant: UUID, limit: int, offset: int) -> dict:
         ).mappings().all()
     except SQLAlchemyError:
         raise HTTPException(503, "Staging storage unavailable") from None
+    has_more=len(rows)==limit
+    if privacy.configured():
+        visible=[]
+        for row in rows:
+            try:privacy.assert_record(db,tenant,"inquiries",row["id"])
+            except HTTPException as exc:
+                if exc.status_code in (410,423):continue
+                raise
+            visible.append(row)
+        rows=visible
     return {"items": [
         {"inquiry_id": str(row["id"]), "kind": row["kind"],
          "subject": row["inquiry"]["subject"], "status": row["status"],
          "version": row["version"], "assigned_to": row["assigned_to"], "synthetic_only": row["synthetic_only"]}
         for row in rows
-    ], "limit": limit, "offset": offset, "no_personal_data_in_list": all(row["synthetic_only"] for row in rows)}
+    ], "limit": limit, "offset": offset, "has_more":has_more, "no_personal_data_in_list": all(row["synthetic_only"] for row in rows)}
 
 
 def transition_record(db: Session, tenant: UUID, ident: UUID, change: PressStatusChange) -> dict:
@@ -280,6 +311,8 @@ def transition_record(db: Session, tenant: UUID, ident: UUID, change: PressStatu
     try:
         with db.begin():
             _advisory_lock(db, tenant)
+            from . import media09_privacy as privacy
+            privacy.assert_record(db,tenant,"inquiries",ident)
             row = db.execute(
                 _joined(tenant).where(press_inquiry_details.c.id == ident)
             ).mappings().first()
