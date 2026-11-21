@@ -26,6 +26,7 @@ jobs:
           php -l wordpress-bridge/sustainable-catalyst-engagement-communications/includes/media08-press-room.php
           php wordpress-bridge/sustainable-catalyst-engagement-communications/tests/media08-press-validation.php
           php wordpress-bridge/sustainable-catalyst-engagement-communications/tests/media081-press-room-validation.php
+          php wordpress-bridge/sustainable-catalyst-engagement-communications/tests/media082-single-operator-validation.php
           php -l wordpress-bridge/sustainable-catalyst-engagement-communications/tests/media081-wp-acceptance.php
           bash -n wordpress-bridge/sustainable-catalyst-engagement-communications/tests/media081-staging-acceptance.sh
       - name: Check no delivery or subscriber integration in visual editor

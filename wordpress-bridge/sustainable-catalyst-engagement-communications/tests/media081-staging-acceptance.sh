@@ -18,6 +18,7 @@ has() { grep "$@" /tmp/media081-body.$$; }
 st() { python3 -c 'import json,sys; print(json.load(open(sys.argv[1])).get(sys.argv[2],""))' "$MEDIA081_STATE" "$1"; }
 
 w config delete SCEC_MEDIA08_PUBLIC_RELEASE >/dev/null 2>&1
+w config delete SCEC_MEDIA08_SINGLE_OPERATOR_OWNER >/dev/null 2>&1
 w user get press-reviewer >/dev/null 2>&1 || w user create press-reviewer press-reviewer@example.invalid --role=scec_press_reviewer \
   --user_pass="$(python3 -c 'import secrets;print(secrets.token_urlsafe(18))')" --quiet
 for id in $(w post list --name=press --post_type=page --format=ids); do w post delete "$id" --force --quiet; done
@@ -53,6 +54,23 @@ ok "sitemap index references the press sitemap" '[ "$(get $URL/sitemap_index.xml
 ok "unknown release slug 404" '[ "$(get $URL/press/2026/no-such-release/)" = 404 ]'
 ok "private record not reachable by id" '[ "$(get "$URL/?p=$(st first)")" = 404 ]'
 ok "no REST exposure" '[ "$(get $URL/wp-json/wp/v2/scec_press_release)" = 404 ]'
+
+w user get staging-admin2 >/dev/null 2>&1 || w user create staging-admin2 staging-admin2@example.invalid --role=administrator \
+  --user_pass="$(python3 -c 'import secrets;print(secrets.token_urlsafe(18))')" --quiet
+OWNER=$(w user get staging-admin --field=ID)
+w config set SCEC_MEDIA08_SINGLE_OPERATOR_OWNER "$OWNER" --raw --type=constant --quiet; sleep 3
+echo "== phase single (owner self-review)"; phase single
+O=$(st owner_url)
+ok "owner release page 200" '[ "$(get $O)" = 200 ]'
+ok "owner release discloses self-review" 'has -q "not independent review" && has -q "self-reviewed, not independently reviewed"'
+ok "owner release not labelled independent" '! has -q "Approved by an independent reviewer"'
+ok "owner release canonical and NewsArticle" 'has -qi "rel=\"canonical\" href=\"$O\"" && has -q "\"@type\":\"NewsArticle\""'
+ok "press sitemap lists owner release" '[ "$(get $URL/press/releases.xml)" = 200 ] && has -q "$O"'
+w config set SCEC_MEDIA08_SINGLE_OPERATOR_OWNER "$(w user get press-reviewer --field=ID)" --raw --type=constant --quiet; sleep 3
+echo "== phase single_off (owner = non-administrator)"; phase single_off
+w config delete SCEC_MEDIA08_SINGLE_OPERATOR_OWNER --quiet; sleep 3
+echo "== phase single_off (owner constant removed)"; phase single_off
+ok "owner release still public with the mode off" '[ "$(get $O)" = 200 ]'
 
 echo "== phase tamper"; phase tamper
 w config set SCEC_MEDIA08_PUBLIC_RELEASE false --raw --type=constant --quiet; sleep 3

@@ -4,8 +4,11 @@
  * objects, and an approved-only public projection with permanent release URLs.
  * No email/outreach/remote publishing.
  *
- * Publication is disabled unless separately enabled in wp-config and a
- * distinct human reviewer approves the immutable submitted revision.
+ * Publication is disabled unless separately enabled in wp-config and the
+ * immutable submitted revision is approved either by a reviewer other than the
+ * author (independent review) or, when SCEC_MEDIA08_SINGLE_OPERATOR_OWNER names
+ * an administrator, by that institutional owner with an explicit, recorded
+ * self-review declaration (single-operator mode, disclosed publicly as such).
  * Released records are never rewritten: corrections are new reviewed records,
  * withdrawals keep a public notice at the same URL, and every state change is
  * appended to the record's history.
@@ -34,6 +37,9 @@ final class SC_Media08_Press_Room {
         'data-release' => 'Data release',
         'event-notice' => 'Event notice',
     );
+    const MODE_INDEPENDENT = 'independent';
+    const MODE_OWNER_SELF = 'owner_self';
+    const SELF_REVIEW_LABEL = 'Approved by the institutional publisher (single-operator self-review; not independent review)';
     const ATTESTATIONS = array(
         'rights' => 'Rights and attribution',
         'source' => 'Source integrity',
@@ -62,6 +68,31 @@ final class SC_Media08_Press_Room {
 
     public static function enabled() {
         return defined('SCEC_MEDIA08_PUBLIC_RELEASE') && SCEC_MEDIA08_PUBLIC_RELEASE === true;
+    }
+
+    /**
+     * Single-operator mode: the user ID in SCEC_MEDIA08_SINGLE_OPERATOR_OWNER, if that
+     * user is an administrator; otherwise 0 (mode off, independent review required).
+     */
+    public static function single_operator_owner() {
+        if (!defined('SCEC_MEDIA08_SINGLE_OPERATOR_OWNER') || !is_int(SCEC_MEDIA08_SINGLE_OPERATOR_OWNER) ||
+            SCEC_MEDIA08_SINGLE_OPERATOR_OWNER <= 0) {
+            return 0;
+        }
+        $owner = SCEC_MEDIA08_SINGLE_OPERATOR_OWNER;
+        return user_can($owner, 'manage_options') ? $owner : 0;
+    }
+
+    /**
+     * Whether an approval satisfies the review rule. Independent: a reviewer other than
+     * the submitter. Owner self-review: recorded as such and made by $owner_id (the
+     * authorised single-operator owner, or 0 when none).
+     */
+    public static function approval_ok($author_id, $reviewer_id, $mode, $owner_id) {
+        $author_id = (int)$author_id; $reviewer_id = (int)$reviewer_id; $owner_id = (int)$owner_id;
+        if (!$author_id || !$reviewer_id) { return false; }
+        if ($mode === self::MODE_OWNER_SELF) { return $owner_id > 0 && $reviewer_id === $owner_id; }
+        return $author_id !== $reviewer_id;
     }
 
     /** The published, non-password /press/ page carrying [sc_press_room]. */
@@ -181,7 +212,8 @@ final class SC_Media08_Press_Room {
     /**
      * 'released', 'withdrawn' or '' (not public). A record is public only if it
      * passed the original gate: approved and released hashes equal the current
-     * content hash, author and reviewer differ, and any embargo has passed.
+     * content hash, the approval satisfies the review rule (independent, or a recorded
+     * owner self-review by a user who is still an administrator), and any embargo has passed.
      */
     public static function public_state($p) {
         if (!self::launch_ready()) { return ''; }
@@ -190,12 +222,18 @@ final class SC_Media08_Press_Room {
         $sha = self::current_sha($p);
         if (!hash_equals((string)self::meta($p->ID,'released_sha'), $sha) ||
             !hash_equals((string)self::meta($p->ID,'approved_sha'), $sha) ||
-            !self::meta($p->ID,'reviewer_id') ||
-            (int)self::meta($p->ID,'submitted_by') === (int)self::meta($p->ID,'reviewer_id')) {
+            !self::approval_ok(self::meta($p->ID,'submitted_by'), self::meta($p->ID,'reviewer_id'),
+                (string)self::meta($p->ID,'approval_mode'), self::self_review_owner_at_render($p))) {
             return '';
         }
         if (!self::embargo_passed((string)self::meta($p->ID,'embargo_until'), time())) { return ''; }
         return $state;
+    }
+
+    /** Owner self-review stays valid after release while the approver remains an administrator. */
+    private static function self_review_owner_at_render($p) {
+        $reviewer = (int)self::meta($p->ID,'reviewer_id');
+        return $reviewer && user_can($reviewer, 'manage_options') ? $reviewer : 0;
     }
 
     private static function embargo_passed($embargo, $now_utc) {
@@ -223,10 +261,11 @@ final class SC_Media08_Press_Room {
         ), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
     }
 
-    public static function publication_gate($enabled, $state, $current_sha, $approved_sha, $author_id, $reviewer_id, $embargo, $now_utc) {
+    public static function publication_gate($enabled, $state, $current_sha, $approved_sha, $author_id, $reviewer_id, $embargo, $now_utc,
+                                            $mode = self::MODE_INDEPENDENT, $owner_id = 0) {
         if (!$enabled || $state !== 'approved' || !$approved_sha ||
             !hash_equals((string)$approved_sha, (string)$current_sha) ||
-            !$author_id || !$reviewer_id || (int)$author_id === (int)$reviewer_id) {
+            !self::approval_ok($author_id, $reviewer_id, $mode, $owner_id)) {
             return false;
         }
         if (!$embargo) { return true; }
@@ -389,19 +428,32 @@ final class SC_Media08_Press_Room {
         if (!$p || self::meta($id,'state')!=='in_review') { self::back('invalid_state',$id); }
         $author=(int)self::meta($id,'submitted_by',0);
         $me=get_current_user_id();
-        if (!$author || $author===$me || (int)$p->post_author===$me) { self::back('independent_review_required',$id); }
+        $mode = self::MODE_INDEPENDENT;
+        if (!$author || $author===$me || (int)$p->post_author===$me) {
+            // Own release: only the configured single-operator owner, with an explicit declaration.
+            if (!$author || $me !== self::single_operator_owner()) { self::back('independent_review_required',$id); }
+            if (($_POST['owner_self_approval'] ?? '') !== '1') { self::back('self_review_declaration_required',$id); }
+            $mode = self::MODE_OWNER_SELF;
+        }
         if (!hash_equals((string)self::meta($id,'submitted_sha'),self::current_sha($p))) {
             self::back('source_changed',$id);
         }
         foreach (array_keys(self::ATTESTATIONS) as $check) {
             if (($_POST['check_'.$check] ?? '') !== '1') { self::back('review_incomplete',$id); }
         }
-        update_post_meta($id,self::META.'approved_sha',self::current_sha($p));
+        $sha = self::current_sha($p);
+        update_post_meta($id,self::META.'approved_sha',$sha);
         update_post_meta($id,self::META.'reviewer_id',$me);
         update_post_meta($id,self::META.'approved_at',gmdate('c'));
+        update_post_meta($id,self::META.'approval_mode',$mode);
         update_post_meta($id,self::META.'attestations',implode(',', array_keys(self::ATTESTATIONS)));
         update_post_meta($id,self::META.'state','approved');
-        self::event($id, 'approved', 'attested: ' . implode(', ', array_keys(self::ATTESTATIONS)));
+        if ($mode === self::MODE_OWNER_SELF) {
+            self::event($id, 'owner_self_approved', 'decision: approved; single-operator owner self-review, not independent review; sha256 ' .
+                $sha . '; attested: ' . implode(', ', array_keys(self::ATTESTATIONS)));
+        } else {
+            self::event($id, 'approved', 'attested: ' . implode(', ', array_keys(self::ATTESTATIONS)));
+        }
         self::back('approved',$id);
     }
 
@@ -433,7 +485,8 @@ final class SC_Media08_Press_Room {
             self::meta($id,'state'),self::current_sha($p),
             self::meta($id,'approved_sha'),(int)self::meta($id,'submitted_by',0),
             (int)self::meta($id,'reviewer_id',0),
-            self::meta($id,'embargo_until'),time());
+            self::meta($id,'embargo_until'),time(),
+            (string)self::meta($id,'approval_mode'), self::single_operator_owner());
         if (!$eligible) { self::back('release_blocked',$id); }
         $year = gmdate('Y');
         if (!self::meta($id,'permalink_path')) {
@@ -475,7 +528,7 @@ final class SC_Media08_Press_Room {
         self::back('withdrawn',$id);
     }
 
-    /** Start a correction: a NEW private draft that must pass full independent review. */
+    /** Start a correction: a NEW private draft that must pass the full review workflow again. */
     public static function correct() {
         $id=absint($_POST['id'] ?? 0);
         self::admin_check('scec08_correct',$id,self::CAP_AUTHOR);
@@ -531,7 +584,8 @@ final class SC_Media08_Press_Room {
 
     /** Public history: dated actions only; no user identities or private notes. */
     private static function public_history($p) {
-        $labels = array('approved'=>'Approved by an independent reviewer','released'=>'Released',
+        $labels = array('approved'=>'Approved by an independent reviewer',
+            'owner_self_approved'=>self::SELF_REVIEW_LABEL,'released'=>'Released',
             'corrected'=>'Correction issued','withdrawn'=>'Withdrawn');
         $items = '';
         foreach (self::history($p->ID) as $e) {
@@ -543,7 +597,10 @@ final class SC_Media08_Press_Room {
         return '<section class="scec-press-history" aria-label="Release record"><h2>Release record</h2>' .
             ($items ? '<ul>' . $items . '</ul>' : '') .
             '<p>Content fingerprint (SHA-256): <code>' . esc_html($sha) . '</code></p>' .
-            '<p>Releases are approved by a reviewer other than the author and are never edited after release. ' .
+            '<p>' . (self::meta($p->ID,'approval_mode') === self::MODE_OWNER_SELF
+                ? 'This release was approved by Sustainable Catalyst&rsquo;s institutional publisher under a single-operator editorial process: it was self-reviewed, not independently reviewed. '
+                : 'This release was approved by a reviewer other than its author. ') .
+            'Releases are never edited after release. ' .
             'Corrections are published as separate releases; withdrawn releases keep a notice at this address.</p></section>';
     }
 
@@ -736,13 +793,18 @@ final class SC_Media08_Press_Room {
 
     private static function form($action,$id,$label) {
         echo '<form method="post" action="'.esc_url(admin_url('admin-post.php')).'">';
-        echo '<input type="hidden" name="action" value="'.esc_attr('scec08_'.$action).'">';
+        $handler = $action === 'self_approve' ? 'approve' : $action;
+        echo '<input type="hidden" name="action" value="'.esc_attr('scec08_'.$handler).'">';
         echo '<input type="hidden" name="id" value="'.(int)$id.'">';
-        wp_nonce_field('scec08_'.$action.'_'.$id);
-        if ($action==='approve') {
+        wp_nonce_field('scec08_'.$handler.'_'.$id);
+        if ($action==='approve' || $action==='self_approve') {
             foreach (self::ATTESTATIONS as $check=>$name) {
                 echo '<p><label><input type="checkbox" name="check_'.esc_attr($check).'" value="1" required> '.esc_html($name).' confirmed</label></p>';
             }
+        }
+        if ($action==='self_approve') {
+            echo '<p><label><input type="checkbox" name="owner_self_approval" value="1" required> I approve this exact revision as the institutional owner. '.
+                'I understand this is single-operator self-review, not independent review, and that it is recorded and disclosed as such.</label></p>';
         }
         if ($action==='return') {
             echo '<p><label>Note to author (required)<br><textarea name="note" rows="3" cols="70" maxlength="1000" required></textarea></label></p>';
@@ -763,8 +825,10 @@ final class SC_Media08_Press_Room {
         $notice=sanitize_key((string)($_GET['notice'] ?? ''));
         $author = self::can(self::CAP_AUTHOR);
         echo '<div class="wrap"><h1>Press Room</h1>';
-        echo '<p>Private institutional releases. Public release is disabled by default, requires approval by a reviewer other than the author, a published Press page, and explicit deployment authorization.</p>';
-        echo '<p><strong>Public release gate:</strong> '.(self::enabled()?'Enabled by configuration — verify independent approval':'OFF — private authoring only').
+        $owner = self::single_operator_owner();
+        echo '<p>Private institutional releases. Public release is disabled by default and requires a published Press page, explicit deployment authorization, and approval of the exact submitted revision: by a reviewer other than the author, or, in single-operator mode, by the institutional owner as a recorded self-review.</p>';
+        echo '<p><strong>Review mode:</strong> '.($owner ? 'Single-operator (owner self-review permitted and disclosed; independent review also accepted)' : 'Independent review required').'</p>';
+        echo '<p><strong>Public release gate:</strong> '.(self::enabled()?'Enabled by configuration':'OFF — private authoring only').
             ' · <strong>Press page:</strong> '.(self::press_page()?'published with [sc_press_room]':'not published').'</p>';
         if ($notice) { echo '<div class="notice notice-info"><p>'.esc_html(str_replace('_',' ',$notice)).'</p></div>'; }
         echo '<h2>Press records</h2>';
@@ -805,14 +869,20 @@ final class SC_Media08_Press_Room {
             echo '<tr><th><label for="sc08-embargo">Embargo (UTC)</label></th><td><input type="datetime-local" id="sc08-embargo" name="embargo_until" value="'.esc_attr((string)self::meta($id,'embargo_until')).'"></td></tr>';
             echo '</tbody></table>';
             submit_button('Save private draft'); echo '</form>';
-            if ($p) { self::form('submit',$id,'Submit for independent review'); }
+            if ($p) { self::form('submit',$id,'Submit for review'); }
         } elseif ($p) {
             echo '<p><strong>Headline:</strong> '.esc_html($p->post_title).'</p><p>'.esc_html((string)self::meta($id,'summary')).'</p>';
             echo '<div style="max-width:760px;padding:20px;background:#fff;border:1px solid #ddd">'.wp_kses_post((string)self::meta($id,'body')).'</div>';
             if ($state==='in_review' && self::can(self::CAP_REVIEW)) {
                 $me = get_current_user_id();
                 if ($me === (int)self::meta($id,'submitted_by') || $me === (int)$p->post_author) {
-                    echo '<p><strong>Independent review required:</strong> you authored or submitted this release, so another reviewer must approve or return it.</p>';
+                    if ($me === $owner) {
+                        echo '<p><strong>Single-operator self-review.</strong> You authored or submitted this release. Approving it records an owner self-review, which is disclosed publicly and is not independent review.</p>';
+                        self::form('self_approve',$id,'Approve as institutional owner (self-review)');
+                        self::form('return',$id,'Return to draft');
+                    } else {
+                        echo '<p><strong>Independent review required:</strong> you authored or submitted this release, so another reviewer must approve or return it.</p>';
+                    }
                 } else {
                     self::form('approve',$id,'Approve independently reviewed release');
                     self::form('return',$id,'Return to author');
@@ -824,6 +894,9 @@ final class SC_Media08_Press_Room {
             echo '<p>Changes to submitted content require a new release record/review. Editing approved revisions in place is blocked.</p>';
         }
         if ($p) {
+            if (self::meta($id,'approval_mode')) {
+                echo '<p><strong>Approval:</strong> '.esc_html(self::meta($id,'approval_mode') === self::MODE_OWNER_SELF ? self::SELF_REVIEW_LABEL : 'Independent reviewer').'</p>';
+            }
             echo '<h2>History</h2><table class="widefat striped"><thead><tr><th>UTC</th><th>Action</th><th>User</th><th>SHA-256</th><th>Note</th></tr></thead><tbody>';
             foreach (self::history($id) as $e) {
                 $u = get_userdata((int)$e['user']);
