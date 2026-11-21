@@ -9,6 +9,7 @@
  *   public   - flag on: release, permanent URL, correction, withdrawal, embargo, tamper
  *   single   - SCEC_MEDIA08_SINGLE_OPERATOR_OWNER set: owner self-review, positive and negative
  *   single_off - owner constant removed/non-admin: releases kept, new self-approval refused
+ *   revise   - in-place editing: working revision, publish, correction notice, restore, reopen
  * Writes state for the HTTP checks to the file named by MEDIA081_STATE.
  */
 if (!defined('WP_CLI') || (defined('WP_ENVIRONMENT_TYPE') && WP_ENVIRONMENT_TYPE === 'production') ||
@@ -220,6 +221,135 @@ if ($phase === 'single') {
     act('approve', $admin, array('id' => $pend, 'owner_self_approval' => '1') + $all);
     ck(st($pend) === 'approved', 'second owner-approved record pending');
     $S['owner'] = $own; $S['owner_url'] = $R::permalink($own); $S['owner_pending'] = $pend;
+}
+
+if ($phase === 'revise') {
+    // In-place editing of a released record (owner mode on): working revision, publish, correction, restore.
+    $admin2 = (int)get_user_by('login', 'staging-admin2')->ID;
+    $all = array('check_rights' => '1', 'check_source' => '1', 'check_privacy' => '1', 'check_institutional' => '1');
+    $id = $S['owner'];
+    $p0 = get_post($id);
+    $url0 = $R::permalink($id); $ref0 = get_post_meta($id, $M.'reference', true); $rel0 = get_post_meta($id, $M.'released_at', true);
+    $body0 = get_post_meta($id, $M.'body', true);
+    $sha0 = $R::sha_of(array('title'=>$p0->post_title,'summary'=>get_post_meta($id,$M.'summary',true),'body'=>$body0,'kind'=>'press-release','source_url'=>'','embargo'=>''));
+    $edit = array('id' => $id, 'title' => 'SYNTHETIC single operator release', 'kind' => 'press-release',
+        'summary' => get_post_meta($id, $M.'summary', true), 'source_url' => '',
+        'body' => '<h2>Revised heading</h2><p>SYNTHETIC revised body with <a href="https://example.org/a">a link</a> &amp; "quotes".</p><ul><li>one</li></ul>' .
+                  '[caption id="attachment_1" align="aligncenter" width="300"]<img src="https://example.org/x.png" alt="Chart" width="300" height="200" /> SYNTHETIC caption[/caption]');
+    list($n) = act('save_update', $admin, array('body' => $body0, 'title' => $p0->post_title) + $edit);
+    ck($n === 'no_changes', 'saving identical text is a no-op');
+    list($n) = act('save_update', $admin, array('body' => str_replace("\n", "\r\n", rtrim($body0)), 'title' => $p0->post_title) + $edit);
+    ck($n === 'no_changes' && !$R::pending($id), 'browser CRLF line breaks and trailing whitespace alone are a no-op');
+    list($n) = act('save_update', $rev, $edit);
+    ck($n === 'die:Not authorized', 'reviewer role cannot edit a release');
+    list($n) = act('save_update', $admin, $edit);
+    $u = $R::pending($id);
+    ck($n === 'update_saved' && $u && $u['by'] === $admin, 'owner saves a working revision of the released record');
+    ck(get_post_meta($id, $M.'body', true) === $body0 && $R::public_state(get_post($id)) === 'released' &&
+        strpos($R::single(get_post($id)), 'Revised heading') === false, 'published text stays live while the revision is pending');
+    $snaps = $R::snapshots($id);
+    $last = end($snaps);
+    ck(in_array($sha0, array_column($snaps, 'sha256'), true) && $last['origin'] === 'update' && $last['sha256'] === $u['sha256'],
+        'published text and the working revision are both snapshotted');
+    $base_n = (int)array_search($sha0, array_column($snaps, 'sha256', 'n'), true);
+    // A release from before snapshots existed (as in production): the first edit records a baseline.
+    $legacy = $S['first'];
+    delete_post_meta($legacy, $M.'snapshot');
+    $lp = get_post($legacy);
+    $lsha = $R::sha_of(array('title'=>$lp->post_title,'summary'=>get_post_meta($legacy,$M.'summary',true),'body'=>get_post_meta($legacy,$M.'body',true),
+        'kind'=>get_post_meta($legacy,$M.'kind',true),'source_url'=>'','embargo'=>get_post_meta($legacy,$M.'embargo_until',true)));
+    list($n) = act('save_update', $admin, array('id' => $legacy, 'title' => $lp->post_title, 'kind' => 'press-release',
+        'summary' => get_post_meta($legacy,$M.'summary',true), 'source_url' => '', 'body' => '<p>SYNTHETIC legacy edit.</p>'));
+    $ls = $R::snapshots($legacy);
+    ck($n === 'update_saved' && $ls[1]['origin'] === 'baseline' && $ls[1]['sha256'] === $lsha && $ls[2]['origin'] === 'update',
+        'release without snapshots gets a baseline of its published text before the first edit');
+    act('discard_update', $admin, array('id' => $legacy));
+    ck(strpos($u['content']['body'], '"quotes"') !== false && strpos(end($snaps)['body'], '"quotes"') !== false, 'quotes and markup survive storage (slashing)');
+    ck(wp_text_diff($R::snapshots($id)[$base_n]['body'], $u['content']['body']) !== '', 'comparison produces a diff');
+    // Publish: negative checks first.
+    $pub = array('id' => $id, 'update_sha' => $u['sha256'], 'change_type' => 'editorial', 'owner_self_approval' => '1') + $all;
+    list($n) = act('publish_update', $rev, $pub);
+    ck($n === 'die:Not authorized', 'reviewer role cannot publish an update');
+    list($n) = act('publish_update', $admin, array('update_sha' => str_repeat('0', 64)) + $pub);
+    ck($n === 'update_changed', 'publishing a different fingerprint than the working revision is refused');
+    list($n) = act('publish_update', $admin, array_diff_key($pub, array('owner_self_approval' => 1)));
+    ck($n === 'self_review_declaration_required', 'owner publishing own revision needs the self-review declaration');
+    list($n) = act('publish_update', $admin, array_diff_key($pub, array('check_privacy' => 1)));
+    ck($n === 'review_incomplete', 'all four attestations required for an update');
+    list($n) = act('publish_update', $admin, array('change_type' => '') + $pub);
+    ck($n === 'change_type_required', 'change type required');
+    list($n) = act('publish_update', $admin, array('change_type' => 'correction', 'public_note' => '') + $pub);
+    ck($n === 'correction_notice_required', 'a factual correction requires a public notice');
+    ck(get_post_meta($id, $M.'body', true) === $body0 && $R::pending($id), 'refused publishes changed nothing');
+    list($n) = act('publish_update', $admin, $pub);
+    $p1 = get_post($id);
+    ck($n === 'update_published' && !$R::pending($id), 'owner publishes the editorial update');
+    ck($R::permalink($id) === $url0 && get_post_meta($id, $M.'reference', true) === $ref0 && get_post_meta($id, $M.'released_at', true) === $rel0,
+        'permanent URL, reference and publication date unchanged');
+    ck($R::public_state($p1) === 'released' && get_post_meta($id, $M.'released_sha', true) === $u['sha256'] &&
+        get_post_meta($id, $M.'approval_mode', true) === 'owner_self', 'new text is the public release, approved by recorded owner self-review');
+    $html = $R::single($p1);
+    ck(strpos($html, 'Revised heading') !== false && strpos($html, '<figure') !== false && strpos($html, 'SYNTHETIC caption') !== false &&
+        strpos($html, '[caption') === false, 'public page shows the update with headings and a captioned image');
+    ck(strpos($html, 'scec-press-notice-correction') === false && strpos($html, 'Updated <time') !== false,
+        'editorial update: no correction notice, dated "Updated" line');
+    ck(strpos($html, 'self-reviewed, not independently reviewed') !== false, 'self-review still disclosed after the update');
+    $sd = $R::structured_data($p1);
+    ck($sd['datePublished'] === $rel0 && $sd['dateModified'] === get_post_meta($id, $M.'updated_at', true) && !isset($sd['correction']),
+        'NewsArticle keeps datePublished, sets dateModified, no correction');
+    $ev = array_column($R::history($id), 'action');
+    ck(in_array('update_saved', $ev, true) && end($ev) === 'update_published', 'history records update_saved and update_published');
+    // A non-owner administrator can publish someone else's revision as independent review.
+    $edit2 = array('body' => '<h2>Revised heading</h2><p>SYNTHETIC body, figure 12 stated correctly.</p>') + $edit;
+    act('save_update', $admin, $edit2);
+    $u2 = $R::pending($id);
+    list($n) = act('publish_update', $admin2, array('id' => $id, 'update_sha' => $u2['sha256'], 'change_type' => 'correction',
+        'public_note' => 'An earlier version stated figure 11; the correct figure is 12.') + $all);
+    $p2 = get_post($id);
+    ck($n === 'update_published' && get_post_meta($id, $M.'approval_mode', true) === 'independent', 'another publisher publishes it as independent review');
+    $html = $R::single($p2);
+    ck(strpos($html, 'scec-press-notice-correction') !== false && strpos($html, 'the correct figure is 12') !== false, 'correction notice shown on the same release');
+    ck(strpos($html, 'approved by a reviewer other than its author') !== false && strpos($html, 'not independently reviewed') === false,
+        'disclosure follows the current approval');
+    $sd = $R::structured_data($p2);
+    ck(isset($sd['correction']['@type']) && $sd['correction']['@type'] === 'CorrectionComment', 'NewsArticle carries a CorrectionComment');
+    $ev = array_column($R::history($id), 'action');
+    ck(end($ev) === 'correction_published', 'history records correction_published');
+    // Restore the original published text (baseline) as a new working revision, then publish it.
+    list($n) = act('restore', $admin, array('id' => $id, 'snapshot' => $base_n));
+    $u3 = $R::pending($id);
+    ck($n === 'restored' && $u3 && $u3['sha256'] === $sha0 && get_post_meta($id, $M.'body', true) !== $body0, 'restore stages the baseline; public text unchanged until published');
+    list($n) = act('discard_update', $admin, array('id' => $id));
+    ck($n === 'update_discarded' && !$R::pending($id), 'working revision can be discarded');
+    act('restore', $admin, array('id' => $id, 'snapshot' => $base_n));
+    list($n) = act('publish_update', $admin, array('id' => $id, 'update_sha' => $sha0, 'change_type' => 'editorial', 'owner_self_approval' => '1') + $all);
+    ck($n === 'update_published' && get_post_meta($id, $M.'body', true) === $body0 && $R::public_state(get_post($id)) === 'released', 'rollback to the original text published');
+    ck(count($R::snapshots($id)) >= 5 && $R::snapshots($id)[$base_n]['sha256'] === $sha0, 'all snapshots kept (append-only)');
+    // Tamper protection still applies after updates.
+    update_post_meta($id, $M.'body', $body0 . '<p>Silent edit</p>');
+    ck($R::public_state(get_post($id)) === '', 'out-of-workflow edit still removes the release');
+    update_post_meta($id, $M.'body', $body0);
+    // Unreleased: Edit release from review returns to draft and clears approval; drafts snapshot.
+    list($n, $d) = act('save', $admin, draft('SYNTHETIC reopen release'));
+    act('submit', $admin, array('id' => $d));
+    act('approve', $admin, array('id' => $d, 'owner_self_approval' => '1') + $all);
+    list($n) = act('reopen', $rev, array('id' => $d));
+    ck($n === 'die:Not authorized', 'reviewer cannot reopen');
+    list($n) = act('reopen', $admin, array('id' => $d));
+    ck($n === 'reopened' && st($d) === 'draft' && get_post_meta($d, $M.'approved_sha', true) === '' && get_post_meta($d, $M.'approval_mode', true) === '',
+        'Edit release on an approved draft returns it to draft and clears approval');
+    list($n) = act('release', $admin, array('id' => $d));
+    ck($n === 'release_blocked', 'reopened draft cannot be released');
+    list($n) = act('save', $admin, draft('SYNTHETIC reopen release v2') + array('id' => $d));
+    ck(count($R::snapshots($d)) === 2, 'each draft save is snapshotted');
+    list($n) = act('restore', $admin, array('id' => $d, 'snapshot' => 1));
+    ck($n === 'restored' && get_post($d)->post_title === 'SYNTHETIC reopen release' && st($d) === 'draft', 'draft restore writes a new revision');
+    // Withdrawn releases cannot be edited in place.
+    list($n) = act('save_update', $admin, array('id' => $S['correction']) + $edit);
+    ck($n === 'invalid_state', 'withdrawn release is not editable in place');
+    // Leave a pending revision for the HTTP check: public shows published text.
+    act('save_update', $admin, array('body' => '<p>SYNTHETIC pending text not yet public.</p>') + $edit);
+    $S['owner_preview_id'] = $id;
 }
 
 if ($phase === 'single_off') {

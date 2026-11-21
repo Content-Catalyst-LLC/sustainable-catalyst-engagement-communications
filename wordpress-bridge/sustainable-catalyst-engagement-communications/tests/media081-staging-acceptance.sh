@@ -66,6 +66,32 @@ ok "owner release discloses self-review" 'has -q "not independent review" && has
 ok "owner release not labelled independent" '! has -q "Approved by an independent reviewer"'
 ok "owner release canonical and NewsArticle" 'has -qi "rel=\"canonical\" href=\"$O\"" && has -q "\"@type\":\"NewsArticle\""'
 ok "press sitemap lists owner release" '[ "$(get $URL/press/sitemap.xml)" = 200 ] && has -q "$O"'
+echo "== phase revise (in-place editing)"; phase revise
+ok "published text live while a revision is pending" '[ "$(get $O)" = 200 ] && ! has -q "pending text not yet public"'
+ok "release URL unchanged after updates" '[ "$(get $O)" = 200 ] && has -qi "rel=\"canonical\" href=\"$O\""'
+ok "correction notice on the release page" 'has -q "the correct figure is 12"'
+PID=$(st owner_preview_id)
+ok "anonymous preview refused" '[ "$(get "$URL/?scec_press_preview=$PID&rev=working&_wpnonce=x")" = 403 ]'
+if [ -n "${MEDIA081_LOGIN_URL:-}" ]; then
+  # WordPress enables the Visual editor only for recognised browsers, so present one.
+  UA="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0 Safari/537.36"
+  curl() { command curl -A "$UA" "$@"; }
+  J=$(mktemp); curl -s -c $J -b $J -o /dev/null "$URL/$MEDIA081_LOGIN_URL"
+  curl -s -c $J -b $J -o /tmp/media081-body.$$ "$URL/wp-admin/admin.php?page=scec-media08&id=$PID"
+  PV=$(grep -o 'href="[^"]*scec_press_preview=[^"]*rev=working[^"]*"' /tmp/media081-body.$$ | head -1 | sed 's/^href="//; s/"$//; s/&#038;/\&/g; s/&amp;/\&/g')
+  ok "admin shows Edit release, revisions and publish-update form" 'has -q "Edit release" && has -q "Revisions" && has -q "scec08_publish_update"'
+  ok "publish-update button is labelled correctly" 'has -q "value=\"Approve and publish update (self-review)\""'
+  cp /tmp/media081-body.$$ /tmp/media081-view.$$
+  curl -s -c $J -b $J -o /tmp/media081-body.$$ "$URL/wp-admin/admin.php?page=scec-media08&id=$PID&edit=1"
+  ok "edit screen has the WordPress editor (Visual/HTML), headings and Add Media" 'has -q "tmce-active" && has -q "switch-html" && has -q "switch-tmce" && has -q "insert-media" && has -q "Heading 2=h2" && has -q "scec08_save_update"'
+  ok "edit screen loads the working revision" 'has -q "pending text not yet public"'
+  cp /tmp/media081-view.$$ /tmp/media081-body.$$; rm -f /tmp/media081-view.$$
+  curl -s -c $J -b $J -D /tmp/media081-hdr.$$ -o /tmp/media081-body.$$ "$PV"
+  ok "signed-in preview shows the working revision in site styling" 'has -q "Preview: working revision" && has -q "pending text not yet public" && has -q "scec-press-release-body"'
+  ok "preview is noindex and uncached" 'grep -qi "X-Robots-Tag: noindex" /tmp/media081-hdr.$$ && grep -qi "no-cache\|no-store" /tmp/media081-hdr.$$'
+  rm -f $J /tmp/media081-hdr.$$
+  unset -f curl
+fi
 w config set SCEC_MEDIA08_SINGLE_OPERATOR_OWNER "$(w user get press-reviewer --field=ID)" --raw --type=constant --quiet; sleep 3
 echo "== phase single_off (owner = non-administrator)"; phase single_off
 w config delete SCEC_MEDIA08_SINGLE_OPERATOR_OWNER --quiet; sleep 3

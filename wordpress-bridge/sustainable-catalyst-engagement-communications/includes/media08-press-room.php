@@ -9,9 +9,12 @@
  * author (independent review) or, when SCEC_MEDIA08_SINGLE_OPERATOR_OWNER names
  * an administrator, by that institutional owner with an explicit, recorded
  * self-review declaration (single-operator mode, disclosed publicly as such).
- * Released records are never rewritten: corrections are new reviewed records,
- * withdrawals keep a public notice at the same URL, and every state change is
- * appended to the record's history.
+ * Released records are revised in place through a working revision: the published
+ * text stays live until the update is approved and published, which replaces it in
+ * one transaction while keeping the permanent URL, reference and publication date.
+ * Every saved text is kept as an append-only snapshot (compare, preview, restore);
+ * factual corrections carry a public notice on the same release. Withdrawals keep a
+ * public notice at the same URL, and every state change is appended to the history.
  */
 if (!defined('ABSPATH')) { exit; }
 
@@ -39,6 +42,10 @@ final class SC_Media08_Press_Room {
     );
     const MODE_INDEPENDENT = 'independent';
     const MODE_OWNER_SELF = 'owner_self';
+    const CHANGE_TYPES = array(
+        'editorial' => 'Editorial update: wording, layout, formatting, images or clarity; no change to facts (public note optional)',
+        'correction' => 'Factual correction: a statement of fact changes (public correction notice required)',
+    );
     const SELF_REVIEW_LABEL = 'Approved by the institutional publisher (single-operator self-review; not independent review)';
     const ATTESTATIONS = array(
         'rights' => 'Rights and attribution',
@@ -56,9 +63,11 @@ final class SC_Media08_Press_Room {
         add_action('init', array(__CLASS__, 'ensure_roles'));
         add_filter('query_vars', array(__CLASS__, 'query_vars'));
         add_action('wp', array(__CLASS__, 'resolve_request'), 1);
+        add_action('template_redirect', array(__CLASS__, 'preview'), 0);
         add_action('template_redirect', array(__CLASS__, 'template_redirect'), 1);
         add_action('admin_menu', array(__CLASS__, 'menu'));
-        foreach (array('save','submit','approve','return','release','withdraw','correct') as $action) {
+        foreach (array('save','submit','approve','return','release','withdraw','correct',
+                       'reopen','save_update','discard_update','publish_update','restore') as $action) {
             add_action('admin_post_scec08_' . $action, array(__CLASS__, $action === 'return' ? 'return_to_author' : $action));
         }
         add_shortcode('sc_press_room', array(__CLASS__, 'render'));
@@ -199,6 +208,47 @@ final class SC_Media08_Press_Room {
         self::seo_hooks();
     }
 
+    /** Signed-in preview of any saved text, rendered with the site theme and Press styles. */
+    public static function preview_url($id, $which) {
+        return add_query_arg(array('scec_press_preview' => (int)$id, 'rev' => $which,
+            '_wpnonce' => wp_create_nonce('scec08_preview_' . (int)$id)), home_url('/'));
+    }
+
+    public static function preview() {
+        if (!isset($_GET['scec_press_preview'])) { return; }
+        $id = absint($_GET['scec_press_preview']);
+        if (!is_user_logged_in() || !self::can(self::CAP_REVIEW) ||
+            !wp_verify_nonce((string)($_GET['_wpnonce'] ?? ''), 'scec08_preview_' . $id)) {
+            wp_die('Preview not available', '', 403);
+        }
+        $p = self::post($id);
+        if (!$p) { wp_die('Not found', '', 404); }
+        $which = sanitize_key((string)($_GET['rev'] ?? 'current'));
+        $c = self::content_of($p);
+        $label = self::meta($id,'state') === 'released' ? 'published text' : 'saved draft';
+        if ($which === 'working' && ($u = self::pending($id))) {
+            $c = $u['content']; $label = 'working revision r' . (int)$u['snapshot'] . ' (not published)';
+        } elseif (ctype_digit($which) && ($s = self::snapshot_content($id, (int)$which))) {
+            $c = $s; $label = 'revision r' . (int)$which;
+        }
+        if (!defined('DONOTCACHEPAGE')) { define('DONOTCACHEPAGE', true); }
+        nocache_headers();
+        header('X-Robots-Tag: noindex, nofollow');
+        add_filter('wp_robots', 'wp_robots_no_robots');
+        $title = 'Preview: ' . $c['title'];
+        add_filter('pre_get_document_title', function () use ($title) { return $title; }, 99);
+        add_filter('rank_math/frontend/title', function () use ($title) { return $title; }, 99);
+        add_filter('rank_math/frontend/robots', function () { return array('index' => 'noindex', 'follow' => 'nofollow'); }, 99);
+        status_header(200);
+        get_header();
+        echo '<main id="primary" class="site-main scec-press-release-page">' .
+            '<p class="scec-press-notice scec-press-preview-banner" role="note" style="border:2px dashed #a00000;padding:12px 16px;max-width:860px;margin:16px auto">' .
+            '<strong>Preview: ' . esc_html($label) . '.</strong> Not public. This is how it appears in the Press Room.</p>' .
+            self::article($p, $c, 'preview') . '</main>';
+        get_footer();
+        exit;
+    }
+
     public static function template_redirect() {
         if (get_query_var('scec_press_sitemap')) {
             self::sitemap();
@@ -313,12 +363,64 @@ final class SC_Media08_Press_Room {
     /** Append-only history: one meta row per event, never updated in place. */
     private static function event($id, $action, $note = '') {
         $p = get_post($id);
-        add_post_meta($id, self::META . 'event', wp_json_encode(array(
+        // wp_slash: add_post_meta unslashes, which would corrupt JSON escapes in notes.
+        add_post_meta($id, self::META . 'event', wp_slash(wp_json_encode(array(
             'at' => gmdate('c'), 'action' => $action, 'user' => get_current_user_id(),
             'state' => (string)self::meta($id, 'state'),
             'sha256' => $p ? self::current_sha($p) : '',
             'note' => (string)$note,
-        ), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
+        ), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)));
+    }
+
+    /** The record's current (for a release: published) text. */
+    private static function content_of($p) {
+        return array('title' => $p->post_title, 'summary' => (string)self::meta($p->ID,'summary'),
+            'body' => (string)self::meta($p->ID,'body'), 'kind' => (string)self::meta($p->ID,'kind'),
+            'source_url' => (string)self::meta($p->ID,'source_url'), 'embargo' => (string)self::meta($p->ID,'embargo_until'));
+    }
+
+    public static function sha_of($c) {
+        return self::digest($c['title'], $c['summary'], $c['body'], $c['kind'], $c['source_url'], $c['embargo']);
+    }
+
+    /** Append-only text snapshots: every saved draft, working revision, restore and baseline. */
+    private static function add_snapshot($id, $c, $origin, $note = '') {
+        $n = count(get_post_meta($id, self::META . 'snapshot', false)) + 1;
+        $c = array_intersect_key($c, array_flip(array('title','summary','body','kind','source_url','embargo')));
+        add_post_meta($id, self::META . 'snapshot', wp_slash(wp_json_encode(array(
+            'n' => $n, 'at' => gmdate('c'), 'user' => get_current_user_id(), 'origin' => $origin,
+            'note' => (string)$note, 'sha256' => self::sha_of($c)) + $c, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)));
+        return $n;
+    }
+
+    public static function snapshots($id) {
+        $rows = array();
+        foreach (get_post_meta($id, self::META . 'snapshot', false) as $raw) {
+            $r = json_decode((string)$raw, true);
+            if (is_array($r)) { $rows[(int)$r['n']] = $r; }
+        }
+        ksort($rows);
+        return $rows;
+    }
+
+    private static function snapshot_content($id, $n) {
+        $rows = self::snapshots($id);
+        if (!isset($rows[$n])) { return null; }
+        return array_intersect_key($rows[$n], array_flip(array('title','summary','body','kind','source_url','embargo')));
+    }
+
+    /** Before the first in-place change, keep the published text as a snapshot. */
+    private static function ensure_baseline($id) {
+        $live = self::content_of(get_post($id));
+        $sha = self::sha_of($live);
+        foreach (self::snapshots($id) as $r) { if ($r['sha256'] === $sha) { return; } }
+        self::add_snapshot($id, $live, 'baseline', 'published text recorded before revision');
+    }
+
+    /** The working revision of a released record (not public), or null. */
+    public static function pending($id) {
+        $u = json_decode((string)get_post_meta($id, self::META . 'update', true), true);
+        return is_array($u) && isset($u['content'], $u['sha256']) ? $u : null;
     }
 
     public static function history($id) {
@@ -380,38 +482,55 @@ final class SC_Media08_Press_Room {
         if ($p && self::meta($id,'state','draft') !== 'draft') {
             self::back('locked', $id);
         }
-        $title = sanitize_text_field(wp_unslash((string)($_POST['title'] ?? '')));
-        $summary = sanitize_textarea_field(wp_unslash((string)($_POST['summary'] ?? '')));
-        $body = wp_kses_post(wp_unslash((string)($_POST['body'] ?? '')));
-        $kind = sanitize_key((string)($_POST['kind'] ?? ''));
-        $source_url = esc_url_raw(wp_unslash((string)($_POST['source_url'] ?? '')));
-        $embargo = sanitize_text_field(wp_unslash((string)($_POST['embargo_until'] ?? '')));
-        if ($title === '' || $summary === '' || trim(wp_strip_all_tags($body)) === '' ||
-            !isset(self::KINDS[$kind]) || strlen($title)>180 || strlen($summary)>900 ||
-            strlen($body)>75000 || strlen($source_url)>600 ||
-            ($source_url && (strpos($source_url, 'https://') !== 0 || !wp_http_validate_url($source_url))) ||
-            ($embargo && !preg_match('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/D', $embargo))) {
-            self::back('invalid',$id);
-        }
+        $c = self::read_form($id);
         $created = !$p;
         if (!$p) {
             $id = wp_insert_post(array('post_type'=>self::TYPE,'post_status'=>'private',
-                'post_title'=>$title,'post_author'=>get_current_user_id()),true);
+                'post_title'=>$c['title'],'post_author'=>get_current_user_id()),true);
             if (is_wp_error($id) || !$id) { self::back('save_failed'); }
-        } else {
-            $result = wp_update_post(array('ID'=>$id,'post_title'=>$title),true);
-            if (is_wp_error($result)) { self::back('save_failed',$id); }
         }
-        update_post_meta($id,self::META.'summary',$summary);
-        update_post_meta($id,self::META.'body',wp_slash($body));
-        update_post_meta($id,self::META.'kind',$kind);
-        update_post_meta($id,self::META.'source_url',$source_url);
-        update_post_meta($id,self::META.'embargo_until',$embargo);
+        if (!self::write_draft($id, $c)) { self::back('save_failed',$id); }
+        self::event($id, $created ? 'created' : 'saved', 'revision ' . (int)self::meta($id,'revision'));
+        self::back('saved',$id);
+    }
+
+    /** Validated editor fields; the same rules for drafts and working revisions. */
+    private static function read_form($id) {
+        $c = array(
+            'title' => sanitize_text_field(wp_unslash((string)($_POST['title'] ?? ''))),
+            'summary' => sanitize_textarea_field(wp_unslash((string)($_POST['summary'] ?? ''))),
+            'body' => wp_kses_post(wp_unslash((string)($_POST['body'] ?? ''))),
+            'kind' => sanitize_key((string)($_POST['kind'] ?? '')),
+            'source_url' => esc_url_raw(wp_unslash((string)($_POST['source_url'] ?? ''))),
+            'embargo' => sanitize_text_field(wp_unslash((string)($_POST['embargo_until'] ?? ''))),
+        );
+        if ($c['title'] === '' || $c['summary'] === '' || trim(wp_strip_all_tags($c['body'])) === '' ||
+            !isset(self::KINDS[$c['kind']]) || strlen($c['title'])>180 || strlen($c['summary'])>900 ||
+            strlen($c['body'])>75000 || strlen($c['source_url'])>600 ||
+            ($c['source_url'] && (strpos($c['source_url'], 'https://') !== 0 || !wp_http_validate_url($c['source_url']))) ||
+            ($c['embargo'] && !preg_match('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/D', $c['embargo']))) {
+            self::back('invalid',$id);
+        }
+        // Store the title exactly as WordPress will save it, so fingerprints match after publishing.
+        $c['title'] = wp_unslash(sanitize_post_field('post_title', wp_slash($c['title']), $id, 'db'));
+        return $c;
+    }
+
+    /** Write an unreleased draft's text as a new revision and snapshot. */
+    private static function write_draft($id, $c, $origin = 'draft', $note = '') {
+        $result = wp_update_post(array('ID'=>$id,'post_title'=>$c['title']),true);
+        if (is_wp_error($result)) { return false; }
+        update_post_meta($id,self::META.'summary',$c['summary']);
+        update_post_meta($id,self::META.'body',wp_slash($c['body']));
+        update_post_meta($id,self::META.'kind',$c['kind']);
+        update_post_meta($id,self::META.'source_url',$c['source_url']);
+        update_post_meta($id,self::META.'embargo_until',$c['embargo']);
         update_post_meta($id,self::META.'state','draft');
         update_post_meta($id,self::META.'draft_sha',self::current_sha(get_post($id)));
         update_post_meta($id,self::META.'revision',1+(int)self::meta($id,'revision',0));
-        self::event($id, $created ? 'created' : 'saved', 'revision ' . (int)self::meta($id,'revision'));
-        self::back('saved',$id);
+        self::add_snapshot($id, self::content_of(get_post($id)), $origin,
+            trim('revision ' . (int)self::meta($id,'revision') . ' ' . $note));
+        return true;
     }
 
     public static function submit() {
@@ -519,6 +638,154 @@ final class SC_Media08_Press_Room {
         self::back('released',$id);
     }
 
+    /** Edit an unreleased record that is in review or approved: back to draft, approval cleared. */
+    public static function reopen() {
+        $id=absint($_POST['id'] ?? 0);
+        self::admin_check('scec08_reopen',$id,self::CAP_AUTHOR);
+        $p=self::post($id);
+        if (!$p || !in_array(self::meta($id,'state'), array('in_review','approved'), true)) { self::back('invalid_state',$id); }
+        foreach (array('submitted_sha','approved_sha','reviewer_id','approval_mode','approved_at','attestations') as $k) {
+            delete_post_meta($id,self::META.$k);
+        }
+        update_post_meta($id,self::META.'state','draft');
+        self::event($id, 'reopened', 'returned to draft for editing; approval cleared');
+        self::back('reopened',$id);
+    }
+
+    /** Save a working revision of a released record. The published text stays live. */
+    public static function save_update() {
+        $id=absint($_POST['id'] ?? 0);
+        self::admin_check('scec08_save_update',$id,self::CAP_AUTHOR);
+        $p=self::post($id);
+        if (!$p || self::meta($id,'state')!=='released') { self::back('invalid_state',$id); }
+        $c = self::read_form($id);
+        $c['embargo'] = (string)self::meta($id,'embargo_until'); // fixed once released
+        // Browsers submit CRLF line breaks and the visual editor drops trailing whitespace;
+        // keep the published body byte-for-byte when those are the only differences.
+        $live = (string)self::meta($id,'body');
+        $norm = function ($b) { return rtrim(str_replace("\r\n", "\n", $b)); };
+        if ($norm($c['body']) === $norm($live)) { $c['body'] = $live; }
+        if (hash_equals(self::current_sha($p), self::sha_of($c))) { self::back('no_changes',$id); }
+        self::stage_update($id, $c, 'update');
+        self::back('update_saved',$id);
+    }
+
+    private static function stage_update($id, $c, $origin, $note = '') {
+        self::ensure_baseline($id);
+        $n = self::add_snapshot($id, $c, $origin, $note);
+        $sha = self::sha_of($c);
+        update_post_meta($id, self::META.'update', wp_slash(wp_json_encode(array(
+            'content' => $c, 'sha256' => $sha, 'snapshot' => $n, 'by' => get_current_user_id(), 'at' => gmdate('c'),
+        ), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)));
+        self::event($id, 'update_saved', trim('working revision r' . $n . ' sha256 ' . $sha . ' ' . $note));
+    }
+
+    public static function discard_update() {
+        $id=absint($_POST['id'] ?? 0);
+        self::admin_check('scec08_discard_update',$id,self::CAP_AUTHOR);
+        $u = self::post($id) ? self::pending($id) : null;
+        if (!$u) { self::back('no_update',$id); }
+        delete_post_meta($id, self::META.'update');
+        self::event($id, 'update_discarded', 'working revision r' . (int)$u['snapshot'] . ' discarded; published text unchanged');
+        self::back('update_discarded',$id);
+    }
+
+    /**
+     * Approve and publish the working revision in place. Same review rule as a release
+     * (independent, or the configured owner's declared self-review), the four attestations,
+     * the exact working fingerprint, and a change type. Replaces the published text in one
+     * transaction; URL, reference and publication date are kept.
+     */
+    public static function publish_update() {
+        $id=absint($_POST['id'] ?? 0);
+        self::admin_check('scec08_publish_update',$id,self::CAP_PUBLISH);
+        $p=self::post($id);
+        if (!$p || self::meta($id,'state')!=='released') { self::back('invalid_state',$id); }
+        $u=self::pending($id);
+        if (!$u) { self::back('no_update',$id); }
+        if (!hash_equals((string)$u['sha256'], (string)($_POST['update_sha'] ?? '')) ||
+            !hash_equals((string)$u['sha256'], self::sha_of($u['content']))) {
+            self::back('update_changed',$id);
+        }
+        $me=get_current_user_id();
+        $author=(int)$u['by'];
+        $mode=self::MODE_INDEPENDENT;
+        if (!$author || $author===$me) {
+            if (!$author || $me !== self::single_operator_owner()) { self::back('independent_review_required',$id); }
+            if (($_POST['owner_self_approval'] ?? '') !== '1') { self::back('self_review_declaration_required',$id); }
+            $mode=self::MODE_OWNER_SELF;
+        }
+        foreach (array_keys(self::ATTESTATIONS) as $check) {
+            if (($_POST['check_'.$check] ?? '') !== '1') { self::back('review_incomplete',$id); }
+        }
+        $type = sanitize_key((string)($_POST['change_type'] ?? ''));
+        if (!isset(self::CHANGE_TYPES[$type])) { self::back('change_type_required',$id); }
+        $note = sanitize_textarea_field(wp_unslash((string)($_POST['public_note'] ?? '')));
+        if (strlen($note) > 500) { self::back('note_too_long',$id); }
+        if ($type === 'correction' && $note === '') { self::back('correction_notice_required',$id); }
+        self::ensure_baseline($id);
+        $previous = self::current_sha($p);
+        $c = $u['content'];
+        $now = gmdate('c');
+        global $wpdb;
+        // One transaction: readers see the previous published text or the new one, never a mix.
+        $wpdb->query('START TRANSACTION');
+        $result = wp_update_post(array('ID'=>$id,'post_title'=>$c['title']),true);
+        if (!is_wp_error($result)) {
+            update_post_meta($id,self::META.'summary',$c['summary']);
+            update_post_meta($id,self::META.'body',wp_slash($c['body']));
+            update_post_meta($id,self::META.'kind',$c['kind']);
+            update_post_meta($id,self::META.'source_url',$c['source_url']);
+            clean_post_cache($id);
+        }
+        if (is_wp_error($result) || !hash_equals((string)$u['sha256'], self::current_sha(get_post($id)))) {
+            $wpdb->query('ROLLBACK');
+            clean_post_cache($id);
+            self::back('update_changed',$id);
+        }
+        foreach (array('approved_sha','released_sha','submitted_sha') as $k) { update_post_meta($id,self::META.$k,$u['sha256']); }
+        update_post_meta($id,self::META.'submitted_by',$author);
+        update_post_meta($id,self::META.'reviewer_id',$me);
+        update_post_meta($id,self::META.'approval_mode',$mode);
+        update_post_meta($id,self::META.'approved_at',$now);
+        update_post_meta($id,self::META.'attestations',implode(',', array_keys(self::ATTESTATIONS)));
+        update_post_meta($id,self::META.'updated_at',$now);
+        update_post_meta($id,self::META.'updated_by',$me);
+        update_post_meta($id,self::META.'published_snapshot',(int)$u['snapshot']);
+        if ($note !== '') {
+            add_post_meta($id, self::META.'public_note', wp_slash(wp_json_encode(array('at'=>$now,'type'=>$type,'text'=>$note),
+                JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)));
+        }
+        delete_post_meta($id, self::META.'update');
+        self::event($id, $type === 'correction' ? 'correction_published' : 'update_published',
+            'published working revision r' . (int)$u['snapshot'] . '; ' . ($mode === self::MODE_OWNER_SELF
+                ? 'single-operator owner self-review, not independent review' : 'independent review') .
+            '; sha256 ' . $previous . ' -> ' . $u['sha256'] . ($note !== '' ? '; public note: ' . $note : ''));
+        $wpdb->query('COMMIT');
+        self::purge_cache();
+        self::back('update_published',$id);
+    }
+
+    /** Restore an earlier snapshot as a new revision; nothing goes public until published. */
+    public static function restore() {
+        $id=absint($_POST['id'] ?? 0);
+        self::admin_check('scec08_restore',$id,self::CAP_AUTHOR);
+        $p=self::post($id);
+        $n=absint($_POST['snapshot'] ?? 0);
+        $c=$p ? self::snapshot_content($id,$n) : null;
+        if (!$c) { self::back('not_found',$id); }
+        $state=(string)self::meta($id,'state','draft');
+        if ($state==='released') {
+            $c['embargo'] = (string)self::meta($id,'embargo_until');
+            self::stage_update($id, $c, 'restore', 'restored from r' . $n);
+            self::back('restored',$id);
+        }
+        if ($state!=='draft') { self::back('invalid_state',$id); }
+        if (!self::write_draft($id, $c, 'restore', 'restored from r' . $n)) { self::back('save_failed',$id); }
+        self::event($id, 'saved', 'revision ' . (int)self::meta($id,'revision') . ' restored from r' . $n);
+        self::back('restored',$id);
+    }
+
     /** Remove from public view while keeping a dated notice at the same URL. */
     public static function withdraw() {
         $id=absint($_POST['id'] ?? 0);
@@ -536,7 +803,8 @@ final class SC_Media08_Press_Room {
         self::back('withdrawn',$id);
     }
 
-    /** Start a correction: a NEW private draft that must pass the full review workflow again. */
+    /** Optional: a separate correction release (a NEW private draft through the full workflow).
+     *  Corrections can also be published in place with "Update published release". */
     public static function correct() {
         $id=absint($_POST['id'] ?? 0);
         self::admin_check('scec08_correct',$id,self::CAP_AUTHOR);
@@ -564,12 +832,49 @@ final class SC_Media08_Press_Room {
         return $t ? gmdate('j F Y', $t) : '';
     }
 
-    private static function meta_line($p) {
-        $parts = array(esc_html(self::KINDS[(string)self::meta($p->ID,'kind')] ?? 'Institutional release'));
+    private static function meta_line($p, $kind = null) {
+        $kind = $kind === null ? (string)self::meta($p->ID,'kind') : $kind;
+        $parts = array(esc_html(self::KINDS[$kind] ?? 'Institutional release'));
         if (self::meta($p->ID,'reference')) { $parts[] = esc_html((string)self::meta($p->ID,'reference')); }
-        $parts[] = '<time datetime="' . esc_attr((string)self::meta($p->ID,'released_at')) . '">' .
-            esc_html(self::date_label(self::meta($p->ID,'released_at'))) . '</time>';
+        $released = (string)self::meta($p->ID,'released_at');
+        $parts[] = $released ? '<time datetime="' . esc_attr($released) . '">' . esc_html(self::date_label($released)) . '</time>' : 'Not yet released';
+        $updated = (string)self::meta($p->ID,'updated_at');
+        if ($updated && $released) {
+            $parts[] = 'Updated <time datetime="' . esc_attr($updated) . '">' . esc_html(self::date_label($updated)) . '</time>';
+        }
         return '<p class="scec-press-release-meta">' . implode(' · ', $parts) . '</p>';
+    }
+
+    /** Public notes added with in-place updates: correction notices and optional update notes. */
+    private static function public_notes($p) {
+        $html = '';
+        foreach (self::notes($p->ID) as $n) {
+            $label = $n['type'] === 'correction' ? 'Correction' : 'Update';
+            $html .= '<p class="scec-press-notice scec-press-notice-' . ($n['type'] === 'correction' ? 'correction' : 'update') . '"><strong>' .
+                $label . ', <time datetime="' . esc_attr((string)$n['at']) . '">' . esc_html(self::date_label($n['at'])) . '</time>:</strong> ' .
+                esc_html((string)$n['text']) . '</p>';
+        }
+        return $html;
+    }
+
+    private static function notes($id) {
+        $notes = array();
+        foreach (get_post_meta($id, self::META . 'public_note', false) as $raw) {
+            $n = json_decode((string)$raw, true);
+            if (is_array($n) && isset($n['at'], $n['type'], $n['text'])) { $notes[] = $n; }
+        }
+        usort($notes, function ($a, $b) { return strcmp((string)$a['at'], (string)$b['at']); });
+        return $notes;
+    }
+
+    /** Release body as published: captions from the Media Library and responsive images. */
+    public static function format_body($html) {
+        $html = preg_replace_callback('/\[caption([^\]]*)\](.*?)\[\/caption\]/s', function ($m) {
+            $atts = shortcode_parse_atts($m[1]);
+            return img_caption_shortcode(is_array($atts) ? $atts : array(), $m[2]);
+        }, (string)$html);
+        $html = wp_kses_post($html);
+        return function_exists('wp_filter_content_tags') ? wp_filter_content_tags($html) : $html;
     }
 
     private static function notices($p) {
@@ -591,9 +896,10 @@ final class SC_Media08_Press_Room {
     }
 
     /** Public history: dated actions only; no user identities or private notes. */
-    private static function public_history($p) {
+    private static function public_history($p, $sha = null) {
         $labels = array('approved'=>'Approved by an independent reviewer',
             'owner_self_approved'=>self::SELF_REVIEW_LABEL,'released'=>'Released',
+            'update_published'=>'Updated','correction_published'=>'Corrected (see notice)',
             'corrected'=>'Correction issued','withdrawn'=>'Withdrawn');
         $items = '';
         foreach (self::history($p->ID) as $e) {
@@ -601,36 +907,40 @@ final class SC_Media08_Press_Room {
             $items .= '<li><time datetime="' . esc_attr((string)$e['at']) . '">' . esc_html(self::date_label($e['at'])) .
                 '</time> — ' . esc_html($labels[$e['action']]) . '</li>';
         }
-        $sha = self::current_sha($p);
+        $sha = $sha === null ? self::current_sha($p) : $sha;
         return '<section class="scec-press-history" aria-label="Release record"><h2>Release record</h2>' .
             ($items ? '<ul>' . $items . '</ul>' : '') .
             '<p>Content fingerprint (SHA-256): <code>' . esc_html($sha) . '</code></p>' .
             '<p>' . (self::meta($p->ID,'approval_mode') === self::MODE_OWNER_SELF
-                ? 'This release was approved by Sustainable Catalyst&rsquo;s institutional publisher under a single-operator editorial process: it was self-reviewed, not independently reviewed. '
-                : 'This release was approved by a reviewer other than its author. ') .
-            'Releases are never edited after release. ' .
-            'Corrections are published as separate releases; withdrawn releases keep a notice at this address.</p></section>';
+                ? 'The current text was approved by Sustainable Catalyst&rsquo;s institutional publisher under a single-operator editorial process: it was self-reviewed, not independently reviewed. '
+                : 'The current text was approved by a reviewer other than its author. ') .
+            'Published text may be revised in place; every published revision is fingerprinted and kept in the release record, ' .
+            'and factual corrections are noted on this page. Withdrawn releases keep a notice at this address.</p></section>';
     }
 
     public static function single($p) {
-        $state = self::public_state($p);
+        return self::article($p, self::content_of($p), self::public_state($p));
+    }
+
+    /** One renderer for public pages and previews, so a preview matches the published page. */
+    private static function article($p, $c, $state) {
         $room = self::press_page();
         $back = $room ? '<p class="scec-press-back"><a href="' . esc_url(get_permalink($room)) . '">← Press Room</a></p>' : '';
         if ($state === 'withdrawn') {
             return '<article class="scec-press scec-press-release scec-press-withdrawn">' . $back .
-                '<h1>Withdrawn: ' . esc_html($p->post_title) . '</h1>' . self::meta_line($p) .
+                '<h1>Withdrawn: ' . esc_html($c['title']) . '</h1>' . self::meta_line($p, $c['kind']) .
                 '<p class="scec-press-notice scec-press-notice-withdrawn"><strong>This release was withdrawn on ' .
                 esc_html(self::date_label(self::meta($p->ID,'withdrawn_at'))) . '.</strong> ' .
                 esc_html((string)self::meta($p->ID,'withdrawal_reason')) . '</p>' .
                 self::public_history($p) . '</article>';
         }
-        $source = (string)self::meta($p->ID,'source_url');
+        $source = (string)$c['source_url'];
         return '<article class="scec-press scec-press-release">' . $back .
-            '<h1>' . esc_html($p->post_title) . '</h1>' . self::meta_line($p) . self::notices($p) .
-            '<p class="scec-press-release-summary">' . esc_html((string)self::meta($p->ID,'summary')) . '</p>' .
-            '<div class="scec-press-release-body">' . wp_kses_post((string)self::meta($p->ID,'body')) . '</div>' .
+            '<h1>' . esc_html($c['title']) . '</h1>' . self::meta_line($p, $c['kind']) . self::notices($p) . self::public_notes($p) .
+            '<p class="scec-press-release-summary">' . esc_html((string)$c['summary']) . '</p>' .
+            '<div class="scec-press-release-body">' . self::format_body((string)$c['body']) . '</div>' .
             ($source ? '<p><a href="' . esc_url($source) . '" rel="noopener noreferrer">Source and background</a></p>' : '') .
-            self::public_history($p) . '</article>';
+            self::public_history($p, self::sha_of($c)) . '</article>';
     }
 
     private static function public_item($p) {
@@ -643,7 +953,7 @@ final class SC_Media08_Press_Room {
                 '<p>Withdrawn ' . esc_html(self::date_label(self::meta($p->ID,'withdrawn_at'))) . '.</p></article>';
         }
         return $html . '<h3><a href="' . esc_url($url) . '">' . esc_html($p->post_title) . '</a></h3>' .
-            self::notices($p) . '<p>' . esc_html((string)self::meta($p->ID,'summary')) . '</p>' .
+            self::notices($p) . self::public_notes($p) . '<p>' . esc_html((string)self::meta($p->ID,'summary')) . '</p>' .
             '<p><a class="scec-press-read" href="' . esc_url($url) . '">Read release</a></p></article>';
     }
 
@@ -733,8 +1043,7 @@ final class SC_Media08_Press_Room {
     public static function structured_data($p) {
         if (self::public_state($p) !== 'released') { return null; }
         $url = self::permalink($p->ID);
-        $modified = (string)self::meta($p->ID,'released_at');
-        foreach (self::history($p->ID) as $e) { if ($e['action'] === 'corrected') { $modified = (string)$e['at']; } }
+        $modified = self::last_modified($p);
         $data = array(
             '@context' => 'https://schema.org', '@type' => 'NewsArticle',
             'headline' => $p->post_title,
@@ -747,13 +1056,25 @@ final class SC_Media08_Press_Room {
             'publisher' => array('@type' => 'Organization', 'name' => get_bloginfo('name'), 'url' => home_url('/')),
             'author' => array('@type' => 'Organization', 'name' => get_bloginfo('name'), 'url' => home_url('/')),
         );
+        $corrections = array();
         $by = (int)self::meta($p->ID,'corrected_by');
         if ($by && ($c = self::post($by)) && self::public_state($c) === 'released') {
-            $data['correction'] = array('@type' => 'CorrectionComment', 'url' => self::permalink($c->ID),
+            $corrections[] = array('@type' => 'CorrectionComment', 'url' => self::permalink($c->ID),
                 'datePublished' => (string)self::meta($p->ID,'corrected_at'),
                 'text' => 'Corrected by ' . (string)self::meta($c->ID,'reference'));
         }
+        foreach (self::notes($p->ID) as $n) {
+            if ($n['type'] !== 'correction') { continue; }
+            $corrections[] = array('@type' => 'CorrectionComment', 'datePublished' => (string)$n['at'], 'text' => (string)$n['text']);
+        }
+        if ($corrections) { $data['correction'] = count($corrections) === 1 ? $corrections[0] : $corrections; }
         return $data;
+    }
+
+    private static function last_modified($p) {
+        $dates = array((string)self::meta($p->ID,'released_at'), (string)self::meta($p->ID,'updated_at'), (string)self::meta($p->ID,'corrected_at'));
+        foreach (self::history($p->ID) as $e) { if ($e['action'] === 'corrected') { $dates[] = (string)$e['at']; } }
+        return max($dates);
     }
 
     public static function json_ld() {
@@ -768,7 +1089,7 @@ final class SC_Media08_Press_Room {
         $items = array();
         foreach (self::public_records() as $p) {
             if (self::public_state($p) !== 'released') { continue; }
-            $lastmod = (string)self::meta($p->ID,'corrected_at') ?: (string)self::meta($p->ID,'released_at');
+            $lastmod = self::last_modified($p);
             $items[] = '<url><loc>' . esc_url(self::permalink($p->ID)) . '</loc><lastmod>' . esc_html($lastmod) . '</lastmod></url>';
         }
         if (!$items) {
@@ -786,7 +1107,7 @@ final class SC_Media08_Press_Room {
     public static function sitemap_index($xml) {
         $latest = '';
         foreach (self::public_records() as $p) {
-            if (self::public_state($p) === 'released') { $latest = max($latest, (string)self::meta($p->ID,'released_at')); }
+            if (self::public_state($p) === 'released') { $latest = max($latest, self::last_modified($p)); }
         }
         if ($latest === '') { return $xml; }
         return $xml . '<sitemap><loc>' . esc_url(home_url('/press/sitemap.xml')) . '</loc><lastmod>' . esc_html($latest) . '</lastmod></sitemap>';
@@ -799,18 +1120,139 @@ final class SC_Media08_Press_Room {
             array(__CLASS__, 'screen'), 'dashicons-megaphone', 58);
     }
 
-    private static function form($action,$id,$label) {
+    /** Headline, type, summary, rich-text body (WordPress editor + Media Library), source, embargo. */
+    private static function editor_fields($c, $with_embargo) {
+        echo '<table class="form-table"><tbody>';
+        echo '<tr><th><label for="sc08-title">Headline</label></th><td><input required class="large-text" id="sc08-title" name="title" maxlength="180" value="'.esc_attr($c['title']).'"></td></tr>';
+        echo '<tr><th>Release type</th><td><select name="kind">';
+        foreach (self::KINDS as $k=>$label) {
+            echo '<option value="'.esc_attr($k).'" '.selected($c['kind'] ?: 'press-release',$k,false).'>'.esc_html($label).'</option>';
+        }
+        echo '</select></td></tr>';
+        echo '<tr><th><label for="sc08-summary">Summary</label></th><td><textarea required class="large-text" id="sc08-summary" name="summary" rows="3" maxlength="900">'.esc_textarea($c['summary']).'</textarea></td></tr>';
+        echo '<tr><th><label for="scec08body">Release body</label></th><td>';
+        // WordPress's own editor: Visual and HTML (Text) modes, headings, lists, links, formatting and Add Media.
+        // wpautop off so paragraphs are stored as <p> markup, matching existing releases and the fingerprint.
+        wp_editor($c['body'], 'scec08body', array('textarea_name'=>'body','media_buttons'=>true,'textarea_rows'=>20,
+            'wpautop'=>false,'drag_drop_upload'=>true,
+            // Named entities keep stored markup (e.g. &mdash;) unchanged when nothing is edited.
+            'tinymce'=>array('wordpress_adv_hidden'=>false,'entity_encoding'=>'named',
+                'entities'=>'38,amp,60,lt,62,gt,160,nbsp,8211,ndash,8212,mdash,8216,lsquo,8217,rsquo,8220,ldquo,8221,rdquo,'.
+                    '8230,hellip,8249,lsaquo,8250,rsaquo,171,laquo,187,raquo,169,copy,174,reg,8482,trade,176,deg,177,plusmn,215,times,183,middot,8226,bull',
+                'block_formats'=>'Paragraph=p;Heading 2=h2;Heading 3=h3;Heading 4=h4;Quote=blockquote;Preformatted=pre')));
+        echo '</td></tr>';
+        echo '<tr><th><label for="sc08-source">Optional verified source URL</label></th><td><input class="regular-text" type="url" id="sc08-source" name="source_url" value="'.esc_attr($c['source_url']).'"></td></tr>';
+        if ($with_embargo) {
+            echo '<tr><th><label for="sc08-embargo">Embargo (UTC)</label></th><td><input type="datetime-local" id="sc08-embargo" name="embargo_until" value="'.esc_attr($c['embargo']).'"></td></tr>';
+        }
+        echo '</tbody></table>';
+    }
+
+    /** The working revision of a released record: preview, compare, publish in place or discard. */
+    private static function pending_panel($p, $owner, $author) {
+        $id = $p->ID;
+        $u = self::pending($id);
+        if (!$u) { return; }
+        $by = get_userdata((int)$u['by']);
+        echo '<div style="border-left:4px solid #b60000;background:#fff;padding:12px 16px;margin:16px 0;max-width:900px">';
+        echo '<h3>Working revision r'.(int)$u['snapshot'].' (not public)</h3><p>Saved '.esc_html((string)$u['at']).' by '.
+            esc_html($by ? $by->display_name : '#'.(int)$u['by']).' · SHA-256 <code>'.esc_html(substr($u['sha256'],0,16)).'…</code>. The published version remains live until you publish this update.</p>';
+        echo '<p><a class="button" target="_blank" rel="noopener" href="'.esc_url(self::preview_url($id,'working')).'">Preview working revision</a> ';
+        echo '<a class="button" href="'.esc_url(add_query_arg(array('compare_from'=>'live','compare_to'=>'working'),self::post_url($id))).'">Compare with published</a> ';
+        if ($author) { echo '<a class="button" href="'.esc_url(add_query_arg('edit','1',self::post_url($id))).'">Continue editing</a>'; }
+        echo '</p>';
+        if (self::can(self::CAP_PUBLISH)) {
+            $me = get_current_user_id();
+            if ($me === (int)$u['by']) {
+                if ($me === $owner) {
+                    echo '<p><strong>Single-operator self-review.</strong> Publishing your own revision records an owner self-review, disclosed publicly; it is not independent review.</p>';
+                    self::form('self_publish_update',$id,'Approve and publish update (self-review)');
+                } else {
+                    echo '<p><strong>Independent review required:</strong> another publisher must approve and publish your revision.</p>';
+                }
+            } else {
+                self::form('publish_update',$id,'Approve and publish update');
+            }
+        }
+        if ($author) { self::form('discard_update',$id,'Discard working revision'); }
+        echo '</div>';
+    }
+
+    /** Saved texts (append-only): preview, compare and restore as a new revision. */
+    private static function revisions_panel($p, $author) {
+        $id = $p->ID;
+        $rows = self::snapshots($id);
+        $from = sanitize_key((string)($_GET['compare_from'] ?? ''));
+        $to = sanitize_key((string)($_GET['compare_to'] ?? ''));
+        if ($from !== '' && $to !== '') {
+            $a = self::compare_content($p, $from); $b = self::compare_content($p, $to);
+            if ($a && $b) {
+                echo '<h2>Comparison: '.esc_html($from).' → '.esc_html($to).'</h2><div style="background:#fff;max-width:1100px">';
+                $any = false;
+                foreach (array('title'=>'Headline','summary'=>'Summary','body'=>'Body','kind'=>'Type','source_url'=>'Source URL') as $k=>$label) {
+                    $ta = $k === 'body' ? self::diff_lines($a[$k]) : (string)$a[$k];
+                    $tb = $k === 'body' ? self::diff_lines($b[$k]) : (string)$b[$k];
+                    $d = wp_text_diff($ta, $tb, array('title'=>$label, 'show_split_view'=>true));
+                    if ($d) { echo $d; $any = true; }
+                }
+                if (!$any) { echo '<p>No differences.</p>'; }
+                echo '</div>';
+            }
+        }
+        if (!$rows) { return; }
+        $live = self::current_sha($p);
+        echo '<h2>Revisions</h2><table class="widefat striped"><thead><tr><th>Rev</th><th>UTC</th><th>User</th><th>Origin</th><th>SHA-256</th><th>Note</th><th>Actions</th></tr></thead><tbody>';
+        foreach (array_reverse($rows, true) as $n=>$r) {
+            $usr = get_userdata((int)$r['user']);
+            echo '<tr><td>r'.(int)$n.($r['sha256'] === $live ? ' <strong>(current)</strong>' : '').'</td><td>'.esc_html((string)$r['at']).'</td><td>'.
+                esc_html($usr ? $usr->display_name : '#'.(int)$r['user']).'</td><td>'.esc_html((string)$r['origin']).'</td><td><code>'.
+                esc_html(substr((string)$r['sha256'],0,12)).'</code></td><td>'.esc_html((string)$r['note']).'</td><td>'.
+                '<a href="'.esc_url(self::preview_url($id,(string)$n)).'" target="_blank" rel="noopener">Preview</a> · '.
+                '<a href="'.esc_url(add_query_arg(array('compare_from'=>(string)$n,'compare_to'=>'live'),self::post_url($id))).'">Compare with current</a>';
+            if ($author && in_array((string)self::meta($id,'state','draft'), array('draft','released'), true) && $r['sha256'] !== $live) {
+                self::form('restore',$id,'Restore as new revision',$n);
+            }
+            echo '</td></tr>';
+        }
+        echo '</tbody></table>';
+    }
+
+    private static function compare_content($p, $key) {
+        if ($key === 'live') { return self::content_of($p); }
+        if ($key === 'working') { $u = self::pending($p->ID); return $u ? $u['content'] : null; }
+        return ctype_digit($key) ? self::snapshot_content($p->ID, (int)$key) : null;
+    }
+
+    /** One block element per line so body comparisons are readable. */
+    private static function diff_lines($html) {
+        return trim(preg_replace('#(</(p|h[1-6]|li|ul|ol|figure|blockquote|pre|table|tr)>|<br\s*/?>)#i', "$1\n", (string)$html));
+    }
+
+    private static function form($action,$id,$label,$extra=null) {
         echo '<form method="post" action="'.esc_url(admin_url('admin-post.php')).'">';
-        $handler = $action === 'self_approve' ? 'approve' : $action;
+        $handler = $action === 'self_approve' ? 'approve' : ($action === 'self_publish_update' ? 'publish_update' : $action);
         echo '<input type="hidden" name="action" value="'.esc_attr('scec08_'.$handler).'">';
         echo '<input type="hidden" name="id" value="'.(int)$id.'">';
         wp_nonce_field('scec08_'.$handler.'_'.$id);
-        if ($action==='approve' || $action==='self_approve') {
+        if ($action==='publish_update' || $action==='self_publish_update') {
+            $u = self::pending($id);
+            echo '<input type="hidden" name="update_sha" value="'.esc_attr($u ? $u['sha256'] : '').'">';
+            echo '<fieldset><legend><strong>Type of change</strong></legend>';
+            foreach (self::CHANGE_TYPES as $k=>$type_label) {
+                echo '<p><label><input type="radio" name="change_type" value="'.esc_attr($k).'" required> '.esc_html($type_label).'</label></p>';
+            }
+            echo '</fieldset><p><label>Public note (required for a factual correction; optional otherwise; shown on the release)<br>'.
+                '<textarea name="public_note" rows="2" cols="70" maxlength="500"></textarea></label></p>';
+        }
+        if ($action==='restore') {
+            echo '<input type="hidden" name="snapshot" value="'.(int)$extra.'">';
+        }
+        if (in_array($action, array('approve','self_approve','publish_update','self_publish_update'), true)) {
             foreach (self::ATTESTATIONS as $check=>$name) {
                 echo '<p><label><input type="checkbox" name="check_'.esc_attr($check).'" value="1" required> '.esc_html($name).' confirmed</label></p>';
             }
         }
-        if ($action==='self_approve') {
+        if ($action==='self_approve' || $action==='self_publish_update') {
             echo '<p><label><input type="checkbox" name="owner_self_approval" value="1" required> I approve this exact revision as the institutional owner. '.
                 'I understand this is single-operator self-review, not independent review, and that it is recorded and disclosed as such.</label></p>';
         }
@@ -860,27 +1302,40 @@ final class SC_Media08_Press_Room {
             if (self::meta($id,'corrects')) { echo '<p>Correction of record #'.(int)self::meta($id,'corrects').'.</p>'; }
             if (self::permalink($id)) { echo '<p><strong>Permanent URL:</strong> <code>'.esc_html(self::permalink($id)).'</code> · '.esc_html((string)self::meta($id,'reference')).'</p>'; }
         }
+        $editing = $p && $state==='released' && $author && isset($_GET['edit']);
         if ($state==='draft' && $author) {
             echo '<form method="post" action="'.esc_url(admin_url('admin-post.php')).'">';
             echo '<input type="hidden" name="action" value="scec08_save"><input type="hidden" name="id" value="'.(int)$id.'">';
             wp_nonce_field('scec08_save_'.$id);
-            echo '<table class="form-table"><tbody>';
-            echo '<tr><th><label for="sc08-title">Headline</label></th><td><input required class="regular-text" id="sc08-title" name="title" maxlength="180" value="'.esc_attr($p?$p->post_title:'').'"></td></tr>';
-            echo '<tr><th>Release type</th><td><select name="kind">';
-            foreach (self::KINDS as $k=>$label) {
-                echo '<option value="'.esc_attr($k).'" '.selected((string)self::meta($id,'kind','press-release'),$k,false).'>'.esc_html($label).'</option>';
-            }
-            echo '</select></td></tr>';
-            echo '<tr><th><label for="sc08-summary">Summary</label></th><td><textarea required id="sc08-summary" name="summary" rows="3" cols="75" maxlength="900">'.esc_textarea((string)self::meta($id,'summary')).'</textarea></td></tr>';
-            echo '<tr><th><label for="sc08-body">Release body (allowed HTML)</label></th><td><textarea required id="sc08-body" name="body" rows="12" cols="80">'.esc_textarea((string)self::meta($id,'body')).'</textarea></td></tr>';
-            echo '<tr><th><label for="sc08-source">Optional verified source URL</label></th><td><input class="regular-text" type="url" id="sc08-source" name="source_url" value="'.esc_attr((string)self::meta($id,'source_url')).'"></td></tr>';
-            echo '<tr><th><label for="sc08-embargo">Embargo (UTC)</label></th><td><input type="datetime-local" id="sc08-embargo" name="embargo_until" value="'.esc_attr((string)self::meta($id,'embargo_until')).'"></td></tr>';
-            echo '</tbody></table>';
+            self::editor_fields($p ? self::content_of($p) : array('title'=>'','summary'=>'','body'=>'','kind'=>'press-release','source_url'=>'','embargo'=>''), true);
             submit_button('Save private draft'); echo '</form>';
-            if ($p) { self::form('submit',$id,'Submit for review'); }
+            if ($p) {
+                echo '<p><a class="button" target="_blank" rel="noopener" href="'.esc_url(self::preview_url($id,'current')).'">Preview saved draft</a></p>';
+                self::form('submit',$id,'Submit for review');
+            }
+        } elseif ($editing) {
+            $u = self::pending($id);
+            echo '<h3>Edit published release</h3><p>The published version stays live while you edit. Saving creates a working revision; nothing changes publicly until you approve and publish the update. The permanent URL, reference and publication date are kept.</p>';
+            echo '<form method="post" action="'.esc_url(admin_url('admin-post.php')).'">';
+            echo '<input type="hidden" name="action" value="scec08_save_update"><input type="hidden" name="id" value="'.(int)$id.'">';
+            wp_nonce_field('scec08_save_update_'.$id);
+            self::editor_fields($u ? $u['content'] : self::content_of($p), false);
+            submit_button('Save working revision'); echo '</form>';
+            echo '<p><a href="'.esc_url(self::post_url($id)).'">Cancel</a></p>';
         } elseif ($p) {
             echo '<p><strong>Headline:</strong> '.esc_html($p->post_title).'</p><p>'.esc_html((string)self::meta($id,'summary')).'</p>';
-            echo '<div style="max-width:760px;padding:20px;background:#fff;border:1px solid #ddd">'.wp_kses_post((string)self::meta($id,'body')).'</div>';
+            echo '<div style="max-width:760px;padding:20px;background:#fff;border:1px solid #ddd">'.self::format_body((string)self::meta($id,'body')).'</div>';
+            echo '<p><a class="button" target="_blank" rel="noopener" href="'.esc_url(self::preview_url($id,'current')).'">Preview</a>';
+            if ($state==='released' && $author) {
+                echo ' <a class="button button-primary" href="'.esc_url(add_query_arg('edit','1',self::post_url($id))).'">Edit release</a>';
+            }
+            if (self::permalink($id) && self::public_state($p) !== '') {
+                echo ' <a class="button" target="_blank" rel="noopener" href="'.esc_url(self::permalink($id)).'">View public page</a>';
+            }
+            echo '</p>';
+            if (in_array($state, array('in_review','approved'), true) && $author) {
+                self::form('reopen',$id,'Edit release (return to draft; clears approval)');
+            }
             if ($state==='in_review' && self::can(self::CAP_REVIEW)) {
                 $me = get_current_user_id();
                 if ($me === (int)self::meta($id,'submitted_by') || $me === (int)$p->post_author) {
@@ -897,10 +1352,13 @@ final class SC_Media08_Press_Room {
                 }
             }
             if ($state==='approved' && self::can(self::CAP_PUBLISH)) { self::form('release',$id,'Release to public Press Room (feature-gated)'); }
+            if ($state==='released') { self::pending_panel($p, $owner, $author); }
             if ($state==='released' && self::can(self::CAP_PUBLISH)) { self::form('withdraw',$id,'Withdraw release'); }
-            if (in_array($state, array('released','withdrawn'), true) && $author && !self::meta($id,'corrected_by')) { self::form('correct',$id,'Start a correction (new reviewed release)'); }
-            echo '<p>Changes to submitted content require a new release record/review. Editing approved revisions in place is blocked.</p>';
+            if (in_array($state, array('released','withdrawn'), true) && $author && !self::meta($id,'corrected_by')) {
+                self::form('correct',$id,'Optional: issue a separate correction release');
+            }
         }
+        if ($p) { self::revisions_panel($p, $author); }
         if ($p) {
             if (self::meta($id,'approval_mode')) {
                 echo '<p><strong>Approval:</strong> '.esc_html(self::meta($id,'approval_mode') === self::MODE_OWNER_SELF ? self::SELF_REVIEW_LABEL : 'Independent reviewer').'</p>';

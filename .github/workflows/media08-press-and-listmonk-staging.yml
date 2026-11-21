@@ -42,6 +42,7 @@ jobs:
           php wordpress-bridge/sustainable-catalyst-engagement-communications/tests/media08-press-validation.php
           php wordpress-bridge/sustainable-catalyst-engagement-communications/tests/media081-press-room-validation.php
           php wordpress-bridge/sustainable-catalyst-engagement-communications/tests/media082-single-operator-validation.php
+          php wordpress-bridge/sustainable-catalyst-engagement-communications/tests/media083-editing-validation.php
           php -l wordpress-bridge/sustainable-catalyst-engagement-communications/tests/media081-wp-acceptance.php
           bash -n wordpress-bridge/sustainable-catalyst-engagement-communications/tests/media081-staging-acceptance.sh
           php wordpress-bridge/sustainable-catalyst-engagement-communications/tests/media07-validation.php
