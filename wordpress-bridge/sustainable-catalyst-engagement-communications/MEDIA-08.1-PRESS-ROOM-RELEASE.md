@@ -10,7 +10,7 @@ published `/press/` page contains `[sc_press_room]`.
 | PR #24 Press renderer (8.8.3) | superseded | `render_press` / `[sc_press]` Media hub already in main; reused as the Press Room landing |
 | PR #30 MEDIA-07 Newsletter Studio (8.9.1) | all commits in main | unchanged |
 | PR #32 MEDIA-08 Press Room (8.9.2) | all commits in main | extended in place (this release) |
-| PR #34 MEDIA-07.3 at `5f361a9` | **deployed build 8.9.3**, not in main | `media07-studio.php/.js` carried from `5f361a9` unchanged (staging bridge dormant unless configured) |
+| PR #34 MEDIA-07.3 at `5f361a9` | **deployed build 8.9.3**, not in main | **Not carried.** Its listmonk staging sync adds `wp_safe_remote_post` to Newsletter Studio, which main's no-delivery contract forbids; #34 relaxed that contract on its own unmerged branch. In production the sync was never configured or used (no `SCEC_MEDIA07_STUDIO_BRIDGE_*` constants, no staging receipts), so 8.9.5 removes dormant code only. It can return through #34's own review. |
 | PR #34 later Gate D commits (8.9.4) | not deployed, not in main | not included; remains its own review |
 | MEDIA-09 (#36–#39) `[sc_press_inquiry]` | in main | preserved; inert unless `SCEC_MEDIA09_PRESS_URL` is defined |
 
