@@ -19,7 +19,7 @@ final class SC_Media08_Press_Room {
     const TYPE = 'scec_press_release';
     const META = '_scec_media08_';
     const PAGE = 'scec-media08';
-    const REWRITE_VERSION = '8.9.5-2';
+    const REWRITE_VERSION = '8.9.7-1';
     const REWRITE_OPTION = 'scec_media08_rewrite_version';
     const ROLE = 'scec_press_reviewer';
     // Least-privilege capabilities. Administrators hold all three; the Press
@@ -147,12 +147,16 @@ final class SC_Media08_Press_Room {
     public static function register_routes() {
         add_rewrite_rule('^press/([0-9]{4})/([a-z0-9-]{1,90})/?$',
             'index.php?scec_press_year=$matches[1]&scec_press_slug=$matches[2]', 'top');
-        // Not *-sitemap.xml: Rank Math's `([^/]+?)-sitemap.xml` rule would capture it.
-        add_rewrite_rule('^press/releases\.xml$', 'index.php?scec_press_sitemap=1', 'top');
+        // /press/sitemap.xml: hosts commonly serve missing *.xml as static 404s unless the name
+        // contains "sitemap", and Rank Math's root-level `([^/]+?)-sitemap.xml` rule cannot match a
+        // path with a slash, so this reaches WordPress and is not captured by Rank Math.
+        add_rewrite_rule('^press/sitemap\.xml$', 'index.php?scec_press_sitemap=1', 'top');
         // Flush once per version, only on a web request: under WP-CLI other plugins
         // (e.g. Rank Math's sitemap) do not register their rules, so a CLI flush drops them.
         if (get_option(self::REWRITE_OPTION) !== self::REWRITE_VERSION && !(defined('WP_CLI') && WP_CLI)) {
             flush_rewrite_rules(false);
+            // Rank Math caches the sitemap index as files, which outlive plugin upgrades.
+            self::invalidate_sitemaps();
             update_option(self::REWRITE_OPTION, self::REWRITE_VERSION, false);
         }
     }
@@ -359,9 +363,13 @@ final class SC_Media08_Press_Room {
     private static function purge_cache() {
         // Endurance/nginx page cache on the production host; harmless elsewhere.
         do_action('epc_purge');
-        // Rank Math caches its sitemap index. Invalidate it directly (its watcher only runs
-        // when the sitemap module is loaded, which is not the case under WP-CLI).
-        if (class_exists('\\RankMath\\Sitemap\\Cache')) { \RankMath\Sitemap\Cache::invalidate_storage('1'); }
+        self::invalidate_sitemaps();
+    }
+
+    private static function invalidate_sitemaps() {
+        // Rank Math caches sitemaps as files. Clear all of them directly: typed invalidation only removes
+        // files listed in its cache-file index, and its watcher does not run under WP-CLI. Releases are rare.
+        if (class_exists('\\RankMath\\Sitemap\\Cache')) { \RankMath\Sitemap\Cache::invalidate_storage(); }
     }
 
     public static function save() {
@@ -781,7 +789,7 @@ final class SC_Media08_Press_Room {
             if (self::public_state($p) === 'released') { $latest = max($latest, (string)self::meta($p->ID,'released_at')); }
         }
         if ($latest === '') { return $xml; }
-        return $xml . '<sitemap><loc>' . esc_url(home_url('/press/releases.xml')) . '</loc><lastmod>' . esc_html($latest) . '</lastmod></sitemap>';
+        return $xml . '<sitemap><loc>' . esc_url(home_url('/press/sitemap.xml')) . '</loc><lastmod>' . esc_html($latest) . '</lastmod></sitemap>';
     }
 
     // ---------------------------------------------------------------- admin

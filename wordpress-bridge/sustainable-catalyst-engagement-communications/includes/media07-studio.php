@@ -67,9 +67,9 @@ final class SC_Media07_Studio {
         wp_enqueue_script('scec07-mjml', $mjml_js,
             array('scec07-grapesjs'), '1.0.8', true);
         wp_enqueue_style('scec07-ui', $base . 'assets/media07-studio.css',
-            array('scec07-grapesjs'), '8.9.6');
+            array('scec07-grapesjs'), '8.9.7');
         wp_enqueue_script('scec07-ui', $base . 'assets/media07-studio.js',
-            array('scec07-mjml'), '8.9.6', true);
+            array('scec07-mjml'), '8.9.7', true);
         wp_enqueue_media();
         wp_add_inline_script('scec07-ui', 'window.SCEC07_BOOT = ' .
             wp_json_encode(array(
