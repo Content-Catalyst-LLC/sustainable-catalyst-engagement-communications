@@ -7,6 +7,8 @@
  *   private  - flag off, no /press/ page: authoring, review rules, release blocked
  *   gated    - /press/ page published, flag still off: release still blocked
  *   public   - flag on: release, permanent URL, correction, withdrawal, embargo, tamper
+ *   single   - SCEC_MEDIA08_SINGLE_OPERATOR_OWNER set: owner self-review, positive and negative
+ *   single_off - owner constant removed/non-admin: releases kept, new self-approval refused
  * Writes state for the HTTP checks to the file named by MEDIA081_STATE.
  */
 if (!defined('WP_CLI') || (defined('WP_ENVIRONMENT_TYPE') && WP_ENVIRONMENT_TYPE === 'production') ||
@@ -157,6 +159,79 @@ if ($phase === 'public') {
     ck($sd['@type'] === 'NewsArticle' && $sd['url'] === $url && !empty($sd['datePublished']), 'NewsArticle structured data for the original');
     $media = do_shortcode('[sc_media]');
     ck(strpos($media, home_url('/press/')) !== false, 'Media page Press & News links to /press/ after launch');
+}
+
+if ($phase === 'single') {
+    // Single-operator mode: SCEC_MEDIA08_SINGLE_OPERATOR_OWNER = staging-admin.
+    $admin2 = (int)get_user_by('login', 'staging-admin2')->ID;
+    $all = array('check_rights' => '1', 'check_source' => '1', 'check_privacy' => '1', 'check_institutional' => '1');
+    ck($R::single_operator_owner() === $admin, 'single-operator owner configured');
+    list($n, $id) = act('save', $admin, draft('SYNTHETIC owner release'));
+    act('submit', $admin, array('id' => $id));
+    $sha = (string)get_post_meta($id, $M . 'submitted_sha', true);
+    list($n) = act('approve', $admin, array('id' => $id) + $all);
+    ck($n === 'self_review_declaration_required' && st($id) === 'in_review', 'owner self-approval needs the explicit declaration');
+    list($n) = act('approve', $admin, array('id' => $id, 'owner_self_approval' => '1', 'check_rights' => '1', 'check_source' => '1', 'check_privacy' => '1'));
+    ck($n === 'review_incomplete' && st($id) === 'in_review', 'owner self-approval still needs all four attestations');
+    // Forged request: wrong nonce is refused before any state change.
+    wp_set_current_user($admin);
+    $_POST = $_REQUEST = array('id' => $id, 'owner_self_approval' => '1', '_wpnonce' => wp_create_nonce('scec08_approve_999999')) + $all;
+    try { do_action('admin_post_scec08_approve'); $forged = 'no_redirect'; } catch (Media081Redirect $e) { $forged = $e->getMessage(); }
+    ck(strpos($forged, 'die:') === 0 && st($id) === 'in_review', 'self-approval with a forged nonce refused (CSRF)');
+    list($n) = act('approve', $rev, array('id' => $id, 'owner_self_approval' => '1') + $all);
+    ck($n === 'approved' && get_post_meta($id, $M . 'approval_mode', true) === 'independent', 'a separate reviewer approval stays independent');
+    // Reset that record and use a fresh one for the self-review path.
+    list($n, $own) = act('save', $admin, draft('SYNTHETIC single operator release'));
+    act('submit', $admin, array('id' => $own));
+    $sha = (string)get_post_meta($own, $M . 'submitted_sha', true);
+    list($n) = act('approve', $admin, array('id' => $own, 'owner_self_approval' => '1') + $all);
+    ck($n === 'approved' && st($own) === 'approved', 'owner self-approves with declaration and attestations');
+    ck(get_post_meta($own, $M . 'approval_mode', true) === 'owner_self' && (int)get_post_meta($own, $M . 'reviewer_id', true) === $admin &&
+        get_post_meta($own, $M . 'approved_sha', true) === $sha && get_post_meta($own, $M . 'approved_at', true) !== '', 'self-approval records mode, identity, time and fingerprint');
+    $ev = $R::history($own); $last = end($ev);
+    ck($last['action'] === 'owner_self_approved' && (int)$last['user'] === $admin && $last['sha256'] === $sha &&
+        strpos($last['note'], 'not independent review') !== false && strpos($last['note'], 'decision: approved') !== false, 'history records the owner decision as self-review');
+    // Non-owner administrator cannot self-approve.
+    list($n, $o2) = act('save', $admin2, draft('SYNTHETIC second admin release'));
+    act('submit', $admin2, array('id' => $o2));
+    list($n) = act('approve', $admin2, array('id' => $o2, 'owner_self_approval' => '1') + $all);
+    ck($n === 'independent_review_required' && st($o2) === 'in_review', 'non-owner administrator cannot self-approve');
+    list($n) = act('approve', $rev, array('id' => $own, 'owner_self_approval' => '1') + $all);
+    ck($n === 'invalid_state', 'approved record cannot be re-approved');
+    list($n) = act('release', $rev, array('id' => $own));
+    ck($n === 'die:Not authorized', 'reviewer role still cannot release');
+    list($n) = act('release', $admin, array('id' => $own));
+    ck($n === 'released' && $R::public_state(get_post($own)) === 'released', 'owner-approved release goes public');
+    $html = $R::single(get_post($own));
+    ck(strpos($html, 'single-operator self-review; not independent review') !== false && strpos($html, 'self-reviewed, not independently reviewed') !== false,
+        'public page discloses self-review');
+    ck(strpos($html, 'Approved by an independent reviewer') === false && strpos($html, 'approved by a reviewer other than its author') === false,
+        'public page never calls self-review independent');
+    ck(strpos($R::single(get_post($S['first'])), 'Approved by an independent reviewer') !== false, 'independent releases keep their label');
+    $body = get_post_meta($own, $M . 'body', true);
+    update_post_meta($own, $M . 'body', $body . '<p>Silent edit</p>');
+    ck($R::public_state(get_post($own)) === '', 'silently edited owner release leaves public view');
+    update_post_meta($own, $M . 'body', $body);
+    list($n, $c) = act('correct', $admin, array('id' => $own));
+    ck($n === 'correction_draft' && st($c) === 'draft', 'owner release can be corrected through a new record');
+    // An owner-approved record left unreleased, for the mode-off phase.
+    list($n, $pend) = act('save', $admin, draft('SYNTHETIC pending owner release'));
+    act('submit', $admin, array('id' => $pend));
+    act('approve', $admin, array('id' => $pend, 'owner_self_approval' => '1') + $all);
+    ck(st($pend) === 'approved', 'second owner-approved record pending');
+    $S['owner'] = $own; $S['owner_url'] = $R::permalink($own); $S['owner_pending'] = $pend;
+}
+
+if ($phase === 'single_off') {
+    // SCEC_MEDIA08_SINGLE_OPERATOR_OWNER removed (or pointed at a non-administrator).
+    ck($R::single_operator_owner() === 0, 'single-operator mode off');
+    ck($R::public_state(get_post($S['owner'])) === 'released', 'already released owner-approved release stays public');
+    list($n) = act('release', $admin, array('id' => $S['owner_pending']));
+    ck($n === 'release_blocked' && st($S['owner_pending']) === 'approved', 'unreleased self-approval cannot be released once the mode is off');
+    list($n, $x) = act('save', $admin, draft('SYNTHETIC mode off release'));
+    act('submit', $admin, array('id' => $x));
+    list($n) = act('approve', $admin, array('id' => $x, 'owner_self_approval' => '1', 'check_rights' => '1', 'check_source' => '1', 'check_privacy' => '1', 'check_institutional' => '1'));
+    ck($n === 'independent_review_required', 'self-approval refused when the mode is off');
 }
 
 if ($phase === 'tamper') {
