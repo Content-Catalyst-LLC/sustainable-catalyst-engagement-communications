@@ -25,6 +25,9 @@ jobs:
           php wordpress-bridge/sustainable-catalyst-engagement-communications/tests/media07-validation.php
           php -l wordpress-bridge/sustainable-catalyst-engagement-communications/includes/media08-press-room.php
           php wordpress-bridge/sustainable-catalyst-engagement-communications/tests/media08-press-validation.php
+          php wordpress-bridge/sustainable-catalyst-engagement-communications/tests/media081-press-room-validation.php
+          php -l wordpress-bridge/sustainable-catalyst-engagement-communications/tests/media081-wp-acceptance.php
+          bash -n wordpress-bridge/sustainable-catalyst-engagement-communications/tests/media081-staging-acceptance.sh
       - name: Check no delivery or subscriber integration in visual editor
         run: |
           python - <<'PY'
@@ -66,19 +69,26 @@ jobs:
           test -s "$dest/grapesjs-mjml.min.js"
           sha256sum "$dest"/*.js > "$GITHUB_WORKSPACE/media07-vendor-sha256.txt"
       - name: Build installable WordPress plugin ZIP
+        id: package
         run: |
           set -euo pipefail
+          # Name the package from the plugin header so it can never disagree with the code.
+          version="$(sed -n 's/^ \* Version: *//p' wordpress-bridge/sustainable-catalyst-engagement-communications/sustainable-catalyst-engagement-communications.php)"
+          test -n "$version"
+          name="scec-media-and-newsletter-studio-$version"
+          echo "name=$name" >> "$GITHUB_OUTPUT"
           cd wordpress-bridge
-          zip -qr "$GITHUB_WORKSPACE/scec-media-and-newsletter-studio-8.9.2.zip" \
+          zip -qr "$GITHUB_WORKSPACE/$name.zip" \
             sustainable-catalyst-engagement-communications \
             -x '*/tests/*'
-          unzip -t "$GITHUB_WORKSPACE/scec-media-and-newsletter-studio-8.9.2.zip" | tail -1
-          sha256sum "$GITHUB_WORKSPACE/scec-media-and-newsletter-studio-8.9.2.zip"
+          unzip -t "$GITHUB_WORKSPACE/$name.zip" | tail -1
+          sha256sum "$GITHUB_WORKSPACE/$name.zip" | tee "$GITHUB_WORKSPACE/$name.zip.sha256"
       - uses: actions/upload-artifact@v4
         with:
-          name: scec-media-and-newsletter-studio-8.9.2
+          name: ${{ steps.package.outputs.name }}
           path: |
-            scec-media-and-newsletter-studio-8.9.2.zip
+            ${{ steps.package.outputs.name }}.zip
+            ${{ steps.package.outputs.name }}.zip.sha256
             media07-vendor-sha256.txt
           if-no-files-found: error
           retention-days: 14

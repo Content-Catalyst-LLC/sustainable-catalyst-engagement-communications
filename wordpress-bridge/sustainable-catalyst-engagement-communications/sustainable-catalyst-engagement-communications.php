@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Sustainable Catalyst — Media & Communications Bridge
  * Description: Public Media hub for newsletters, video, LinkedIn, social channels and read-only Engagement & Communications bridge.
- * Version: 8.9.2
+ * Version: 8.9.5
  * Author: Content Catalyst LLC
  * Text Domain: sc-engagement-bridge
  */
@@ -10,7 +10,7 @@ if (!defined('ABSPATH')) { exit; }
 
 final class SC_Engagement_Bridge_882 {
     const OPTION = 'sc_ec880_app_url';
-    const VERSION = '8.9.2';
+    const VERSION = '8.9.5';
     const MEDIA_OPTION = 'sc_ec_media_settings';
     const REDIRECT_OPTION = 'sc_ec_media_legacy_redirects';
 
@@ -243,6 +243,9 @@ final class SC_Engagement_Bridge_882 {
         if ($items === '') { return ''; }
         return '<nav class="scec881-public" aria-label="Existing Sustainable Catalyst public services"><div class="scec881-public-heading"><strong>Public services</strong><p>Public pages remain independent of the Engagement &amp; Communications administration system. Existing forms and submission workflows are unchanged.</p></div><div class="scec881-public-grid">' . $items . '</div></nav>';
     }
+    private static function press_room_launched() {
+        return class_exists('SC_Media08_Press_Room') && SC_Media08_Press_Room::launch_ready();
+    }
     /** Public Press landing, no backend calls or private records. */
     public static function render_press($attrs = array()) {
         self::start_assets();
@@ -255,6 +258,10 @@ final class SC_Engagement_Bridge_882 {
         $cards = '';
         foreach ($destinations as $destination) {
             $url = self::resolve_public_page($destination[2]);
+            // After public launch the Press Room's own archive is the release list.
+            if ($url === '' && $destination[0] === 'Press Releases' && self::press_room_launched()) {
+                $url = get_permalink(SC_Media08_Press_Room::press_page()) . '#scec-press-archive-title';
+            }
             $heading = '<strong>' . esc_html($destination[0]) . '</strong>';
             $description = '<span>' . esc_html($destination[1]) . '</span>';
             if ($url) {
@@ -660,7 +667,10 @@ final class SC_Engagement_Bridge_882 {
         $subscribe_url = $substack !== '' ? rtrim($substack, '/') . '/subscribe' : '';
         $feed = $substack !== '' && $options['show_feed'] === '1' && ($options['enable_discovery'] ?? '0') !== '1' ? self::render_substack_feed($substack) : '';
         $latest = self::media03_updates($options, $substack);
-        $press = self::media_public_card('Press & News', 'Official releases, public statements, and institutional announcements.', array('press-releases', 'newsroom', 'institutional-updates', 'announcements'));
+        $press_slugs = array('press-releases', 'newsroom', 'institutional-updates', 'announcements');
+        // The dedicated Press Room replaces "Not yet published" only once it is authorized for public launch.
+        if (self::press_room_launched()) { array_unshift($press_slugs, 'press'); }
+        $press = self::media_public_card('Press & News', 'Official releases, public statements, and institutional announcements.', $press_slugs);
         $events = self::media_public_card('Events & Briefings', 'Public events, webinars, presentations, and briefings.', array('events', 'webinars', 'briefings'));
         $inquiries = self::media_public_card('Media Inquiries', 'Institutional and journalist inquiries.', array('press-contact', 'media-contact', 'contact', 'contact-us'));
         ob_start(); ?>

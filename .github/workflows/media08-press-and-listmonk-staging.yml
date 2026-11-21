@@ -40,6 +40,9 @@ jobs:
           php -l wordpress-bridge/sustainable-catalyst-engagement-communications/includes/media08-press-room.php
           php -l wordpress-bridge/sustainable-catalyst-engagement-communications/sustainable-catalyst-engagement-communications.php
           php wordpress-bridge/sustainable-catalyst-engagement-communications/tests/media08-press-validation.php
+          php wordpress-bridge/sustainable-catalyst-engagement-communications/tests/media081-press-room-validation.php
+          php -l wordpress-bridge/sustainable-catalyst-engagement-communications/tests/media081-wp-acceptance.php
+          bash -n wordpress-bridge/sustainable-catalyst-engagement-communications/tests/media081-staging-acceptance.sh
           php wordpress-bridge/sustainable-catalyst-engagement-communications/tests/media07-validation.php
           node --check wordpress-bridge/sustainable-catalyst-engagement-communications/assets/media07-studio.js
       - name: Preserve legacy public Media and no-mail boundaries
@@ -61,6 +64,10 @@ jobs:
           assert "hash_equals" in press and "press_page_missing" in press
           assert "wp_safe_remote_post" not in press and "wp_remote_post" not in press
           assert "wp_mail(" not in press and "wp_mail(" not in editor
+          assert "add_role(self::ROLE, 'Press reviewer', array('read' => true, self::CAP_REVIEW => true))" in press
+          assert "wp_insert_user" not in press and "wp_create_user" not in press
+          assert "(int)$p->post_author===$me" in press
+          assert "SC_Media08_Press_Room::launch_ready()" in bridge
           print("Press shortcode routing and release-safety contract: PASS")
           PY
 
