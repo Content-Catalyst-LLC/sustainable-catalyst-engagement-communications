@@ -26,7 +26,7 @@ for id in $(w post list --name=press --post_type=page --format=ids); do w post d
 echo "== phase private (flag off, no /press/ page)"; phase private
 ok "anonymous /press/ is 404 before the page exists" '[ "$(get $URL/press/)" = 404 ]'
 ok "anonymous release route is 404 before launch" '[ "$(get $URL/press/$(date -u +%Y)/synthetic-first-release/)" = 404 ]'
-ok "press sitemap 404 before launch" '[ "$(get $URL/press/releases.xml)" = 404 ]'
+ok "press sitemap 404 before launch" '[ "$(get $URL/press/sitemap.xml)" = 404 ]'
 
 w post create --post_type=page --post_status=publish --post_title=Press --post_name=press --post_content='[sc_press_room]' --quiet
 echo "== phase gated (/press/ published, flag off)"; phase gated
@@ -49,8 +49,8 @@ ok "withdrawn page hides the body" '! has -q "SYNTHETIC corrected body"'
 ok "Press Room lists the release with its URL" '[ "$(get $URL/press/)" = 200 ] && has -q "$F"'
 ok "embargoed release not listed" '! has -q "SYNTHETIC embargoed release"'
 ok "Media page links Press & News to /press/" '[ "$(get $URL/media/)" = 200 ] && has -q "href=\"$URL/press/\""'
-ok "press sitemap lists the release, not the withdrawn one" '[ "$(get $URL/press/releases.xml)" = 200 ] && has -q "$F" && ! has -q "$C"'
-ok "sitemap index references the press sitemap" '[ "$(get $URL/sitemap_index.xml)" = 200 ] && has -q "press/releases.xml"'
+ok "press sitemap lists the release, not the withdrawn one" '[ "$(get $URL/press/sitemap.xml)" = 200 ] && has -q "$F" && ! has -q "$C"'
+ok "sitemap index references the press sitemap" '[ "$(get $URL/sitemap_index.xml)" = 200 ] && has -q "press/sitemap.xml"'
 ok "unknown release slug 404" '[ "$(get $URL/press/2026/no-such-release/)" = 404 ]'
 ok "private record not reachable by id" '[ "$(get "$URL/?p=$(st first)")" = 404 ]'
 ok "no REST exposure" '[ "$(get $URL/wp-json/wp/v2/scec_press_release)" = 404 ]'
@@ -65,7 +65,7 @@ ok "owner release page 200" '[ "$(get $O)" = 200 ]'
 ok "owner release discloses self-review" 'has -q "not independent review" && has -q "self-reviewed, not independently reviewed"'
 ok "owner release not labelled independent" '! has -q "Approved by an independent reviewer"'
 ok "owner release canonical and NewsArticle" 'has -qi "rel=\"canonical\" href=\"$O\"" && has -q "\"@type\":\"NewsArticle\""'
-ok "press sitemap lists owner release" '[ "$(get $URL/press/releases.xml)" = 200 ] && has -q "$O"'
+ok "press sitemap lists owner release" '[ "$(get $URL/press/sitemap.xml)" = 200 ] && has -q "$O"'
 w config set SCEC_MEDIA08_SINGLE_OPERATOR_OWNER "$(w user get press-reviewer --field=ID)" --raw --type=constant --quiet; sleep 3
 echo "== phase single_off (owner = non-administrator)"; phase single_off
 w config delete SCEC_MEDIA08_SINGLE_OPERATOR_OWNER --quiet; sleep 3
@@ -76,7 +76,7 @@ echo "== phase tamper"; phase tamper
 w config set SCEC_MEDIA08_PUBLIC_RELEASE false --raw --type=constant --quiet; sleep 3
 echo "== phase killswitch (flag off)"; phase killswitch
 ok "release URL 404 when the flag is off" '[ "$(get $F)" = 404 ]'
-ok "press sitemap 404 when the flag is off" '[ "$(get $URL/press/releases.xml)" = 404 ]'
+ok "press sitemap 404 when the flag is off" '[ "$(get $URL/press/sitemap.xml)" = 404 ]'
 ok "sitemap index no longer references it" '! { get $URL/sitemap_index.xml >/dev/null; has -q press-sitemap; }'
 w config delete SCEC_MEDIA08_PUBLIC_RELEASE --quiet
 rm -f /tmp/media081-body.$$

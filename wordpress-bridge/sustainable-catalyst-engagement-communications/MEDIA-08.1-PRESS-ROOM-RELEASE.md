@@ -22,8 +22,10 @@ Version 8.9.5 is above both the deployed 8.9.3 and the unmerged #34 candidate 8.
 - **SEO**: per-release `<title>`, description, canonical, robots, Open Graph (Rank Math filters when Rank Math is active,
   plain tags otherwise) and `NewsArticle` JSON-LD with `CorrectionComment` when corrected. Withdrawn releases are
   `noindex, follow` and carry no structured data.
-- **Sitemap**: `/press/releases.xml` (released, not withdrawn), referenced from the Rank Math sitemap index. Not named
-  `*-sitemap.xml`, which Rank Math's own rewrite rule would capture. Release actions invalidate Rank Math's index cache.
+- **Sitemap**: `/press/sitemap.xml` (released, not withdrawn; 8.9.7, was `/press/releases.xml`), referenced from the
+  Rank Math sitemap index. Must contain "sitemap" (production web-server rules serve other missing `.xml` as static
+  404s) and must not be a root-level `*-sitemap.xml` (Rank Math's own rule would capture it). Release actions invalidate
+  Rank Math's index cache.
 - **Corrections** are new records (`corrects` link) that go through the full submit → independent approval → release
   flow. On release the original shows a dated correction notice; its approved text is never changed.
 - **Withdrawal** keeps the permanent URL with a dated public notice and reason; body hidden; removed from the sitemap.

@@ -35,4 +35,9 @@ ck(strpos($src, "add_role(self::ROLE, 'Press reviewer', array('read' => true, se
 ck(strpos($src, 'wp_insert_user') === false && strpos($src, 'wp_create_user') === false, 'never creates user accounts');
 ck(strpos($src, "add_post_meta(\$id, self::META . 'event'") !== false, 'history is append-only rows');
 ck(strpos($src, 'wp_mail(') === false && strpos($src, 'wp_remote_') === false, 'no outbound mail or HTTP');
+// The press sitemap must reach WordPress on hosts whose server rules pass only *sitemap*.xml, and
+// must not be captured by Rank Math's root-level ([^/]+?)-sitemap([0-9]+)?.xml rule.
+ck(strpos($src, "add_rewrite_rule('^press/sitemap\\.xml$'") !== false && strpos($src, "home_url('/press/sitemap.xml')") !== false, 'press sitemap at /press/sitemap.xml');
+ck((bool)preg_match('#(robots\.txt|[a-z0-9_\-]*sitemap[a-z0-9_\.\-]*\.(xml|xsl|html)(\.gz)?)#', '/press/sitemap.xml'), 'path passes the host static-file exception');
+ck(!preg_match('#^([^/]+?)-sitemap([0-9]+)?\.xml$#', 'press/sitemap.xml'), 'path not captured by Rank Math');
 echo "MEDIA-08.1 permanent URLs, references and fingerprint: PASS\n";
