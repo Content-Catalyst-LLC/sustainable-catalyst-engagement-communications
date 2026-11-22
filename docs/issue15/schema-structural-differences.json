@@ -1,0 +1,150 @@
+{
+  "retrieved_date": "2026-10-28",
+  "comparison": {
+    "expected_original_sha256": "38f1a9fa093e72785551064e5749a7d8e3b819c5b97da3073524e6b56ee97704",
+    "production_original_sha256": "08a7bd472d4239c374ba655b2ade1844d216c3acd8a2cc1fd4fe61db885cb381",
+    "exact_equal": false,
+    "named_collection_order_equal": false,
+    "expected_table_count": 18,
+    "production_table_count": 18,
+    "differences": [
+      {
+        "kind": "constraints_attribute",
+        "path": "tables/advisory_approvals/constraints/ck_advisory_approvals_ck_advisory_approval_state/definition",
+        "expected": "CHECK (state::text = ANY (ARRAY['pending'::character varying::text, 'approved'::character varying::text, 'rejected'::character varying::text]))",
+        "production": "CHECK (state::text = ANY (ARRAY['pending'::character varying, 'approved'::character varying, 'rejected'::character varying]::text[]))"
+      },
+      {
+        "kind": "constraints_attribute",
+        "path": "tables/advisory_engagements/constraints/ck_advisory_engagements_classification/definition",
+        "expected": "CHECK (classification::text = ANY (ARRAY['internal'::character varying::text, 'confidential'::character varying::text, 'restricted'::character varying::text]))",
+        "production": "CHECK (classification::text = ANY (ARRAY['internal'::character varying, 'confidential'::character varying, 'restricted'::character varying]::text[]))"
+      },
+      {
+        "kind": "constraints_attribute",
+        "path": "tables/advisory_workflow_history/constraints/ck_advisory_workflow_history_ck_advisory_event_type/definition",
+        "expected": "CHECK (event_type::text = ANY (ARRAY['created'::character varying::text, 'approval_requested'::character varying::text, 'approval_approved'::character varying::text, 'approval_rejected'::character varying::text, 'transition'::character varying::text]))",
+        "production": "CHECK (event_type::text = ANY (ARRAY['created'::character varying, 'approval_requested'::character varying, 'approval_approved'::character varying, 'approval_rejected'::character varying, 'transition'::character varying]::text[]))"
+      },
+      {
+        "kind": "constraints_attribute",
+        "path": "tables/assessments/constraints/ck_assessments_classification/definition",
+        "expected": "CHECK (classification::text = ANY (ARRAY['internal'::character varying::text, 'confidential'::character varying::text, 'restricted'::character varying::text]))",
+        "production": "CHECK (classification::text = ANY (ARRAY['internal'::character varying, 'confidential'::character varying, 'restricted'::character varying]::text[]))"
+      },
+      {
+        "kind": "constraints_attribute",
+        "path": "tables/cases/constraints/ck_cases_classification/definition",
+        "expected": "CHECK (classification::text = ANY (ARRAY['internal'::character varying::text, 'confidential'::character varying::text, 'restricted'::character varying::text]))",
+        "production": "CHECK (classification::text = ANY (ARRAY['internal'::character varying, 'confidential'::character varying, 'restricted'::character varying]::text[]))"
+      },
+      {
+        "kind": "constraints_attribute",
+        "path": "tables/contacts/constraints/ck_contacts_classification/definition",
+        "expected": "CHECK (classification::text = ANY (ARRAY['internal'::character varying::text, 'confidential'::character varying::text, 'restricted'::character varying::text]))",
+        "production": "CHECK (classification::text = ANY (ARRAY['internal'::character varying, 'confidential'::character varying, 'restricted'::character varying]::text[]))"
+      },
+      {
+        "kind": "constraints_attribute",
+        "path": "tables/engagement_audit_log/constraints/ck_engagement_audit_log_ck_engagement_audit_log_operation/definition",
+        "expected": "CHECK (operation::text = ANY (ARRAY['created'::character varying::text, 'updated'::character varying::text, 'imported'::character varying::text]))",
+        "production": "CHECK (operation::text = ANY (ARRAY['created'::character varying, 'updated'::character varying, 'imported'::character varying]::text[]))"
+      },
+      {
+        "kind": "constraints_attribute",
+        "path": "tables/engagement_events/constraints/ck_engagement_events_classification/definition",
+        "expected": "CHECK (classification::text = ANY (ARRAY['internal'::character varying::text, 'confidential'::character varying::text, 'restricted'::character varying::text]))",
+        "production": "CHECK (classification::text = ANY (ARRAY['internal'::character varying, 'confidential'::character varying, 'restricted'::character varying]::text[]))"
+      },
+      {
+        "kind": "constraints_attribute",
+        "path": "tables/forms/constraints/ck_forms_classification/definition",
+        "expected": "CHECK (classification::text = ANY (ARRAY['internal'::character varying::text, 'confidential'::character varying::text, 'restricted'::character varying::text]))",
+        "production": "CHECK (classification::text = ANY (ARRAY['internal'::character varying, 'confidential'::character varying, 'restricted'::character varying]::text[]))"
+      },
+      {
+        "kind": "constraints_attribute",
+        "path": "tables/import_batches/constraints/ck_import_batches_mode/definition",
+        "expected": "CHECK (mode::text = ANY (ARRAY['rehearsal'::character varying::text, 'planned'::character varying::text]))",
+        "production": "CHECK (mode::text = ANY (ARRAY['rehearsal'::character varying, 'planned'::character varying]::text[]))"
+      },
+      {
+        "kind": "constraints_attribute",
+        "path": "tables/import_batches/constraints/ck_import_batches_state/definition",
+        "expected": "CHECK (state::text = ANY (ARRAY['created'::character varying::text, 'verified'::character varying::text, 'cancelled'::character varying::text]))",
+        "production": "CHECK (state::text = ANY (ARRAY['created'::character varying, 'verified'::character varying, 'cancelled'::character varying]::text[]))"
+      },
+      {
+        "kind": "constraints_attribute",
+        "path": "tables/inquiries/constraints/ck_inquiries_classification/definition",
+        "expected": "CHECK (classification::text = ANY (ARRAY['internal'::character varying::text, 'confidential'::character varying::text, 'restricted'::character varying::text]))",
+        "production": "CHECK (classification::text = ANY (ARRAY['internal'::character varying, 'confidential'::character varying, 'restricted'::character varying]::text[]))"
+      },
+      {
+        "kind": "constraints_attribute",
+        "path": "tables/newsletters/constraints/ck_newsletters_classification/definition",
+        "expected": "CHECK (classification::text = ANY (ARRAY['internal'::character varying::text, 'confidential'::character varying::text, 'restricted'::character varying::text]))",
+        "production": "CHECK (classification::text = ANY (ARRAY['internal'::character varying, 'confidential'::character varying, 'restricted'::character varying]::text[]))"
+      },
+      {
+        "kind": "constraints_attribute",
+        "path": "tables/organizations/constraints/ck_organizations_classification/definition",
+        "expected": "CHECK (classification::text = ANY (ARRAY['internal'::character varying::text, 'confidential'::character varying::text, 'restricted'::character varying::text]))",
+        "production": "CHECK (classification::text = ANY (ARRAY['internal'::character varying, 'confidential'::character varying, 'restricted'::character varying]::text[]))"
+      },
+      {
+        "kind": "constraints_attribute",
+        "path": "tables/submissions/constraints/ck_submissions_classification/definition",
+        "expected": "CHECK (classification::text = ANY (ARRAY['internal'::character varying::text, 'confidential'::character varying::text, 'restricted'::character varying::text]))",
+        "production": "CHECK (classification::text = ANY (ARRAY['internal'::character varying, 'confidential'::character varying, 'restricted'::character varying]::text[]))"
+      },
+      {
+        "kind": "constraints_attribute",
+        "path": "tables/submissions/constraints/ck_submissions_submission_privacy/definition",
+        "expected": "CHECK (classification::text = ANY (ARRAY['confidential'::character varying::text, 'restricted'::character varying::text]))",
+        "production": "CHECK (classification::text = ANY (ARRAY['confidential'::character varying, 'restricted'::character varying]::text[]))"
+      },
+      {
+        "kind": "constraints_attribute",
+        "path": "tables/support_history/constraints/ck_support_history_ck_support_history_type/definition",
+        "expected": "CHECK (event_type::text = ANY (ARRAY['created'::character varying::text, 'transition'::character varying::text, 'feedback'::character varying::text]))",
+        "production": "CHECK (event_type::text = ANY (ARRAY['created'::character varying, 'transition'::character varying, 'feedback'::character varying]::text[]))"
+      },
+      {
+        "kind": "constraints_attribute",
+        "path": "tables/surveys/constraints/ck_surveys_classification/definition",
+        "expected": "CHECK (classification::text = ANY (ARRAY['internal'::character varying::text, 'confidential'::character varying::text, 'restricted'::character varying::text]))",
+        "production": "CHECK (classification::text = ANY (ARRAY['internal'::character varying, 'confidential'::character varying, 'restricted'::character varying]::text[]))"
+      },
+      {
+        "kind": "constraints_attribute",
+        "path": "tables/tests/constraints/ck_tests_classification/definition",
+        "expected": "CHECK (classification::text = ANY (ARRAY['internal'::character varying::text, 'confidential'::character varying::text, 'restricted'::character varying::text]))",
+        "production": "CHECK (classification::text = ANY (ARRAY['internal'::character varying, 'confidential'::character varying, 'restricted'::character varying]::text[]))"
+      }
+    ],
+    "assessment": "DIFFERENCES_REQUIRE_REVIEW",
+    "sql_expression_normalization_performed": false,
+    "deployment_go": false,
+    "limitations": [
+      "No SQL expression, default, type, constraint or index rendering is silently normalized.",
+      "PostgreSQL version/search_path differences require review; a textual SQL difference is not automatically incompatibility or safety.",
+      "Matching metadata does not certify data, migration history, privileges, writers, backup, identity or privacy."
+    ]
+  },
+  "production_version_settings": {
+    "search_path": "pg_catalog, public",
+    "server_encoding": "UTF8",
+    "server_version": "16.15 (Ubuntu 16.15-0ubuntu0.24.04.1)",
+    "server_version_num": "160015",
+    "standard_conforming_strings": "on"
+  },
+  "producer_versions": {
+    "query_sha256": "e3a0d423af4304b6ed07a171cd8604a3544076345246e034f830dc883a367050",
+    "comparer_sha256": "4fa5446d44ec810a99163d47c899dcec7ac904b77943a563a28de0969fed92a0",
+    "expected_schema_sha256": "38f1a9fa093e72785551064e5749a7d8e3b819c5b97da3073524e6b56ee97704",
+    "canonical_serialization": "json.dumps(sort_keys=True,separators=(comma,colon)); named collections additionally sorted for ordering diagnosis; SQL text untouched"
+  },
+  "protected_configuration_secret_values_excluded": true,
+  "no_production_mutations": true
+}

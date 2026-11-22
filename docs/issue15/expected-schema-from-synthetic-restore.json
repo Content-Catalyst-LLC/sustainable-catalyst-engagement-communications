@@ -1,0 +1,2085 @@
+{
+  "scope": "independent restore of synthetic fixture only; no production data/config read",
+  "schema": {
+    "tables": [
+      {
+        "name": "advisory_approvals",
+        "columns": [
+          {
+            "name": "id",
+            "type": "uuid",
+            "default": null,
+            "identity": "",
+            "not_null": true,
+            "generated": ""
+          },
+          {
+            "name": "organization_id",
+            "type": "uuid",
+            "default": null,
+            "identity": "",
+            "not_null": true,
+            "generated": ""
+          },
+          {
+            "name": "engagement_id",
+            "type": "uuid",
+            "default": null,
+            "identity": "",
+            "not_null": true,
+            "generated": ""
+          },
+          {
+            "name": "requested_by",
+            "type": "character varying(120)",
+            "default": null,
+            "identity": "",
+            "not_null": true,
+            "generated": ""
+          },
+          {
+            "name": "state",
+            "type": "character varying(20)",
+            "default": null,
+            "identity": "",
+            "not_null": true,
+            "generated": ""
+          },
+          {
+            "name": "reviewed_by",
+            "type": "character varying(120)",
+            "default": null,
+            "identity": "",
+            "not_null": false,
+            "generated": ""
+          },
+          {
+            "name": "requested_at",
+            "type": "timestamp with time zone",
+            "default": null,
+            "identity": "",
+            "not_null": true,
+            "generated": ""
+          },
+          {
+            "name": "reviewed_at",
+            "type": "timestamp with time zone",
+            "default": null,
+            "identity": "",
+            "not_null": false,
+            "generated": ""
+          },
+          {
+            "name": "note",
+            "type": "character varying(2000)",
+            "default": null,
+            "identity": "",
+            "not_null": false,
+            "generated": ""
+          }
+        ],
+        "indexes": [
+          {
+            "name": "ix_advisory_approvals_tenant_engagement",
+            "definition": "CREATE INDEX ix_advisory_approvals_tenant_engagement ON public.advisory_approvals USING btree (organization_id, engagement_id)"
+          },
+          {
+            "name": "pk_advisory_approvals",
+            "definition": "CREATE UNIQUE INDEX pk_advisory_approvals ON public.advisory_approvals USING btree (id)"
+          },
+          {
+            "name": "ux_advisory_one_pending",
+            "definition": "CREATE UNIQUE INDEX ux_advisory_one_pending ON public.advisory_approvals USING btree (organization_id, engagement_id) WHERE ((state)::text = 'pending'::text)"
+          }
+        ],
+        "constraints": [
+          {
+            "name": "ck_advisory_approvals_ck_advisory_approval_state",
+            "type": "c",
+            "definition": "CHECK (state::text = ANY (ARRAY['pending'::character varying::text, 'approved'::character varying::text, 'rejected'::character varying::text]))"
+          },
+          {
+            "name": "fk_advisory_approvals_engagement_id_advisory_engagements",
+            "type": "f",
+            "definition": "FOREIGN KEY (engagement_id) REFERENCES advisory_engagements(id)"
+          },
+          {
+            "name": "fk_advisory_approvals_organization_id_organizations",
+            "type": "f",
+            "definition": "FOREIGN KEY (organization_id) REFERENCES organizations(id)"
+          },
+          {
+            "name": "pk_advisory_approvals",
+            "type": "p",
+            "definition": "PRIMARY KEY (id)"
+          }
+        ],
+        "row_security": false
+      },
+      {
+        "name": "advisory_engagements",
+        "columns": [
+          {
+            "name": "id",
+            "type": "uuid",
+            "default": null,
+            "identity": "",
+            "not_null": true,
+            "generated": ""
+          },
+          {
+            "name": "organization_id",
+            "type": "uuid",
+            "default": null,
+            "identity": "",
+            "not_null": true,
+            "generated": ""
+          },
+          {
+            "name": "schema_version",
+            "type": "character varying(30)",
+            "default": null,
+            "identity": "",
+            "not_null": true,
+            "generated": ""
+          },
+          {
+            "name": "classification",
+            "type": "character varying(16)",
+            "default": null,
+            "identity": "",
+            "not_null": true,
+            "generated": ""
+          },
+          {
+            "name": "created_at",
+            "type": "timestamp with time zone",
+            "default": null,
+            "identity": "",
+            "not_null": true,
+            "generated": ""
+          },
+          {
+            "name": "updated_at",
+            "type": "timestamp with time zone",
+            "default": null,
+            "identity": "",
+            "not_null": true,
+            "generated": ""
+          },
+          {
+            "name": "legacy_system",
+            "type": "character varying(80)",
+            "default": null,
+            "identity": "",
+            "not_null": false,
+            "generated": ""
+          },
+          {
+            "name": "legacy_object_type",
+            "type": "character varying(80)",
+            "default": null,
+            "identity": "",
+            "not_null": false,
+            "generated": ""
+          },
+          {
+            "name": "legacy_external_id",
+            "type": "character varying(255)",
+            "default": null,
+            "identity": "",
+            "not_null": false,
+            "generated": ""
+          },
+          {
+            "name": "payload",
+            "type": "jsonb",
+            "default": null,
+            "identity": "",
+            "not_null": true,
+            "generated": ""
+          }
+        ],
+        "indexes": [
+          {
+            "name": "ix_advisory_engagements_created_at",
+            "definition": "CREATE INDEX ix_advisory_engagements_created_at ON public.advisory_engagements USING btree (created_at)"
+          },
+          {
+            "name": "ix_advisory_engagements_organization_id",
+            "definition": "CREATE INDEX ix_advisory_engagements_organization_id ON public.advisory_engagements USING btree (organization_id)"
+          },
+          {
+            "name": "pk_advisory_engagements",
+            "definition": "CREATE UNIQUE INDEX pk_advisory_engagements ON public.advisory_engagements USING btree (id)"
+          },
+          {
+            "name": "uq_advisory_engagements_id_tenant",
+            "definition": "CREATE UNIQUE INDEX uq_advisory_engagements_id_tenant ON public.advisory_engagements USING btree (id, organization_id)"
+          },
+          {
+            "name": "ux_advisory_engagements_legacy_identity",
+            "definition": "CREATE UNIQUE INDEX ux_advisory_engagements_legacy_identity ON public.advisory_engagements USING btree (legacy_system, legacy_object_type, legacy_external_id) WHERE ((legacy_system IS NOT NULL) AND (legacy_object_type IS NOT NULL) AND (legacy_external_id IS NOT NULL))"
+          }
+        ],
+        "constraints": [
+          {
+            "name": "ck_advisory_engagements_classification",
+            "type": "c",
+            "definition": "CHECK (classification::text = ANY (ARRAY['internal'::character varying::text, 'confidential'::character varying::text, 'restricted'::character varying::text]))"
+          },
+          {
+            "name": "fk_advisory_engagements_organization_id_organizations",
+            "type": "f",
+            "definition": "FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE RESTRICT"
+          },
+          {
+            "name": "pk_advisory_engagements",
+            "type": "p",
+            "definition": "PRIMARY KEY (id)"
+          },
+          {
+            "name": "uq_advisory_engagements_id_tenant",
+            "type": "u",
+            "definition": "UNIQUE (id, organization_id)"
+          }
+        ],
+        "row_security": false
+      },
+      {
+        "name": "advisory_workflow_history",
+        "columns": [
+          {
+            "name": "id",
+            "type": "uuid",
+            "default": null,
+            "identity": "",
+            "not_null": true,
+            "generated": ""
+          },
+          {
+            "name": "organization_id",
+            "type": "uuid",
+            "default": null,
+            "identity": "",
+            "not_null": true,
+            "generated": ""
+          },
+          {
+            "name": "engagement_id",
+            "type": "uuid",
+            "default": null,
+            "identity": "",
+            "not_null": true,
+            "generated": ""
+          },
+          {
+            "name": "event_type",
+            "type": "character varying(40)",
+            "default": null,
+            "identity": "",
+            "not_null": true,
+            "generated": ""
+          },
+          {
+            "name": "before_status",
+            "type": "character varying(30)",
+            "default": null,
+            "identity": "",
+            "not_null": false,
+            "generated": ""
+          },
+          {
+            "name": "after_status",
+            "type": "character varying(30)",
+            "default": null,
+            "identity": "",
+            "not_null": true,
+            "generated": ""
+          },
+          {
+            "name": "actor_ref",
+            "type": "character varying(120)",
+            "default": null,
+            "identity": "",
+            "not_null": true,
+            "generated": ""
+          },
+          {
+            "name": "note",
+            "type": "character varying(2000)",
+            "default": null,
+            "identity": "",
+            "not_null": false,
+            "generated": ""
+          },
+          {
+            "name": "occurred_at",
+            "type": "timestamp with time zone",
+            "default": null,
+            "identity": "",
+            "not_null": true,
+            "generated": ""
+          }
+        ],
+        "indexes": [
+          {
+            "name": "ix_advisory_history_tenant_engagement",
+            "definition": "CREATE INDEX ix_advisory_history_tenant_engagement ON public.advisory_workflow_history USING btree (organization_id, engagement_id, occurred_at)"
+          },
+          {
+            "name": "pk_advisory_workflow_history",
+            "definition": "CREATE UNIQUE INDEX pk_advisory_workflow_history ON public.advisory_workflow_history USING btree (id)"
+          }
+        ],
+        "constraints": [
+          {
+            "name": "ck_advisory_workflow_history_ck_advisory_event_type",
+            "type": "c",
+            "definition": "CHECK (event_type::text = ANY (ARRAY['created'::character varying::text, 'approval_requested'::character varying::text, 'approval_approved'::character varying::text, 'approval_rejected'::character varying::text, 'transition'::character varying::text]))"
+          },
+          {
+            "name": "fk_advisory_workflow_history_engagement_id_advisory_engagements",
+            "type": "f",
+            "definition": "FOREIGN KEY (engagement_id) REFERENCES advisory_engagements(id)"
+          },
+          {
+            "name": "fk_advisory_workflow_history_organization_id_organizations",
+            "type": "f",
+            "definition": "FOREIGN KEY (organization_id) REFERENCES organizations(id)"
+          },
+          {
+            "name": "pk_advisory_workflow_history",
+            "type": "p",
+            "definition": "PRIMARY KEY (id)"
+          }
+        ],
+        "row_security": false
+      },
+      {
+        "name": "alembic_version",
+        "columns": [
+          {
+            "name": "version_num",
+            "type": "character varying(32)",
+            "default": null,
+            "identity": "",
+            "not_null": true,
+            "generated": ""
+          }
+        ],
+        "indexes": [
+          {
+            "name": "alembic_version_pkc",
+            "definition": "CREATE UNIQUE INDEX alembic_version_pkc ON public.alembic_version USING btree (version_num)"
+          }
+        ],
+        "constraints": [
+          {
+            "name": "alembic_version_pkc",
+            "type": "p",
+            "definition": "PRIMARY KEY (version_num)"
+          }
+        ],
+        "row_security": false
+      },
+      {
+        "name": "assessments",
+        "columns": [
+          {
+            "name": "id",
+            "type": "uuid",
+            "default": null,
+            "identity": "",
+            "not_null": true,
+            "generated": ""
+          },
+          {
+            "name": "organization_id",
+            "type": "uuid",
+            "default": null,
+            "identity": "",
+            "not_null": true,
+            "generated": ""
+          },
+          {
+            "name": "schema_version",
+            "type": "character varying(30)",
+            "default": null,
+            "identity": "",
+            "not_null": true,
+            "generated": ""
+          },
+          {
+            "name": "classification",
+            "type": "character varying(16)",
+            "default": null,
+            "identity": "",
+            "not_null": true,
+            "generated": ""
+          },
+          {
+            "name": "created_at",
+            "type": "timestamp with time zone",
+            "default": null,
+            "identity": "",
+            "not_null": true,
+            "generated": ""
+          },
+          {
+            "name": "updated_at",
+            "type": "timestamp with time zone",
+            "default": null,
+            "identity": "",
+            "not_null": true,
+            "generated": ""
+          },
+          {
+            "name": "legacy_system",
+            "type": "character varying(80)",
+            "default": null,
+            "identity": "",
+            "not_null": false,
+            "generated": ""
+          },
+          {
+            "name": "legacy_object_type",
+            "type": "character varying(80)",
+            "default": null,
+            "identity": "",
+            "not_null": false,
+            "generated": ""
+          },
+          {
+            "name": "legacy_external_id",
+            "type": "character varying(255)",
+            "default": null,
+            "identity": "",
+            "not_null": false,
+            "generated": ""
+          },
+          {
+            "name": "payload",
+            "type": "jsonb",
+            "default": null,
+            "identity": "",
+            "not_null": true,
+            "generated": ""
+          }
+        ],
+        "indexes": [
+          {
+            "name": "ix_assessments_created_at",
+            "definition": "CREATE INDEX ix_assessments_created_at ON public.assessments USING btree (created_at)"
+          },
+          {
+            "name": "ix_assessments_organization_id",
+            "definition": "CREATE INDEX ix_assessments_organization_id ON public.assessments USING btree (organization_id)"
+          },
+          {
+            "name": "pk_assessments",
+            "definition": "CREATE UNIQUE INDEX pk_assessments ON public.assessments USING btree (id)"
+          },
+          {
+            "name": "uq_assessments_id_tenant",
+            "definition": "CREATE UNIQUE INDEX uq_assessments_id_tenant ON public.assessments USING btree (id, organization_id)"
+          },
+          {
+            "name": "ux_assessments_legacy_identity",
+            "definition": "CREATE UNIQUE INDEX ux_assessments_legacy_identity ON public.assessments USING btree (legacy_system, legacy_object_type, legacy_external_id) WHERE ((legacy_system IS NOT NULL) AND (legacy_object_type IS NOT NULL) AND (legacy_external_id IS NOT NULL))"
+          }
+        ],
+        "constraints": [
+          {
+            "name": "ck_assessments_classification",
+            "type": "c",
+            "definition": "CHECK (classification::text = ANY (ARRAY['internal'::character varying::text, 'confidential'::character varying::text, 'restricted'::character varying::text]))"
+          },
+          {
+            "name": "fk_assessments_organization_id_organizations",
+            "type": "f",
+            "definition": "FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE RESTRICT"
+          },
+          {
+            "name": "pk_assessments",
+            "type": "p",
+            "definition": "PRIMARY KEY (id)"
+          },
+          {
+            "name": "uq_assessments_id_tenant",
+            "type": "u",
+            "definition": "UNIQUE (id, organization_id)"
+          }
+        ],
+        "row_security": false
+      },
+      {
+        "name": "cases",
+        "columns": [
+          {
+            "name": "id",
+            "type": "uuid",
+            "default": null,
+            "identity": "",
+            "not_null": true,
+            "generated": ""
+          },
+          {
+            "name": "organization_id",
+            "type": "uuid",
+            "default": null,
+            "identity": "",
+            "not_null": true,
+            "generated": ""
+          },
+          {
+            "name": "schema_version",
+            "type": "character varying(30)",
+            "default": null,
+            "identity": "",
+            "not_null": true,
+            "generated": ""
+          },
+          {
+            "name": "classification",
+            "type": "character varying(16)",
+            "default": null,
+            "identity": "",
+            "not_null": true,
+            "generated": ""
+          },
+          {
+            "name": "created_at",
+            "type": "timestamp with time zone",
+            "default": null,
+            "identity": "",
+            "not_null": true,
+            "generated": ""
+          },
+          {
+            "name": "updated_at",
+            "type": "timestamp with time zone",
+            "default": null,
+            "identity": "",
+            "not_null": true,
+            "generated": ""
+          },
+          {
+            "name": "legacy_system",
+            "type": "character varying(80)",
+            "default": null,
+            "identity": "",
+            "not_null": false,
+            "generated": ""
+          },
+          {
+            "name": "legacy_object_type",
+            "type": "character varying(80)",
+            "default": null,
+            "identity": "",
+            "not_null": false,
+            "generated": ""
+          },
+          {
+            "name": "legacy_external_id",
+            "type": "character varying(255)",
+            "default": null,
+            "identity": "",
+            "not_null": false,
+            "generated": ""
+          },
+          {
+            "name": "payload",
+            "type": "jsonb",
+            "default": null,
+            "identity": "",
+            "not_null": true,
+            "generated": ""
+          }
+        ],
+        "indexes": [
+          {
+            "name": "ix_cases_created_at",
+            "definition": "CREATE INDEX ix_cases_created_at ON public.cases USING btree (created_at)"
+          },
+          {
+            "name": "ix_cases_organization_id",
+            "definition": "CREATE INDEX ix_cases_organization_id ON public.cases USING btree (organization_id)"
+          },
+          {
+            "name": "pk_cases",
+            "definition": "CREATE UNIQUE INDEX pk_cases ON public.cases USING btree (id)"
+          },
+          {
+            "name": "uq_cases_id_tenant",
+            "definition": "CREATE UNIQUE INDEX uq_cases_id_tenant ON public.cases USING btree (id, organization_id)"
+          },
+          {
+            "name": "ux_cases_legacy_identity",
+            "definition": "CREATE UNIQUE INDEX ux_cases_legacy_identity ON public.cases USING btree (legacy_system, legacy_object_type, legacy_external_id) WHERE ((legacy_system IS NOT NULL) AND (legacy_object_type IS NOT NULL) AND (legacy_external_id IS NOT NULL))"
+          }
+        ],
+        "constraints": [
+          {
+            "name": "ck_cases_classification",
+            "type": "c",
+            "definition": "CHECK (classification::text = ANY (ARRAY['internal'::character varying::text, 'confidential'::character varying::text, 'restricted'::character varying::text]))"
+          },
+          {
+            "name": "fk_cases_organization_id_organizations",
+            "type": "f",
+            "definition": "FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE RESTRICT"
+          },
+          {
+            "name": "pk_cases",
+            "type": "p",
+            "definition": "PRIMARY KEY (id)"
+          },
+          {
+            "name": "uq_cases_id_tenant",
+            "type": "u",
+            "definition": "UNIQUE (id, organization_id)"
+          }
+        ],
+        "row_security": false
+      },
+      {
+        "name": "contacts",
+        "columns": [
+          {
+            "name": "id",
+            "type": "uuid",
+            "default": null,
+            "identity": "",
+            "not_null": true,
+            "generated": ""
+          },
+          {
+            "name": "organization_id",
+            "type": "uuid",
+            "default": null,
+            "identity": "",
+            "not_null": true,
+            "generated": ""
+          },
+          {
+            "name": "schema_version",
+            "type": "character varying(30)",
+            "default": null,
+            "identity": "",
+            "not_null": true,
+            "generated": ""
+          },
+          {
+            "name": "classification",
+            "type": "character varying(16)",
+            "default": null,
+            "identity": "",
+            "not_null": true,
+            "generated": ""
+          },
+          {
+            "name": "created_at",
+            "type": "timestamp with time zone",
+            "default": null,
+            "identity": "",
+            "not_null": true,
+            "generated": ""
+          },
+          {
+            "name": "updated_at",
+            "type": "timestamp with time zone",
+            "default": null,
+            "identity": "",
+            "not_null": true,
+            "generated": ""
+          },
+          {
+            "name": "legacy_system",
+            "type": "character varying(80)",
+            "default": null,
+            "identity": "",
+            "not_null": false,
+            "generated": ""
+          },
+          {
+            "name": "legacy_object_type",
+            "type": "character varying(80)",
+            "default": null,
+            "identity": "",
+            "not_null": false,
+            "generated": ""
+          },
+          {
+            "name": "legacy_external_id",
+            "type": "character varying(255)",
+            "default": null,
+            "identity": "",
+            "not_null": false,
+            "generated": ""
+          },
+          {
+            "name": "payload",
+            "type": "jsonb",
+            "default": null,
+            "identity": "",
+            "not_null": true,
+            "generated": ""
+          }
+        ],
+        "indexes": [
+          {
+            "name": "ix_contacts_created_at",
+            "definition": "CREATE INDEX ix_contacts_created_at ON public.contacts USING btree (created_at)"
+          },
+          {
+            "name": "ix_contacts_organization_id",
+            "definition": "CREATE INDEX ix_contacts_organization_id ON public.contacts USING btree (organization_id)"
+          },
+          {
+            "name": "pk_contacts",
+            "definition": "CREATE UNIQUE INDEX pk_contacts ON public.contacts USING btree (id)"
+          },
+          {
+            "name": "uq_contacts_id_tenant",
+            "definition": "CREATE UNIQUE INDEX uq_contacts_id_tenant ON public.contacts USING btree (id, organization_id)"
+          },
+          {
+            "name": "ux_contacts_legacy_identity",
+            "definition": "CREATE UNIQUE INDEX ux_contacts_legacy_identity ON public.contacts USING btree (legacy_system, legacy_object_type, legacy_external_id) WHERE ((legacy_system IS NOT NULL) AND (legacy_object_type IS NOT NULL) AND (legacy_external_id IS NOT NULL))"
+          }
+        ],
+        "constraints": [
+          {
+            "name": "ck_contacts_classification",
+            "type": "c",
+            "definition": "CHECK (classification::text = ANY (ARRAY['internal'::character varying::text, 'confidential'::character varying::text, 'restricted'::character varying::text]))"
+          },
+          {
+            "name": "fk_contacts_organization_id_organizations",
+            "type": "f",
+            "definition": "FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE RESTRICT"
+          },
+          {
+            "name": "pk_contacts",
+            "type": "p",
+            "definition": "PRIMARY KEY (id)"
+          },
+          {
+            "name": "uq_contacts_id_tenant",
+            "type": "u",
+            "definition": "UNIQUE (id, organization_id)"
+          }
+        ],
+        "row_security": false
+      },
+      {
+        "name": "engagement_audit_log",
+        "columns": [
+          {
+            "name": "id",
+            "type": "uuid",
+            "default": "gen_random_uuid()",
+            "identity": "",
+            "not_null": true,
+            "generated": ""
+          },
+          {
+            "name": "organization_id",
+            "type": "uuid",
+            "default": null,
+            "identity": "",
+            "not_null": true,
+            "generated": ""
+          },
+          {
+            "name": "record_type",
+            "type": "character varying(60)",
+            "default": null,
+            "identity": "",
+            "not_null": true,
+            "generated": ""
+          },
+          {
+            "name": "record_id",
+            "type": "uuid",
+            "default": null,
+            "identity": "",
+            "not_null": true,
+            "generated": ""
+          },
+          {
+            "name": "operation",
+            "type": "character varying(20)",
+            "default": null,
+            "identity": "",
+            "not_null": true,
+            "generated": ""
+          },
+          {
+            "name": "recorded_at",
+            "type": "timestamp with time zone",
+            "default": null,
+            "identity": "",
+            "not_null": true,
+            "generated": ""
+          }
+        ],
+        "indexes": [
+          {
+            "name": "ix_engagement_audit_org_record",
+            "definition": "CREATE INDEX ix_engagement_audit_org_record ON public.engagement_audit_log USING btree (organization_id, record_type, record_id)"
+          },
+          {
+            "name": "pk_engagement_audit_log",
+            "definition": "CREATE UNIQUE INDEX pk_engagement_audit_log ON public.engagement_audit_log USING btree (id)"
+          }
+        ],
+        "constraints": [
+          {
+            "name": "ck_engagement_audit_log_ck_engagement_audit_log_operation",
+            "type": "c",
+            "definition": "CHECK (operation::text = ANY (ARRAY['created'::character varying::text, 'updated'::character varying::text, 'imported'::character varying::text]))"
+          },
+          {
+            "name": "fk_engagement_audit_log_organization_id_organizations",
+            "type": "f",
+            "definition": "FOREIGN KEY (organization_id) REFERENCES organizations(id)"
+          },
+          {
+            "name": "pk_engagement_audit_log",
+            "type": "p",
+            "definition": "PRIMARY KEY (id)"
+          }
+        ],
+        "row_security": false
+      },
+      {
+        "name": "engagement_events",
+        "columns": [
+          {
+            "name": "id",
+            "type": "uuid",
+            "default": null,
+            "identity": "",
+            "not_null": true,
+            "generated": ""
+          },
+          {
+            "name": "organization_id",
+            "type": "uuid",
+            "default": null,
+            "identity": "",
+            "not_null": true,
+            "generated": ""
+          },
+          {
+            "name": "schema_version",
+            "type": "character varying(30)",
+            "default": null,
+            "identity": "",
+            "not_null": true,
+            "generated": ""
+          },
+          {
+            "name": "classification",
+            "type": "character varying(16)",
+            "default": null,
+            "identity": "",
+            "not_null": true,
+            "generated": ""
+          },
+          {
+            "name": "created_at",
+            "type": "timestamp with time zone",
+            "default": null,
+            "identity": "",
+            "not_null": true,
+            "generated": ""
+          },
+          {
+            "name": "updated_at",
+            "type": "timestamp with time zone",
+            "default": null,
+            "identity": "",
+            "not_null": true,
+            "generated": ""
+          },
+          {
+            "name": "legacy_system",
+            "type": "character varying(80)",
+            "default": null,
+            "identity": "",
+            "not_null": false,
+            "generated": ""
+          },
+          {
+            "name": "legacy_object_type",
+            "type": "character varying(80)",
+            "default": null,
+            "identity": "",
+            "not_null": false,
+            "generated": ""
+          },
+          {
+            "name": "legacy_external_id",
+            "type": "character varying(255)",
+            "default": null,
+            "identity": "",
+            "not_null": false,
+            "generated": ""
+          },
+          {
+            "name": "payload",
+            "type": "jsonb",
+            "default": null,
+            "identity": "",
+            "not_null": true,
+            "generated": ""
+          }
+        ],
+        "indexes": [
+          {
+            "name": "ix_engagement_events_created_at",
+            "definition": "CREATE INDEX ix_engagement_events_created_at ON public.engagement_events USING btree (created_at)"
+          },
+          {
+            "name": "ix_engagement_events_organization_id",
+            "definition": "CREATE INDEX ix_engagement_events_organization_id ON public.engagement_events USING btree (organization_id)"
+          },
+          {
+            "name": "pk_engagement_events",
+            "definition": "CREATE UNIQUE INDEX pk_engagement_events ON public.engagement_events USING btree (id)"
+          },
+          {
+            "name": "uq_engagement_events_id_tenant",
+            "definition": "CREATE UNIQUE INDEX uq_engagement_events_id_tenant ON public.engagement_events USING btree (id, organization_id)"
+          },
+          {
+            "name": "ux_engagement_events_legacy_identity",
+            "definition": "CREATE UNIQUE INDEX ux_engagement_events_legacy_identity ON public.engagement_events USING btree (legacy_system, legacy_object_type, legacy_external_id) WHERE ((legacy_system IS NOT NULL) AND (legacy_object_type IS NOT NULL) AND (legacy_external_id IS NOT NULL))"
+          }
+        ],
+        "constraints": [
+          {
+            "name": "ck_engagement_events_classification",
+            "type": "c",
+            "definition": "CHECK (classification::text = ANY (ARRAY['internal'::character varying::text, 'confidential'::character varying::text, 'restricted'::character varying::text]))"
+          },
+          {
+            "name": "fk_engagement_events_organization_id_organizations",
+            "type": "f",
+            "definition": "FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE RESTRICT"
+          },
+          {
+            "name": "pk_engagement_events",
+            "type": "p",
+            "definition": "PRIMARY KEY (id)"
+          },
+          {
+            "name": "uq_engagement_events_id_tenant",
+            "type": "u",
+            "definition": "UNIQUE (id, organization_id)"
+          }
+        ],
+        "row_security": false
+      },
+      {
+        "name": "forms",
+        "columns": [
+          {
+            "name": "id",
+            "type": "uuid",
+            "default": null,
+            "identity": "",
+            "not_null": true,
+            "generated": ""
+          },
+          {
+            "name": "organization_id",
+            "type": "uuid",
+            "default": null,
+            "identity": "",
+            "not_null": true,
+            "generated": ""
+          },
+          {
+            "name": "schema_version",
+            "type": "character varying(30)",
+            "default": null,
+            "identity": "",
+            "not_null": true,
+            "generated": ""
+          },
+          {
+            "name": "classification",
+            "type": "character varying(16)",
+            "default": null,
+            "identity": "",
+            "not_null": true,
+            "generated": ""
+          },
+          {
+            "name": "created_at",
+            "type": "timestamp with time zone",
+            "default": null,
+            "identity": "",
+            "not_null": true,
+            "generated": ""
+          },
+          {
+            "name": "updated_at",
+            "type": "timestamp with time zone",
+            "default": null,
+            "identity": "",
+            "not_null": true,
+            "generated": ""
+          },
+          {
+            "name": "legacy_system",
+            "type": "character varying(80)",
+            "default": null,
+            "identity": "",
+            "not_null": false,
+            "generated": ""
+          },
+          {
+            "name": "legacy_object_type",
+            "type": "character varying(80)",
+            "default": null,
+            "identity": "",
+            "not_null": false,
+            "generated": ""
+          },
+          {
+            "name": "legacy_external_id",
+            "type": "character varying(255)",
+            "default": null,
+            "identity": "",
+            "not_null": false,
+            "generated": ""
+          },
+          {
+            "name": "payload",
+            "type": "jsonb",
+            "default": null,
+            "identity": "",
+            "not_null": true,
+            "generated": ""
+          }
+        ],
+        "indexes": [
+          {
+            "name": "ix_forms_created_at",
+            "definition": "CREATE INDEX ix_forms_created_at ON public.forms USING btree (created_at)"
+          },
+          {
+            "name": "ix_forms_organization_id",
+            "definition": "CREATE INDEX ix_forms_organization_id ON public.forms USING btree (organization_id)"
+          },
+          {
+            "name": "pk_forms",
+            "definition": "CREATE UNIQUE INDEX pk_forms ON public.forms USING btree (id)"
+          },
+          {
+            "name": "uq_forms_id_tenant",
+            "definition": "CREATE UNIQUE INDEX uq_forms_id_tenant ON public.forms USING btree (id, organization_id)"
+          },
+          {
+            "name": "ux_forms_legacy_identity",
+            "definition": "CREATE UNIQUE INDEX ux_forms_legacy_identity ON public.forms USING btree (legacy_system, legacy_object_type, legacy_external_id) WHERE ((legacy_system IS NOT NULL) AND (legacy_object_type IS NOT NULL) AND (legacy_external_id IS NOT NULL))"
+          }
+        ],
+        "constraints": [
+          {
+            "name": "ck_forms_classification",
+            "type": "c",
+            "definition": "CHECK (classification::text = ANY (ARRAY['internal'::character varying::text, 'confidential'::character varying::text, 'restricted'::character varying::text]))"
+          },
+          {
+            "name": "fk_forms_organization_id_organizations",
+            "type": "f",
+            "definition": "FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE RESTRICT"
+          },
+          {
+            "name": "pk_forms",
+            "type": "p",
+            "definition": "PRIMARY KEY (id)"
+          },
+          {
+            "name": "uq_forms_id_tenant",
+            "type": "u",
+            "definition": "UNIQUE (id, organization_id)"
+          }
+        ],
+        "row_security": false
+      },
+      {
+        "name": "import_batches",
+        "columns": [
+          {
+            "name": "id",
+            "type": "uuid",
+            "default": null,
+            "identity": "",
+            "not_null": true,
+            "generated": ""
+          },
+          {
+            "name": "legacy_system",
+            "type": "character varying(80)",
+            "default": null,
+            "identity": "",
+            "not_null": true,
+            "generated": ""
+          },
+          {
+            "name": "mode",
+            "type": "character varying(12)",
+            "default": null,
+            "identity": "",
+            "not_null": true,
+            "generated": ""
+          },
+          {
+            "name": "state",
+            "type": "character varying(20)",
+            "default": null,
+            "identity": "",
+            "not_null": true,
+            "generated": ""
+          },
+          {
+            "name": "created_at",
+            "type": "timestamp with time zone",
+            "default": "now()",
+            "identity": "",
+            "not_null": true,
+            "generated": ""
+          }
+        ],
+        "indexes": [
+          {
+            "name": "pk_import_batches",
+            "definition": "CREATE UNIQUE INDEX pk_import_batches ON public.import_batches USING btree (id)"
+          }
+        ],
+        "constraints": [
+          {
+            "name": "ck_import_batches_mode",
+            "type": "c",
+            "definition": "CHECK (mode::text = ANY (ARRAY['rehearsal'::character varying::text, 'planned'::character varying::text]))"
+          },
+          {
+            "name": "ck_import_batches_state",
+            "type": "c",
+            "definition": "CHECK (state::text = ANY (ARRAY['created'::character varying::text, 'verified'::character varying::text, 'cancelled'::character varying::text]))"
+          },
+          {
+            "name": "pk_import_batches",
+            "type": "p",
+            "definition": "PRIMARY KEY (id)"
+          }
+        ],
+        "row_security": false
+      },
+      {
+        "name": "inquiries",
+        "columns": [
+          {
+            "name": "id",
+            "type": "uuid",
+            "default": null,
+            "identity": "",
+            "not_null": true,
+            "generated": ""
+          },
+          {
+            "name": "organization_id",
+            "type": "uuid",
+            "default": null,
+            "identity": "",
+            "not_null": true,
+            "generated": ""
+          },
+          {
+            "name": "schema_version",
+            "type": "character varying(30)",
+            "default": null,
+            "identity": "",
+            "not_null": true,
+            "generated": ""
+          },
+          {
+            "name": "classification",
+            "type": "character varying(16)",
+            "default": null,
+            "identity": "",
+            "not_null": true,
+            "generated": ""
+          },
+          {
+            "name": "created_at",
+            "type": "timestamp with time zone",
+            "default": null,
+            "identity": "",
+            "not_null": true,
+            "generated": ""
+          },
+          {
+            "name": "updated_at",
+            "type": "timestamp with time zone",
+            "default": null,
+            "identity": "",
+            "not_null": true,
+            "generated": ""
+          },
+          {
+            "name": "legacy_system",
+            "type": "character varying(80)",
+            "default": null,
+            "identity": "",
+            "not_null": false,
+            "generated": ""
+          },
+          {
+            "name": "legacy_object_type",
+            "type": "character varying(80)",
+            "default": null,
+            "identity": "",
+            "not_null": false,
+            "generated": ""
+          },
+          {
+            "name": "legacy_external_id",
+            "type": "character varying(255)",
+            "default": null,
+            "identity": "",
+            "not_null": false,
+            "generated": ""
+          },
+          {
+            "name": "payload",
+            "type": "jsonb",
+            "default": null,
+            "identity": "",
+            "not_null": true,
+            "generated": ""
+          }
+        ],
+        "indexes": [
+          {
+            "name": "ix_inquiries_created_at",
+            "definition": "CREATE INDEX ix_inquiries_created_at ON public.inquiries USING btree (created_at)"
+          },
+          {
+            "name": "ix_inquiries_organization_id",
+            "definition": "CREATE INDEX ix_inquiries_organization_id ON public.inquiries USING btree (organization_id)"
+          },
+          {
+            "name": "pk_inquiries",
+            "definition": "CREATE UNIQUE INDEX pk_inquiries ON public.inquiries USING btree (id)"
+          },
+          {
+            "name": "uq_inquiries_id_tenant",
+            "definition": "CREATE UNIQUE INDEX uq_inquiries_id_tenant ON public.inquiries USING btree (id, organization_id)"
+          },
+          {
+            "name": "ux_inquiries_legacy_identity",
+            "definition": "CREATE UNIQUE INDEX ux_inquiries_legacy_identity ON public.inquiries USING btree (legacy_system, legacy_object_type, legacy_external_id) WHERE ((legacy_system IS NOT NULL) AND (legacy_object_type IS NOT NULL) AND (legacy_external_id IS NOT NULL))"
+          }
+        ],
+        "constraints": [
+          {
+            "name": "ck_inquiries_classification",
+            "type": "c",
+            "definition": "CHECK (classification::text = ANY (ARRAY['internal'::character varying::text, 'confidential'::character varying::text, 'restricted'::character varying::text]))"
+          },
+          {
+            "name": "fk_inquiries_organization_id_organizations",
+            "type": "f",
+            "definition": "FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE RESTRICT"
+          },
+          {
+            "name": "pk_inquiries",
+            "type": "p",
+            "definition": "PRIMARY KEY (id)"
+          },
+          {
+            "name": "uq_inquiries_id_tenant",
+            "type": "u",
+            "definition": "UNIQUE (id, organization_id)"
+          }
+        ],
+        "row_security": false
+      },
+      {
+        "name": "newsletters",
+        "columns": [
+          {
+            "name": "id",
+            "type": "uuid",
+            "default": null,
+            "identity": "",
+            "not_null": true,
+            "generated": ""
+          },
+          {
+            "name": "organization_id",
+            "type": "uuid",
+            "default": null,
+            "identity": "",
+            "not_null": true,
+            "generated": ""
+          },
+          {
+            "name": "schema_version",
+            "type": "character varying(30)",
+            "default": null,
+            "identity": "",
+            "not_null": true,
+            "generated": ""
+          },
+          {
+            "name": "classification",
+            "type": "character varying(16)",
+            "default": null,
+            "identity": "",
+            "not_null": true,
+            "generated": ""
+          },
+          {
+            "name": "created_at",
+            "type": "timestamp with time zone",
+            "default": null,
+            "identity": "",
+            "not_null": true,
+            "generated": ""
+          },
+          {
+            "name": "updated_at",
+            "type": "timestamp with time zone",
+            "default": null,
+            "identity": "",
+            "not_null": true,
+            "generated": ""
+          },
+          {
+            "name": "legacy_system",
+            "type": "character varying(80)",
+            "default": null,
+            "identity": "",
+            "not_null": false,
+            "generated": ""
+          },
+          {
+            "name": "legacy_object_type",
+            "type": "character varying(80)",
+            "default": null,
+            "identity": "",
+            "not_null": false,
+            "generated": ""
+          },
+          {
+            "name": "legacy_external_id",
+            "type": "character varying(255)",
+            "default": null,
+            "identity": "",
+            "not_null": false,
+            "generated": ""
+          },
+          {
+            "name": "payload",
+            "type": "jsonb",
+            "default": null,
+            "identity": "",
+            "not_null": true,
+            "generated": ""
+          }
+        ],
+        "indexes": [
+          {
+            "name": "ix_newsletters_created_at",
+            "definition": "CREATE INDEX ix_newsletters_created_at ON public.newsletters USING btree (created_at)"
+          },
+          {
+            "name": "ix_newsletters_organization_id",
+            "definition": "CREATE INDEX ix_newsletters_organization_id ON public.newsletters USING btree (organization_id)"
+          },
+          {
+            "name": "pk_newsletters",
+            "definition": "CREATE UNIQUE INDEX pk_newsletters ON public.newsletters USING btree (id)"
+          },
+          {
+            "name": "uq_newsletters_id_tenant",
+            "definition": "CREATE UNIQUE INDEX uq_newsletters_id_tenant ON public.newsletters USING btree (id, organization_id)"
+          },
+          {
+            "name": "ux_newsletters_legacy_identity",
+            "definition": "CREATE UNIQUE INDEX ux_newsletters_legacy_identity ON public.newsletters USING btree (legacy_system, legacy_object_type, legacy_external_id) WHERE ((legacy_system IS NOT NULL) AND (legacy_object_type IS NOT NULL) AND (legacy_external_id IS NOT NULL))"
+          }
+        ],
+        "constraints": [
+          {
+            "name": "ck_newsletters_classification",
+            "type": "c",
+            "definition": "CHECK (classification::text = ANY (ARRAY['internal'::character varying::text, 'confidential'::character varying::text, 'restricted'::character varying::text]))"
+          },
+          {
+            "name": "fk_newsletters_organization_id_organizations",
+            "type": "f",
+            "definition": "FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE RESTRICT"
+          },
+          {
+            "name": "pk_newsletters",
+            "type": "p",
+            "definition": "PRIMARY KEY (id)"
+          },
+          {
+            "name": "uq_newsletters_id_tenant",
+            "type": "u",
+            "definition": "UNIQUE (id, organization_id)"
+          }
+        ],
+        "row_security": false
+      },
+      {
+        "name": "organizations",
+        "columns": [
+          {
+            "name": "id",
+            "type": "uuid",
+            "default": null,
+            "identity": "",
+            "not_null": true,
+            "generated": ""
+          },
+          {
+            "name": "organization_id",
+            "type": "uuid",
+            "default": null,
+            "identity": "",
+            "not_null": false,
+            "generated": ""
+          },
+          {
+            "name": "schema_version",
+            "type": "character varying(30)",
+            "default": null,
+            "identity": "",
+            "not_null": true,
+            "generated": ""
+          },
+          {
+            "name": "classification",
+            "type": "character varying(16)",
+            "default": null,
+            "identity": "",
+            "not_null": true,
+            "generated": ""
+          },
+          {
+            "name": "created_at",
+            "type": "timestamp with time zone",
+            "default": null,
+            "identity": "",
+            "not_null": true,
+            "generated": ""
+          },
+          {
+            "name": "updated_at",
+            "type": "timestamp with time zone",
+            "default": null,
+            "identity": "",
+            "not_null": true,
+            "generated": ""
+          },
+          {
+            "name": "legacy_system",
+            "type": "character varying(80)",
+            "default": null,
+            "identity": "",
+            "not_null": false,
+            "generated": ""
+          },
+          {
+            "name": "legacy_object_type",
+            "type": "character varying(80)",
+            "default": null,
+            "identity": "",
+            "not_null": false,
+            "generated": ""
+          },
+          {
+            "name": "legacy_external_id",
+            "type": "character varying(255)",
+            "default": null,
+            "identity": "",
+            "not_null": false,
+            "generated": ""
+          },
+          {
+            "name": "payload",
+            "type": "jsonb",
+            "default": null,
+            "identity": "",
+            "not_null": true,
+            "generated": ""
+          }
+        ],
+        "indexes": [
+          {
+            "name": "ix_organizations_created_at",
+            "definition": "CREATE INDEX ix_organizations_created_at ON public.organizations USING btree (created_at)"
+          },
+          {
+            "name": "pk_organizations",
+            "definition": "CREATE UNIQUE INDEX pk_organizations ON public.organizations USING btree (id)"
+          },
+          {
+            "name": "uq_organizations_id_tenant",
+            "definition": "CREATE UNIQUE INDEX uq_organizations_id_tenant ON public.organizations USING btree (id, organization_id)"
+          },
+          {
+            "name": "ux_organizations_legacy_identity",
+            "definition": "CREATE UNIQUE INDEX ux_organizations_legacy_identity ON public.organizations USING btree (legacy_system, legacy_object_type, legacy_external_id) WHERE ((legacy_system IS NOT NULL) AND (legacy_object_type IS NOT NULL) AND (legacy_external_id IS NOT NULL))"
+          }
+        ],
+        "constraints": [
+          {
+            "name": "ck_organizations_classification",
+            "type": "c",
+            "definition": "CHECK (classification::text = ANY (ARRAY['internal'::character varying::text, 'confidential'::character varying::text, 'restricted'::character varying::text]))"
+          },
+          {
+            "name": "ck_organizations_organization_self",
+            "type": "c",
+            "definition": "CHECK (organization_id IS NULL OR organization_id = id)"
+          },
+          {
+            "name": "pk_organizations",
+            "type": "p",
+            "definition": "PRIMARY KEY (id)"
+          },
+          {
+            "name": "uq_organizations_id_tenant",
+            "type": "u",
+            "definition": "UNIQUE (id, organization_id)"
+          }
+        ],
+        "row_security": false
+      },
+      {
+        "name": "submissions",
+        "columns": [
+          {
+            "name": "id",
+            "type": "uuid",
+            "default": null,
+            "identity": "",
+            "not_null": true,
+            "generated": ""
+          },
+          {
+            "name": "organization_id",
+            "type": "uuid",
+            "default": null,
+            "identity": "",
+            "not_null": true,
+            "generated": ""
+          },
+          {
+            "name": "schema_version",
+            "type": "character varying(30)",
+            "default": null,
+            "identity": "",
+            "not_null": true,
+            "generated": ""
+          },
+          {
+            "name": "classification",
+            "type": "character varying(16)",
+            "default": null,
+            "identity": "",
+            "not_null": true,
+            "generated": ""
+          },
+          {
+            "name": "created_at",
+            "type": "timestamp with time zone",
+            "default": null,
+            "identity": "",
+            "not_null": true,
+            "generated": ""
+          },
+          {
+            "name": "updated_at",
+            "type": "timestamp with time zone",
+            "default": null,
+            "identity": "",
+            "not_null": true,
+            "generated": ""
+          },
+          {
+            "name": "legacy_system",
+            "type": "character varying(80)",
+            "default": null,
+            "identity": "",
+            "not_null": false,
+            "generated": ""
+          },
+          {
+            "name": "legacy_object_type",
+            "type": "character varying(80)",
+            "default": null,
+            "identity": "",
+            "not_null": false,
+            "generated": ""
+          },
+          {
+            "name": "legacy_external_id",
+            "type": "character varying(255)",
+            "default": null,
+            "identity": "",
+            "not_null": false,
+            "generated": ""
+          },
+          {
+            "name": "payload",
+            "type": "jsonb",
+            "default": null,
+            "identity": "",
+            "not_null": true,
+            "generated": ""
+          }
+        ],
+        "indexes": [
+          {
+            "name": "ix_submissions_created_at",
+            "definition": "CREATE INDEX ix_submissions_created_at ON public.submissions USING btree (created_at)"
+          },
+          {
+            "name": "ix_submissions_organization_id",
+            "definition": "CREATE INDEX ix_submissions_organization_id ON public.submissions USING btree (organization_id)"
+          },
+          {
+            "name": "pk_submissions",
+            "definition": "CREATE UNIQUE INDEX pk_submissions ON public.submissions USING btree (id)"
+          },
+          {
+            "name": "uq_submissions_id_tenant",
+            "definition": "CREATE UNIQUE INDEX uq_submissions_id_tenant ON public.submissions USING btree (id, organization_id)"
+          },
+          {
+            "name": "ux_submissions_legacy_identity",
+            "definition": "CREATE UNIQUE INDEX ux_submissions_legacy_identity ON public.submissions USING btree (legacy_system, legacy_object_type, legacy_external_id) WHERE ((legacy_system IS NOT NULL) AND (legacy_object_type IS NOT NULL) AND (legacy_external_id IS NOT NULL))"
+          }
+        ],
+        "constraints": [
+          {
+            "name": "ck_submissions_classification",
+            "type": "c",
+            "definition": "CHECK (classification::text = ANY (ARRAY['internal'::character varying::text, 'confidential'::character varying::text, 'restricted'::character varying::text]))"
+          },
+          {
+            "name": "ck_submissions_submission_privacy",
+            "type": "c",
+            "definition": "CHECK (classification::text = ANY (ARRAY['confidential'::character varying::text, 'restricted'::character varying::text]))"
+          },
+          {
+            "name": "fk_submissions_organization_id_organizations",
+            "type": "f",
+            "definition": "FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE RESTRICT"
+          },
+          {
+            "name": "pk_submissions",
+            "type": "p",
+            "definition": "PRIMARY KEY (id)"
+          },
+          {
+            "name": "uq_submissions_id_tenant",
+            "type": "u",
+            "definition": "UNIQUE (id, organization_id)"
+          }
+        ],
+        "row_security": false
+      },
+      {
+        "name": "support_history",
+        "columns": [
+          {
+            "name": "id",
+            "type": "uuid",
+            "default": "gen_random_uuid()",
+            "identity": "",
+            "not_null": true,
+            "generated": ""
+          },
+          {
+            "name": "organization_id",
+            "type": "uuid",
+            "default": null,
+            "identity": "",
+            "not_null": true,
+            "generated": ""
+          },
+          {
+            "name": "case_id",
+            "type": "uuid",
+            "default": null,
+            "identity": "",
+            "not_null": true,
+            "generated": ""
+          },
+          {
+            "name": "event_type",
+            "type": "character varying(40)",
+            "default": null,
+            "identity": "",
+            "not_null": true,
+            "generated": ""
+          },
+          {
+            "name": "from_status",
+            "type": "character varying(30)",
+            "default": null,
+            "identity": "",
+            "not_null": false,
+            "generated": ""
+          },
+          {
+            "name": "to_status",
+            "type": "character varying(30)",
+            "default": null,
+            "identity": "",
+            "not_null": true,
+            "generated": ""
+          },
+          {
+            "name": "actor_ref",
+            "type": "character varying(120)",
+            "default": null,
+            "identity": "",
+            "not_null": true,
+            "generated": ""
+          },
+          {
+            "name": "note",
+            "type": "character varying(2000)",
+            "default": null,
+            "identity": "",
+            "not_null": false,
+            "generated": ""
+          },
+          {
+            "name": "occurred_at",
+            "type": "timestamp with time zone",
+            "default": null,
+            "identity": "",
+            "not_null": true,
+            "generated": ""
+          }
+        ],
+        "indexes": [
+          {
+            "name": "ix_support_history_tenant_case",
+            "definition": "CREATE INDEX ix_support_history_tenant_case ON public.support_history USING btree (organization_id, case_id, occurred_at)"
+          },
+          {
+            "name": "pk_support_history",
+            "definition": "CREATE UNIQUE INDEX pk_support_history ON public.support_history USING btree (id)"
+          }
+        ],
+        "constraints": [
+          {
+            "name": "ck_support_history_ck_support_history_type",
+            "type": "c",
+            "definition": "CHECK (event_type::text = ANY (ARRAY['created'::character varying::text, 'transition'::character varying::text, 'feedback'::character varying::text]))"
+          },
+          {
+            "name": "fk_support_history_case_id_cases",
+            "type": "f",
+            "definition": "FOREIGN KEY (case_id) REFERENCES cases(id)"
+          },
+          {
+            "name": "fk_support_history_organization_id_organizations",
+            "type": "f",
+            "definition": "FOREIGN KEY (organization_id) REFERENCES organizations(id)"
+          },
+          {
+            "name": "pk_support_history",
+            "type": "p",
+            "definition": "PRIMARY KEY (id)"
+          }
+        ],
+        "row_security": false
+      },
+      {
+        "name": "surveys",
+        "columns": [
+          {
+            "name": "id",
+            "type": "uuid",
+            "default": null,
+            "identity": "",
+            "not_null": true,
+            "generated": ""
+          },
+          {
+            "name": "organization_id",
+            "type": "uuid",
+            "default": null,
+            "identity": "",
+            "not_null": true,
+            "generated": ""
+          },
+          {
+            "name": "schema_version",
+            "type": "character varying(30)",
+            "default": null,
+            "identity": "",
+            "not_null": true,
+            "generated": ""
+          },
+          {
+            "name": "classification",
+            "type": "character varying(16)",
+            "default": null,
+            "identity": "",
+            "not_null": true,
+            "generated": ""
+          },
+          {
+            "name": "created_at",
+            "type": "timestamp with time zone",
+            "default": null,
+            "identity": "",
+            "not_null": true,
+            "generated": ""
+          },
+          {
+            "name": "updated_at",
+            "type": "timestamp with time zone",
+            "default": null,
+            "identity": "",
+            "not_null": true,
+            "generated": ""
+          },
+          {
+            "name": "legacy_system",
+            "type": "character varying(80)",
+            "default": null,
+            "identity": "",
+            "not_null": false,
+            "generated": ""
+          },
+          {
+            "name": "legacy_object_type",
+            "type": "character varying(80)",
+            "default": null,
+            "identity": "",
+            "not_null": false,
+            "generated": ""
+          },
+          {
+            "name": "legacy_external_id",
+            "type": "character varying(255)",
+            "default": null,
+            "identity": "",
+            "not_null": false,
+            "generated": ""
+          },
+          {
+            "name": "payload",
+            "type": "jsonb",
+            "default": null,
+            "identity": "",
+            "not_null": true,
+            "generated": ""
+          }
+        ],
+        "indexes": [
+          {
+            "name": "ix_surveys_created_at",
+            "definition": "CREATE INDEX ix_surveys_created_at ON public.surveys USING btree (created_at)"
+          },
+          {
+            "name": "ix_surveys_organization_id",
+            "definition": "CREATE INDEX ix_surveys_organization_id ON public.surveys USING btree (organization_id)"
+          },
+          {
+            "name": "pk_surveys",
+            "definition": "CREATE UNIQUE INDEX pk_surveys ON public.surveys USING btree (id)"
+          },
+          {
+            "name": "uq_surveys_id_tenant",
+            "definition": "CREATE UNIQUE INDEX uq_surveys_id_tenant ON public.surveys USING btree (id, organization_id)"
+          },
+          {
+            "name": "ux_surveys_legacy_identity",
+            "definition": "CREATE UNIQUE INDEX ux_surveys_legacy_identity ON public.surveys USING btree (legacy_system, legacy_object_type, legacy_external_id) WHERE ((legacy_system IS NOT NULL) AND (legacy_object_type IS NOT NULL) AND (legacy_external_id IS NOT NULL))"
+          }
+        ],
+        "constraints": [
+          {
+            "name": "ck_surveys_classification",
+            "type": "c",
+            "definition": "CHECK (classification::text = ANY (ARRAY['internal'::character varying::text, 'confidential'::character varying::text, 'restricted'::character varying::text]))"
+          },
+          {
+            "name": "fk_surveys_organization_id_organizations",
+            "type": "f",
+            "definition": "FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE RESTRICT"
+          },
+          {
+            "name": "pk_surveys",
+            "type": "p",
+            "definition": "PRIMARY KEY (id)"
+          },
+          {
+            "name": "uq_surveys_id_tenant",
+            "type": "u",
+            "definition": "UNIQUE (id, organization_id)"
+          }
+        ],
+        "row_security": false
+      },
+      {
+        "name": "tests",
+        "columns": [
+          {
+            "name": "id",
+            "type": "uuid",
+            "default": null,
+            "identity": "",
+            "not_null": true,
+            "generated": ""
+          },
+          {
+            "name": "organization_id",
+            "type": "uuid",
+            "default": null,
+            "identity": "",
+            "not_null": true,
+            "generated": ""
+          },
+          {
+            "name": "schema_version",
+            "type": "character varying(30)",
+            "default": null,
+            "identity": "",
+            "not_null": true,
+            "generated": ""
+          },
+          {
+            "name": "classification",
+            "type": "character varying(16)",
+            "default": null,
+            "identity": "",
+            "not_null": true,
+            "generated": ""
+          },
+          {
+            "name": "created_at",
+            "type": "timestamp with time zone",
+            "default": null,
+            "identity": "",
+            "not_null": true,
+            "generated": ""
+          },
+          {
+            "name": "updated_at",
+            "type": "timestamp with time zone",
+            "default": null,
+            "identity": "",
+            "not_null": true,
+            "generated": ""
+          },
+          {
+            "name": "legacy_system",
+            "type": "character varying(80)",
+            "default": null,
+            "identity": "",
+            "not_null": false,
+            "generated": ""
+          },
+          {
+            "name": "legacy_object_type",
+            "type": "character varying(80)",
+            "default": null,
+            "identity": "",
+            "not_null": false,
+            "generated": ""
+          },
+          {
+            "name": "legacy_external_id",
+            "type": "character varying(255)",
+            "default": null,
+            "identity": "",
+            "not_null": false,
+            "generated": ""
+          },
+          {
+            "name": "payload",
+            "type": "jsonb",
+            "default": null,
+            "identity": "",
+            "not_null": true,
+            "generated": ""
+          }
+        ],
+        "indexes": [
+          {
+            "name": "ix_tests_created_at",
+            "definition": "CREATE INDEX ix_tests_created_at ON public.tests USING btree (created_at)"
+          },
+          {
+            "name": "ix_tests_organization_id",
+            "definition": "CREATE INDEX ix_tests_organization_id ON public.tests USING btree (organization_id)"
+          },
+          {
+            "name": "pk_tests",
+            "definition": "CREATE UNIQUE INDEX pk_tests ON public.tests USING btree (id)"
+          },
+          {
+            "name": "uq_tests_id_tenant",
+            "definition": "CREATE UNIQUE INDEX uq_tests_id_tenant ON public.tests USING btree (id, organization_id)"
+          },
+          {
+            "name": "ux_tests_legacy_identity",
+            "definition": "CREATE UNIQUE INDEX ux_tests_legacy_identity ON public.tests USING btree (legacy_system, legacy_object_type, legacy_external_id) WHERE ((legacy_system IS NOT NULL) AND (legacy_object_type IS NOT NULL) AND (legacy_external_id IS NOT NULL))"
+          }
+        ],
+        "constraints": [
+          {
+            "name": "ck_tests_classification",
+            "type": "c",
+            "definition": "CHECK (classification::text = ANY (ARRAY['internal'::character varying::text, 'confidential'::character varying::text, 'restricted'::character varying::text]))"
+          },
+          {
+            "name": "fk_tests_organization_id_organizations",
+            "type": "f",
+            "definition": "FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE RESTRICT"
+          },
+          {
+            "name": "pk_tests",
+            "type": "p",
+            "definition": "PRIMARY KEY (id)"
+          },
+          {
+            "name": "uq_tests_id_tenant",
+            "type": "u",
+            "definition": "UNIQUE (id, organization_id)"
+          }
+        ],
+        "row_security": false
+      }
+    ]
+  },
+  "schema_sha256": "38f1a9fa093e72785551064e5749a7d8e3b819c5b97da3073524e6b56ee97704",
+  "table_count": 18,
+  "source_sha": "d16bf44202de38db90aebdd29283b88febb71d1b",
+  "fixture_dump_sha256": "df98761383ee60c5f9b539af949669be16b7cae84e21d38a95da827d6164e14c",
+  "production_comparison_complete": false,
+  "owned_container_removed": true
+}

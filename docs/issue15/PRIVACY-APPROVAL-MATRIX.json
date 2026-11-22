@@ -1,0 +1,23 @@
+{
+  "date_recorded": "2026-10-28",
+  "evidence": "explicit owner statement in this chat",
+  "primary_operator": {
+    "designation": "Sustainable Catalyst business owner",
+    "confirmed": true
+  },
+  "deputy_operator": {
+    "designation": "same business owner",
+    "confirmed": true,
+    "same_individual_as_primary": true
+  },
+  "independent_alternate": "not_appointed",
+  "independent_approval_or_separation_of_duties": "NOT_SATISFIED_WHERE_REQUIRED",
+  "production_privacy_gate": "NOT_SATISFIED",
+  "operational_retention_schedule": "not_approved",
+  "consent_withdrawal_unsubscribe": "pending",
+  "backup_and_audit_retention": "pending",
+  "activation_authorized": false,
+  "distinct_individual_count": 1,
+  "independent_alternate_count": 0,
+  "procedural_supplement": "PRIVACY-OPERATING-PROCEDURES-DRAFT-0.2.md"
+}

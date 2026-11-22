@@ -1,0 +1,14 @@
+{
+  "source_commit": "381a5a382c9b613136c091d0c1f235f36907c037",
+  "scope": "Git-tracked approved source/templates and recovery code only; no production data, credentials, keys or runtime configuration",
+  "artifacts": {
+    "scec-v12.2.0-381a5a38-source.zip": "9bed0c17381e2efa2db24a0718b78e19d4ad41ba402c9301b1001cd365c01ab1",
+    "scec-recovery-tools.zip": "58e536eee3bb80d10b60ad7ea251e358b1642cadef0fa7aa45d2cf5df38bfc3d"
+  },
+  "production_backup_complete": false,
+  "source_restore_files_verified": 256,
+  "source_restore_result": "PASS",
+  "restore_staging_removed_after_test": true,
+  "stored_at": "/mnt/catalyst-ssd/backups/scec/source-381a5a38",
+  "working_checkout_untouched": true
+}

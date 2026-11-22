@@ -1,0 +1,26 @@
+{
+  "pi": {
+    "approved_commit": "381a5a382c9b613136c091d0c1f235f36907c037",
+    "existing_checkout_preserved": true,
+    "fetch_succeeded": true,
+    "fetched_main": "381a5a382c9b613136c091d0c1f235f36907c037",
+    "candidate_path": "/mnt/catalyst-ssd/development/scec-381a5a38",
+    "candidate_sha": "381a5a382c9b613136c091d0c1f235f36907c037",
+    "candidate_status": "",
+    "original_checkout_sha": "61543658d111eac2993abc86206dc8a8479dc562"
+  },
+  "contabo": {
+    "architecture": "x86_64",
+    "hostname": "vmi3544820",
+    "backend_sha": "280c6b9516f9a9cafca0682f7656964077367d7d",
+    "frontend_sha": "35b5ac363fdebd471f94d8092e943722bc7267e3",
+    "backend_health": {
+      "status": "ok",
+      "service": "engagement-communications",
+      "version": "8.6.0",
+      "phase": "identity-authorization-privacy"
+    },
+    "frontend_image": "sha256:04e8fe6b7cc4701fb4cba71cb6a2891fa095dc54df17dd6a7bfbc7012f199652",
+    "production_mutations": false
+  }
+}

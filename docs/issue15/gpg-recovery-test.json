@@ -1,0 +1,99 @@
+{
+  "scope": "disposable GPG keys and existing synthetic PostgreSQL fixture only",
+  "production_data_accessed": false,
+  "checks": [
+    {
+      "name": "encrypt_bundle",
+      "result": "PASS"
+    },
+    {
+      "name": "decrypt_and_verify_all_files",
+      "result": "PASS"
+    },
+    {
+      "name": "existing_output_refused",
+      "result": "PASS"
+    },
+    {
+      "name": "existing_restore_target_refused",
+      "result": "PASS"
+    },
+    {
+      "name": "ciphertext_checksum_mismatch_refused",
+      "result": "PASS"
+    },
+    {
+      "name": "source_drift_refused",
+      "result": "PASS"
+    },
+    {
+      "name": "production_without_approval_refused",
+      "result": "PASS"
+    },
+    {
+      "name": "missing_recipient_refused",
+      "result": "PASS"
+    },
+    {
+      "name": "tampered_ciphertext_integrity_refused_and_cleanup",
+      "result": "PASS"
+    },
+    {
+      "name": "restore_size_limit_and_cleanup",
+      "result": "PASS"
+    },
+    {
+      "name": "archive_traversal_refused_and_cleanup",
+      "result": "PASS"
+    },
+    {
+      "name": "restored_content_hash_mismatch_and_cleanup",
+      "result": "PASS"
+    },
+    {
+      "name": "postgres_restore_from_decrypted_dump",
+      "result": "PASS"
+    },
+    {
+      "name": "restored_revision_850_001",
+      "result": "PASS"
+    },
+    {
+      "name": "restored_18_tables",
+      "result": "PASS"
+    },
+    {
+      "name": "restored_fixture_counts_match_prior_evidence",
+      "result": "PASS"
+    }
+  ],
+  "bundle_bytes": 8081,
+  "synthetic_dump_sha256": "df98761383ee60c5f9b539af949669be16b7cae84e21d38a95da827d6164e14c",
+  "restored_files": 2,
+  "restored_table_counts": {
+    "submissions": 0,
+    "organizations": 2,
+    "advisory_workflow_history": 0,
+    "assessments": 0,
+    "alembic_version": 1,
+    "inquiries": 0,
+    "cases": 0,
+    "contacts": 1,
+    "import_batches": 0,
+    "engagement_audit_log": 3,
+    "engagement_events": 0,
+    "forms": 0,
+    "newsletters": 0,
+    "advisory_engagements": 0,
+    "advisory_approvals": 0,
+    "tests": 0,
+    "support_history": 0,
+    "surveys": 0
+  },
+  "postgres_restore_seconds": 6.2,
+  "postgres_image_id": "sha256:1a6ab3f5345eb6dbe04a1349529caabdb0ab09293a09590fad07b2246bfa4b54",
+  "tool_sha256": "58311b5a61bce6b60e6578be6d2118733bf4b1f70a2b91b19a84d1676a08fa07",
+  "result": "PASS",
+  "owned_container_removed": true,
+  "disposable_keys_and_plaintext_removed": true
+}

@@ -1,0 +1,61 @@
+{
+  "scope": "read-only development dependency/database catalog metadata; no records or secret values",
+  "postgres_restore_client": {
+    "returncode": 0,
+    "version": "pg_restore (PostgreSQL) 15.19 (Debian 15.19-0+deb12u1)",
+    "usable": true
+  },
+  "containers": [
+    "sc-site-intelligence-dev",
+    "sc-library-pi-adapter",
+    "sc-library-pi-backend",
+    "sc-library-pi-db",
+    "catalyst-workbench-repair-7y",
+    "sc-library-dev-worker-go-1",
+    "sc-library-dev-worker-python-1",
+    "sc-library-dev-worker-rust-1",
+    "sc-library-dev-library-backend-1",
+    "sc-library-dev-redis-1",
+    "sc-library-dev-ingestion-1",
+    "sc-research-librarian-dev",
+    "sc-decision-studio-dev",
+    "sc-decision-studio-dev-postgres",
+    "sc-lab-dev",
+    "sc-core-dev",
+    "sc-library-dev-postgres-1",
+    "catalyst-workspace-dev-workspace-api-1",
+    "catalyst-workspace-dev-postgres-1",
+    "site-wordpress-1",
+    "site-proxy-1",
+    "site-db-1"
+  ],
+  "scec_databases": [
+    {
+      "container": "sc-library-pi-db",
+      "catalog_query_succeeded": true,
+      "matching_database_names": []
+    },
+    {
+      "container": "sc-decision-studio-dev-postgres",
+      "catalog_query_succeeded": true,
+      "matching_database_names": []
+    },
+    {
+      "container": "sc-library-dev-postgres-1",
+      "catalog_query_succeeded": true,
+      "matching_database_names": []
+    },
+    {
+      "container": "catalyst-workspace-dev-postgres-1",
+      "catalog_query_succeeded": true,
+      "matching_database_names": []
+    }
+  ],
+  "development_env_files": [],
+  "scec_named_backup_paths": [
+    "/mnt/catalyst-ssd/backups/scec",
+    "/mnt/catalyst-ssd/backups/scec/source-381a5a38/scec-recovery-tools.zip",
+    "/mnt/catalyst-ssd/backups/scec/source-381a5a38/scec-v12.2.0-381a5a38-source.zip"
+  ],
+  "backup_scan_complete": false
+}
