@@ -1,0 +1,28 @@
+{
+  "scope": "isolated owned container; no production change",
+  "image_id": "sha256:04e8fe6b7cc4701fb4cba71cb6a2891fa095dc54df17dd6a7bfbc7012f199652",
+  "configuration_sha256": "65fa173f7ad7d8ddd2a7c1500ba01c277f7429641c42f48467e7da2baf6a89d5",
+  "checks": {
+    "nginx_syntax": true,
+    "healthz": 200,
+    "original_html_preserved": true,
+    "/v1": {
+      "status": 503,
+      "json_verified": true,
+      "security_headers_preserved": true
+    },
+    "/v1/contracts/canonical": {
+      "status": 503,
+      "json_verified": true,
+      "security_headers_preserved": true
+    },
+    "/v1/human-auth/login": {
+      "status": 503,
+      "json_verified": true,
+      "security_headers_preserved": true
+    }
+  },
+  "result": "PASS_ISOLATED_ONLY",
+  "owned_container_removed": true,
+  "owned_network_removed": true
+}
