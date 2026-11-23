@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Sustainable Catalyst — Media & Communications Bridge
  * Description: Public Media hub for newsletters, video, LinkedIn, social channels and read-only Engagement & Communications bridge.
- * Version: 8.9.8
+ * Version: 8.9.9
  * Author: Content Catalyst LLC
  * Text Domain: sc-engagement-bridge
  */
@@ -10,7 +10,7 @@ if (!defined('ABSPATH')) { exit; }
 
 final class SC_Engagement_Bridge_882 {
     const OPTION = 'sc_ec880_app_url';
-    const VERSION = '8.9.8';
+    const VERSION = '8.9.9';
     const MEDIA_OPTION = 'sc_ec_media_settings';
     const REDIRECT_OPTION = 'sc_ec_media_legacy_redirects';
 
@@ -677,7 +677,7 @@ final class SC_Engagement_Bridge_882 {
         <section class="scec-media" aria-labelledby="scec-media-heading">
           <div class="scec-media-masthead"><span>SUSTAINABLE CATALYST / PUBLIC COMMUNICATIONS</span><span>MEDIA</span></div>
           <div class="scec-media-hero"><div class="scec-media-eyebrow">MEDIA &amp; COMMUNICATIONS</div>
-            <h2 id="scec-media-heading">Media<span class="scec-media-red">.</span></h2>
+            <h1 id="scec-media-heading">Media<span class="scec-media-red">.</span></h1>
             <p>Official news, research communications, newsletters, videos, and public briefings from Sustainable Catalyst.</p></div>
           <nav class="scec-media-nav" aria-label="Media page sections"><?php if ($latest) : ?><a href="#scec-media-latest">Latest</a><?php endif; ?><a href="#scec-media-newsletter">Newsletter</a><a href="#scec-media-video">Video</a><a href="#scec-media-linkedin">LinkedIn</a><a href="#scec-media-socials">Socials</a><a href="#scec-media-news">Press &amp; News</a><a href="#scec-media-contact">Inquiries</a></nav>
           <?php echo $latest; // Public links and text escaped in MEDIA-03. ?>
